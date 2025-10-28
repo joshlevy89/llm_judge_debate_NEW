@@ -1,0 +1,4 @@
+.cursorrules
+__pycache__
+.env
+qa_results.json

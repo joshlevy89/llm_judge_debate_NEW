@@ -1,0 +1,18 @@
+qa_prompt_template: |
+  Answer the following question. You must choose between the options provided.
+
+  Question: {question}
+
+  {options_text}
+
+  You may do some initial thinking about the question. You can use:
+  <THINKING>
+  <your thinking here>
+  </END THINKING>
+  
+  After thinking, your final answer should be in the following format:
+  <BEGIN FINAL ANSWER>
+  Answer: <0-N, where N is the number of options>
+  Confidence: <0-100%>
+  Reasoning: <brief explanation>
+  </END FINAL ANSWER>
