@@ -1,4 +1,5 @@
 .cursorrules
 __pycache__
 .env
-qa_results.json
+.python-version
+results/
