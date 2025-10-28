@@ -5,6 +5,7 @@ import yaml
 import random
 import string
 import time
+from datetime import datetime
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
@@ -21,26 +22,13 @@ from dataset_utils import select_questions_and_options, format_options
 def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
 
-def setup_output_paths(model_name, dataset_name):
-    run_id = generate_run_id()
-    
-    # Clean model and dataset names for filename
-    model_clean = model_name.replace('/', '_')
-    dataset_clean = dataset_name.replace('/', '_')
-    
-    # Create directory structure
-    output_dir = Path('results') / 'qa'
+def setup_output_path():
+    output_dir = Path('results')
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Create file paths
-    base_name = f"{model_clean}_{dataset_clean}_{run_id}"
-    results_path = output_dir / f"{base_name}.jsonl"
-    config_path = output_dir / f"{base_name}.json"
-    
-    return results_path, config_path
+    return output_dir / 'qa_results.jsonl'
 
-def save_config(config_path):
-    config = {
+def get_config():
+    return {
         'dataset_name': DATASET_NAME,
         'dataset_subset': DATASET_SUBSET,
         'dataset_split': DATASET_SPLIT,
@@ -50,8 +38,6 @@ def save_config(config_path):
         'num_choices': NUM_CHOICES,
         'max_threads': MAX_THREADS
     }
-    with open(config_path, 'w') as f:
-        json.dump(config, f, indent=2)
 
 def load_prompt_template():
     with open('prompts.yaml', 'r') as f:
@@ -87,8 +73,7 @@ def parse_model_response(response_text):
     
     return parsed
 
-def process_question(q_data, prompt_template, api_key, question_num, total_questions):
-
+def process_question(q_data, prompt_template, api_key, question_num, total_questions, config, run_id, run_datetime):
     options_text = format_options(q_data['options'])
     number_choices = ', '.join(str(i) for i in range(NUM_CHOICES))
     
@@ -108,6 +93,9 @@ def process_question(q_data, prompt_template, api_key, question_num, total_quest
     parsed_model_response = parse_model_response(raw_model_response)
     
     return {
+        'run_id': run_id,
+        'datetime': run_datetime,
+        'config': config,
         'question_idx': q_data['original_idx'],
         'question': q_data['question'],
         'options': q_data['options'],
@@ -124,13 +112,14 @@ def main():
     if not api_key:
         raise ValueError("Please set OPENROUTER_API_KEY environment variable")
     
-    # Setup output paths
-    results_path, config_path = setup_output_paths(MODEL_NAME, DATASET_NAME)
-    print(f"Results will be saved to: {results_path}")
+    run_id = generate_run_id()
+    run_datetime = datetime.now().isoformat()
+    results_path = setup_output_path()
+    config = get_config()
     
-    # Save config
-    save_config(config_path)
-    print(f"Config saved to: {config_path}")
+    print(f"Run ID: {run_id}")
+    print(f"Datetime: {run_datetime}")
+    print(f"Results will be appended to: {results_path}")
     
     print(f"Loading dataset: {DATASET_NAME}/{DATASET_SUBSET}")
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
@@ -148,11 +137,11 @@ def main():
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, prompt_template, api_key, i+1, len(questions_data)): i
+            executor.submit(process_question, q_data, prompt_template, api_key, i+1, len(questions_data), config, run_id, run_datetime): i
             for i, q_data in enumerate(questions_data)
         }
         
-        with open(results_path, 'w') as f:
+        with open(results_path, 'a') as f:
             for future in as_completed(futures):
                 try:
                     result = future.result()
