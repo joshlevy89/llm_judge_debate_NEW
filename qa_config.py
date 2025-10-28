@@ -9,7 +9,7 @@ DATASET_SPLIT = "train"
 MODEL_NAME = "openai/gpt-4o-mini"  # OpenRouter model name
 
 # Evaluation parameters
-NUM_QUESTIONS = 2 
+NUM_QUESTIONS = 20 
 RANDOM_SEED = 42 
 NUM_CHOICES = 2  
 

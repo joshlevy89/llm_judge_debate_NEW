@@ -4,6 +4,7 @@ import json
 import yaml
 import random
 import string
+import time
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
@@ -14,7 +15,7 @@ from qa_config import (
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
     MAX_THREADS
 )
-from llm_utils import call_openrouter
+from llm_utils import call_openrouter, get_openrouter_key_info
 from dataset_utils import select_questions_and_options, format_options
 
 def generate_run_id():
@@ -87,8 +88,7 @@ def parse_model_response(response_text):
     return parsed
 
 def process_question(q_data, prompt_template, api_key, question_num, total_questions):
-    print(f"Processing question {question_num}/{total_questions}")
-    
+
     options_text = format_options(q_data['options'])
     number_choices = ', '.join(str(i) for i in range(NUM_CHOICES))
     
@@ -114,7 +114,8 @@ def process_question(q_data, prompt_template, api_key, question_num, total_quest
         'correct_idx': q_data['correct_idx'],
         'raw_model_response': raw_model_response,
         'parsed_model_response': parsed_model_response,
-        'prompt': prompt
+        'prompt': prompt,
+        'token_usage': response.get('usage', {})
     }
 
 def main():
@@ -139,8 +140,10 @@ def main():
     
     prompt_template = load_prompt_template()
 
-    # Run evaluation in parallel
-    print(f"Processing {len(questions_data)} questions with {MAX_THREADS} threads")
+    key_info_start = get_openrouter_key_info(api_key)
+    start_time = time.time()
+    
+    print(f"Processing {len(questions_data)} questions with {MAX_THREADS} threads...")
     completed = 0
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
@@ -157,11 +160,19 @@ def main():
                     f.flush()
                     completed += 1
                 except Exception as e:
-                    print(f"Error processing question: {e}")
+                    print(f"Error: {e}")
                     continue
     
-    print(f"Evaluation complete. {completed}/{len(questions_data)} questions processed.")
-    print(f"Results saved to: {results_path}")
+    key_info_end = get_openrouter_key_info(api_key)
+    duration = time.time() - start_time
+    
+    print(f"\n{completed}/{len(questions_data)} questions completed in {duration:.1f}s")
+    print(f"Results: {results_path}")
+    
+    if key_info_start and key_info_end:
+        start_usage = key_info_start.get('data', {}).get('usage', 0)
+        end_usage = key_info_end.get('data', {}).get('usage', 0)
+        print(f"Cost: ${end_usage - start_usage:.6f} (Total: ${end_usage:.2f})")
 
 if __name__ == "__main__":
     main()
