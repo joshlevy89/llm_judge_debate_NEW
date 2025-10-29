@@ -46,7 +46,7 @@ def get_config():
 def load_prompts():
     with open('prompts.yaml', 'r') as f:
         prompts = yaml.safe_load(f)
-    return prompts['debater_prompt_template'], prompts['judge_prompt_template']
+    return prompts['debater_prompt_template'], prompts['judge_prompt_template'], prompts['response_format_prompt']
 
 def format_debate_history(history):
     if not history:
@@ -94,7 +94,7 @@ def run_debate_turn(turn_num, debater_assignments, question, history, debater_te
     
     return turn_responses
 
-def run_judge(question, options, debate_history_text, judge_template, api_key):
+def run_judge(question, options, debate_history_text, judge_template, response_format_prompt, api_key):
     options_text = ""
     for i, option in enumerate(options):
         options_text += f"Debater {i} is arguing for: {option}\n"
@@ -106,7 +106,8 @@ def run_judge(question, options, debate_history_text, judge_template, api_key):
         num_debaters=len(options),
         options_text=options_text.strip(),
         debate_history=debate_history_text,
-        min_confidence=min_confidence
+        min_confidence=min_confidence,
+        response_format_prompt=response_format_prompt
     )
     
     response = call_openrouter(prompt, JUDGE_MODEL, api_key, JUDGE_TEMPERATURE)
@@ -125,7 +126,7 @@ def run_judge(question, options, debate_history_text, judge_template, api_key):
         'token_usage': response.get('usage', {})
     }
 
-def process_question(q_data, debater_template, judge_template, debater_template_str, judge_template_str, api_key, config, run_id, run_datetime):
+def process_question(q_data, debater_template, judge_template, response_format_prompt, debater_template_str, judge_template_str, api_key, config, run_id, run_datetime):
     debater_assignments = q_data['options']
     debate_history = []
     
@@ -134,7 +135,7 @@ def process_question(q_data, debater_template, judge_template, debater_template_
         debate_history.extend(turn_responses)
     
     debate_history_text = format_debate_history(debate_history)
-    judge_verdict = run_judge(q_data['question'], q_data['options'], debate_history_text, judge_template, api_key)
+    judge_verdict = run_judge(q_data['question'], q_data['options'], debate_history_text, judge_template, response_format_prompt, api_key)
     
     return {
         'run_id': run_id,
@@ -174,7 +175,7 @@ def main():
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
     
-    debater_template, judge_template = load_prompts()
+    debater_template, judge_template, response_format_prompt = load_prompts()
     
     key_info_start = get_openrouter_key_info(api_key)
     start_time = time.time()
@@ -185,7 +186,7 @@ def main():
     results_path = output_dir / 'results.jsonl'
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, debater_template, judge_template, debater_template, judge_template, api_key, config, run_id, run_datetime): i
+            executor.submit(process_question, q_data, debater_template, judge_template, response_format_prompt, debater_template, judge_template, api_key, config, run_id, run_datetime): i
             for i, q_data in enumerate(questions_data)
         }
         

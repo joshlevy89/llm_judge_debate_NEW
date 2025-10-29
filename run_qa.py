@@ -43,9 +43,9 @@ def get_config():
 def load_prompt_template():
     with open('prompts.yaml', 'r') as f:
         prompts = yaml.safe_load(f)
-    return prompts['qa_prompt_template']
+    return prompts['qa_prompt_template'], prompts['response_format_prompt']
 
-def process_question(q_data, prompt_template, prompt_template_str, api_key, question_num, total_questions, config, run_id, run_datetime):
+def process_question(q_data, prompt_template, response_format_prompt, prompt_template_str, api_key, question_num, total_questions, config, run_id, run_datetime):
     options_text = format_options(q_data['options'])
     number_choices = ', '.join(str(i) for i in range(NUM_CHOICES))
     
@@ -53,6 +53,7 @@ def process_question(q_data, prompt_template, prompt_template_str, api_key, ques
         question=q_data['question'],
         options_text=options_text,
         letter_choices=number_choices,
+        response_format_prompt=response_format_prompt
     )
     
     response = call_openrouter(prompt, MODEL_NAME, api_key, TEMPERATURE)
@@ -100,7 +101,7 @@ def main():
     print(f"Selecting {NUM_QUESTIONS} questions with seed {RANDOM_SEED}")
     questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
     
-    prompt_template = load_prompt_template()
+    prompt_template, response_format_prompt = load_prompt_template()
 
     key_info_start = get_openrouter_key_info(api_key)
     start_time = time.time()
@@ -110,7 +111,7 @@ def main():
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, prompt_template, prompt_template, api_key, i+1, len(questions_data), config, run_id, run_datetime): i
+            executor.submit(process_question, q_data, prompt_template, response_format_prompt, prompt_template, api_key, i+1, len(questions_data), config, run_id, run_datetime): i
             for i, q_data in enumerate(questions_data)
         }
         
