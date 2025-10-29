@@ -6,7 +6,8 @@ DATASET_SUBSET = "gpqa_diamond"
 DATASET_SPLIT = "train"
 
 # Model configuration
-MODEL_NAME = "openai/gpt-4o-mini"  # OpenRouter model name
+# MODEL_NAME = "openai/gpt-4o-mini" 
+MODEL_NAME = "x-ai/grok-4-fast"
 
 # Evaluation parameters
 NUM_QUESTIONS = 198

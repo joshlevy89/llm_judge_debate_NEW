@@ -1,5 +1,5 @@
 qa_prompt_template: |
-  Answer the following question. You must choose between the options provided.
+  Answer the following question. You must choose between the N options provided.
 
   Question: {question}
 
@@ -12,7 +12,7 @@ qa_prompt_template: |
   
   After thinking, your final answer should be in the following format:
   <BEGIN FINAL ANSWER>
-  Answer: <0-N, where N is the number of options>
-  Confidence: <0-100%>
+  Answer: X (where X is the index of the correct answer)
+  Confidence: Y% (with a minimum of 100/N% and a maximum of 100%)
   Reasoning: <brief explanation>
   </END FINAL ANSWER>
