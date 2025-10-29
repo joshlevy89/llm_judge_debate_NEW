@@ -1,5 +1,21 @@
 import re
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+from config_general import REQUEST_TIMEOUT, MAX_RETRIES, RETRY_BACKOFF_FACTOR
+
+def _get_session():
+    session = requests.Session()
+    retry = Retry(
+        total=MAX_RETRIES,
+        backoff_factor=RETRY_BACKOFF_FACTOR,
+        status_forcelist=[429, 500, 502, 503, 504]
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("https://", adapter)
+    return session
+
+_session = _get_session()
 
 def call_openrouter(prompt, model_name, api_key, temperature=0.0):
     url = "https://openrouter.ai/api/v1/chat/completions"
@@ -12,7 +28,7 @@ def call_openrouter(prompt, model_name, api_key, temperature=0.0):
         "messages": [{"role": "user", "content": prompt}],
         "temperature": temperature
     }
-    response = requests.post(url, headers=headers, json=data)
+    response = _session.post(url, headers=headers, json=data, timeout=REQUEST_TIMEOUT)
     return response.json()
 
 def get_openrouter_key_info(api_key):

@@ -10,7 +10,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from dotenv import load_dotenv
-from qa_config import (
+from config_qa import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     MODEL_NAME, TEMPERATURE,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
@@ -46,6 +46,7 @@ def load_prompt_template():
     return prompts['qa_prompt_template'], prompts['response_format_prompt']
 
 def process_question(q_data, prompt_template, response_format_prompt, prompt_template_str, api_key, question_num, total_questions, config, run_id, run_datetime):
+    record_id = generate_run_id()
     options_text = format_options(q_data['options'])
     number_choices = ', '.join(str(i) for i in range(NUM_CHOICES))
     
@@ -67,6 +68,7 @@ def process_question(q_data, prompt_template, response_format_prompt, prompt_tem
     
     return {
         'run_id': run_id,
+        'record_id': record_id,
         'datetime': run_datetime,
         'config': config,
         'prompt_template': prompt_template_str,

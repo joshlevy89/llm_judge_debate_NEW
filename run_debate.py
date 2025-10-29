@@ -10,7 +10,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from dotenv import load_dotenv
-from debate_config import (
+from config_debate import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     DEBATER_MODEL, JUDGE_MODEL, DEBATER_TEMPERATURE, JUDGE_TEMPERATURE,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES, NUM_TURNS,
@@ -23,9 +23,9 @@ def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
 
 def setup_output_path(run_id):
-    output_dir = Path('results') / 'debate' / run_id
+    output_dir = Path('results') / 'debate'
     output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir
+    return output_dir / f'{run_id}.jsonl'
 
 def get_config():
     return {
@@ -127,6 +127,7 @@ def run_judge(question, options, debate_history_text, judge_template, response_f
     }
 
 def process_question(q_data, debater_template, judge_template, response_format_prompt, debater_template_str, judge_template_str, api_key, config, run_id, run_datetime):
+    record_id = generate_run_id()
     debater_assignments = q_data['options']
     debate_history = []
     
@@ -139,6 +140,7 @@ def process_question(q_data, debater_template, judge_template, response_format_p
     
     return {
         'run_id': run_id,
+        'record_id': record_id,
         'datetime': run_datetime,
         'config': config,
         'prompt_templates': {
@@ -162,15 +164,12 @@ def main():
     
     run_id = generate_run_id()
     run_datetime = datetime.now().isoformat()
-    output_dir = setup_output_path(run_id)
+    results_path = setup_output_path(run_id)
     config = get_config()
-    
-    with open(output_dir / 'config.json', 'w') as f:
-        json.dump(config, f, indent=2)
     
     print(f"Run ID: {run_id}")
     print(f"Datetime: {run_datetime}")
-    print(f"Results: {output_dir}")
+    print(f"Results: {results_path}")
     
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
@@ -182,8 +181,6 @@ def main():
     
     print(f"Processing {len(questions_data)} questions with {MAX_THREADS} threads...")
     completed = 0
-    
-    results_path = output_dir / 'results.jsonl'
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
             executor.submit(process_question, q_data, debater_template, judge_template, response_format_prompt, debater_template, judge_template, api_key, config, run_id, run_datetime): i
