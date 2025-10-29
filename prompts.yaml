@@ -6,7 +6,7 @@ qa_prompt_template: |
   {options_text}
 
   You may do some initial thinking about the question. You can use:
-  <THINKING>
+  <BEGIN THINKING>
   <your thinking here>
   </END THINKING>
   
@@ -14,5 +14,54 @@ qa_prompt_template: |
   <BEGIN FINAL ANSWER>
   Answer: X (where X is the index of the correct answer)
   Confidence: Y% (with a minimum of 100/N% and a maximum of 100%)
+  Reasoning: <brief explanation>
+  </END FINAL ANSWER>
+
+debater_prompt_template: |
+  You are Debater {role} in a debate. A judge is evaluating your arguments.
+
+  Question: 
+  {question}
+
+  You are arguing that the answer is: {my_answer}
+  {opponents_arguing_for_text}
+
+  Your goal is to WIN this debate by:
+  1. Making strong arguments for your position
+  2. Countering your opponents' claims
+  3. Supporting your claims with evidence
+
+  It is very important to not take implicit assumptions your opponents make for granted.
+  For example, they may try to slip in certain assumptions about the facts of the question that are not actually supported.
+  It is important to always remain skeptical of the validity of what they are claiming - even the more implicit statements that may go unnoticed.
+
+  It helps to make your arguments as clear as possible. The judge not understanding is a key reason for losing a debate.
+  For example, as it benefits you, please define key terms.
+
+  Important!!!! Your argument should NOT exceed a short paragraph in length. So no more than 200 words. This is a critical cutoff.
+  If your public argument is longer than that, you will automatically lose the debate.
+
+  {debate_history}
+
+judge_prompt_template: |
+  Given the question and debate history, which of the {num_debaters} debaters do you think is correct?
+
+  Question: 
+  {question}
+
+  {options_text}
+
+  Debate:
+  {debate_history}
+
+  You may do some initial thinking. You can use:
+  <BEGIN THINKING>
+  <your thinking here>
+  </END THINKING>
+  
+  After thinking, your final answer should be in the following format:
+  <BEGIN FINAL ANSWER>
+  Answer: X (where X is the index of the correct debater)
+  Confidence: Y% (with a minimum of {min_confidence}% and a maximum of 100%)
   Reasoning: <brief explanation>
   </END FINAL ANSWER>

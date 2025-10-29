@@ -1,0 +1,17 @@
+DATASET_NAME = "Idavidrein/gpqa"
+DATASET_SUBSET = "gpqa_diamond"
+DATASET_SPLIT = "train"
+
+DEBATER_MODEL = "x-ai/grok-4-fast"
+JUDGE_MODEL = "openai/gpt-4o-mini"
+DEBATER_TEMPERATURE = 0.0
+JUDGE_TEMPERATURE = 0.0
+
+NUM_QUESTIONS = 2
+RANDOM_SEED = 42
+NUM_CHOICES = 2
+
+NUM_TURNS = 1
+
+MAX_THREADS = 5000
+

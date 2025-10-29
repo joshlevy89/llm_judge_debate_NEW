@@ -12,11 +12,11 @@ from datasets import load_dataset
 from dotenv import load_dotenv
 from qa_config import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
-    MODEL_NAME,
+    MODEL_NAME, TEMPERATURE,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
     MAX_THREADS
 )
-from llm_utils import call_openrouter, get_openrouter_key_info
+from llm_utils import call_openrouter, get_openrouter_key_info, parse_model_response
 from dataset_utils import select_questions_and_options, format_options
 
 def generate_run_id():
@@ -33,6 +33,7 @@ def get_config():
         'dataset_subset': DATASET_SUBSET,
         'dataset_split': DATASET_SPLIT,
         'model_name': MODEL_NAME,
+        'temperature': TEMPERATURE,
         'num_questions': NUM_QUESTIONS,
         'random_seed': RANDOM_SEED,
         'num_choices': NUM_CHOICES,
@@ -44,36 +45,7 @@ def load_prompt_template():
         prompts = yaml.safe_load(f)
     return prompts['qa_prompt_template']
 
-def parse_model_response(response_text):
-    parsed = {
-        'is_valid': False,
-        'answer': None,
-        'confidence': None,
-        'reasoning': None
-    }
-    
-    final_answer_match = re.search(r'<BEGIN FINAL ANSWER>(.*?)</END FINAL ANSWER>', response_text, re.DOTALL | re.IGNORECASE)
-    if not final_answer_match:
-        return parsed
-    
-    final_answer_text = final_answer_match.group(1)
-    parsed['is_valid'] = True
-    
-    answer_match = re.search(r'Answer:\s*(\d+)', final_answer_text, re.IGNORECASE)
-    if answer_match:
-        parsed['answer'] = int(answer_match.group(1))
-    
-    confidence_match = re.search(r'Confidence:\s*(\d+)(?:\.\d+)?%?', final_answer_text, re.IGNORECASE)
-    if confidence_match:
-        parsed['confidence'] = int(confidence_match.group(1))
-    
-    reasoning_match = re.search(r'Reasoning:\s*(.+?)(?=\n\s*$|\Z)', final_answer_text, re.IGNORECASE | re.DOTALL)
-    if reasoning_match:
-        parsed['reasoning'] = reasoning_match.group(1).strip()
-    
-    return parsed
-
-def process_question(q_data, prompt_template, api_key, question_num, total_questions, config, run_id, run_datetime):
+def process_question(q_data, prompt_template, prompt_template_str, api_key, question_num, total_questions, config, run_id, run_datetime):
     options_text = format_options(q_data['options'])
     number_choices = ', '.join(str(i) for i in range(NUM_CHOICES))
     
@@ -83,7 +55,7 @@ def process_question(q_data, prompt_template, api_key, question_num, total_quest
         letter_choices=number_choices,
     )
     
-    response = call_openrouter(prompt, MODEL_NAME, api_key)
+    response = call_openrouter(prompt, MODEL_NAME, api_key, TEMPERATURE)
     
     if 'choices' in response and len(response['choices']) > 0:
         raw_model_response = response['choices'][0]['message']['content']
@@ -96,6 +68,7 @@ def process_question(q_data, prompt_template, api_key, question_num, total_quest
         'run_id': run_id,
         'datetime': run_datetime,
         'config': config,
+        'prompt_template': prompt_template_str,
         'question_idx': q_data['original_idx'],
         'question': q_data['question'],
         'options': q_data['options'],
@@ -137,7 +110,7 @@ def main():
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, prompt_template, api_key, i+1, len(questions_data), config, run_id, run_datetime): i
+            executor.submit(process_question, q_data, prompt_template, prompt_template, api_key, i+1, len(questions_data), config, run_id, run_datetime): i
             for i, q_data in enumerate(questions_data)
         }
         
