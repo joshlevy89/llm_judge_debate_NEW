@@ -177,11 +177,11 @@ def main():
     debater_template, judge_template, response_format_prompt = load_prompts()
     
     key_info_start = get_openrouter_key_info(api_key)
-    start_time = time.time()
+    start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
     
+    start_time = time.time()
     print(f"Processing {len(questions_data)} questions with {MAX_THREADS} threads...")
     completed = 0
-    start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
