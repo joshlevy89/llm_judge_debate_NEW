@@ -181,6 +181,8 @@ def main():
     
     print(f"Processing {len(questions_data)} questions with {MAX_THREADS} threads...")
     completed = 0
+    start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
+    
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
             executor.submit(process_question, q_data, debater_template, judge_template, response_format_prompt, debater_template, judge_template, api_key, config, run_id, run_datetime): i
@@ -194,19 +196,22 @@ def main():
                     f.write(json.dumps(result) + '\n')
                     f.flush()
                     completed += 1
+                    
+                    key_info_current = get_openrouter_key_info(api_key)
+                    current_usage = key_info_current.get('data', {}).get('usage', 0)
+                    cost_so_far = current_usage - start_usage
+                    print(f"Completed {completed}/{len(questions_data)} - Cost: ${cost_so_far:.6f}")
+
                 except Exception as e:
                     print(f"Error: {e}")
                     continue
     
-    key_info_end = get_openrouter_key_info(api_key)
     duration = time.time() - start_time
-    
     print(f"\n{completed}/{len(questions_data)} questions completed in {duration:.1f}s")
     
-    if key_info_start and key_info_end:
-        start_usage = key_info_start.get('data', {}).get('usage', 0)
-        end_usage = key_info_end.get('data', {}).get('usage', 0)
-        print(f"Cost: ${end_usage - start_usage:.6f} (Total: ${end_usage:.2f})")
+    key_info_end = get_openrouter_key_info(api_key)
+    end_usage = key_info_end.get('data', {}).get('usage', 0)
+    print(f"Cost: ${end_usage - start_usage:.6f} (Total: ${end_usage:.2f})")
 
 if __name__ == "__main__":
     main()
