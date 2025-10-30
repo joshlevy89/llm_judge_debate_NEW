@@ -57,12 +57,16 @@ def process_question(q_data, prompt_template, response_format_prompt, prompt_tem
         response_format_prompt=response_format_prompt
     )
     
-    response = call_openrouter(prompt, MODEL_NAME, api_key, TEMPERATURE)
-    
-    if 'choices' in response and len(response['choices']) > 0:
-        raw_model_response = response['choices'][0]['message']['content']
-    else:
-        raw_model_response = "Error: No response from model"
+    raw_model_response, token_usage = call_openrouter(
+        prompt, 
+        MODEL_NAME, 
+        api_key, 
+        TEMPERATURE,
+        run_id=run_id,
+        record_id=record_id,
+        context="QA",
+        error_log_dir='results/qa/error_logs'
+    )
     
     parsed_model_response = parse_model_response(raw_model_response)
     
@@ -79,7 +83,7 @@ def process_question(q_data, prompt_template, response_format_prompt, prompt_tem
         'raw_model_response': raw_model_response,
         'parsed_model_response': parsed_model_response,
         'prompt': prompt,
-        'token_usage': response.get('usage', {})
+        'token_usage': token_usage
     }
 
 def main():

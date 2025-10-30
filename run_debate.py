@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 from config_debate import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     DEBATER_MODEL, JUDGE_MODEL, DEBATER_TEMPERATURE, JUDGE_TEMPERATURE,
+    DEBATER_REASONING_EFFORT, DEBATER_REASONING_MAX_TOKENS,
+    JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES, NUM_TURNS,
     MAX_THREADS
 )
@@ -36,6 +38,10 @@ def get_config():
         'judge_model': JUDGE_MODEL,
         'debater_temperature': DEBATER_TEMPERATURE,
         'judge_temperature': JUDGE_TEMPERATURE,
+        'debater_reasoning_effort': DEBATER_REASONING_EFFORT,
+        'debater_reasoning_max_tokens': DEBATER_REASONING_MAX_TOKENS,
+        'judge_reasoning_effort': JUDGE_REASONING_EFFORT,
+        'judge_reasoning_max_tokens': JUDGE_REASONING_MAX_TOKENS,
         'num_questions': NUM_QUESTIONS,
         'random_seed': RANDOM_SEED,
         'num_choices': NUM_CHOICES,
@@ -52,9 +58,10 @@ def format_debate_history(history):
     if not history:
         return ""
     
-    text = "\n\n"
+    text = ""
     for entry in history:
-        text += f"Debater {entry['debater_idx']} (Turn {entry['turn']}):\n{entry['response']}\n\n"
+        text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn {entry['turn']})\n{'-'*80}\n"
+        text += f"{entry['response']}\n"
     return text
 
 def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, debater_template):
@@ -73,28 +80,35 @@ def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, d
         debate_history=debate_history_text
     )
 
-def run_debate_turn(turn_num, debater_assignments, question, history, debater_template, api_key):
+def run_debate_turn(turn_num, debater_assignments, question, history, debater_template, api_key, run_id, record_id):
     turn_responses = []
     
     for debater_idx, answer in enumerate(debater_assignments):
         prompt = get_debater_prompt(debater_idx, answer, debater_assignments, question, history, debater_template)
-        response = call_openrouter(prompt, DEBATER_MODEL, api_key, DEBATER_TEMPERATURE)
+        context = f"Debater {debater_idx} Turn {turn_num}"
         
-        if 'choices' in response and len(response['choices']) > 0:
-            response_text = response['choices'][0]['message']['content']
-        else:
-            response_text = "Error: No response from model"
-        
+        response_text, token_usage = call_openrouter(
+            prompt, 
+            DEBATER_MODEL, 
+            api_key, 
+            DEBATER_TEMPERATURE,
+            reasoning_effort=DEBATER_REASONING_EFFORT,
+            reasoning_max_tokens=DEBATER_REASONING_MAX_TOKENS,
+            run_id=run_id,
+            record_id=record_id,
+            context=context
+        )
+
         turn_responses.append({
             'turn': turn_num,
             'debater_idx': debater_idx,
             'response': response_text,
-            'token_usage': response.get('usage', {})
+            'token_usage': token_usage
         })
     
     return turn_responses
 
-def run_judge(question, options, debate_history_text, judge_template, response_format_prompt, api_key):
+def run_judge(question, options, debate_history_text, judge_template, response_format_prompt, api_key, run_id, record_id):
     options_text = ""
     for i, option in enumerate(options):
         options_text += f"Debater {i} is arguing for: {option}\n"
@@ -110,12 +124,17 @@ def run_judge(question, options, debate_history_text, judge_template, response_f
         response_format_prompt=response_format_prompt
     )
     
-    response = call_openrouter(prompt, JUDGE_MODEL, api_key, JUDGE_TEMPERATURE)
-    
-    if 'choices' in response and len(response['choices']) > 0:
-        response_text = response['choices'][0]['message']['content']
-    else:
-        response_text = "Error: No response from model"
+    response_text, token_usage = call_openrouter(
+        prompt, 
+        JUDGE_MODEL, 
+        api_key, 
+        JUDGE_TEMPERATURE,
+        reasoning_effort=JUDGE_REASONING_EFFORT,
+        reasoning_max_tokens=JUDGE_REASONING_MAX_TOKENS,
+        run_id=run_id,
+        record_id=record_id,
+        context="Judge"
+    )
     
     parsed = parse_model_response(response_text)
     
@@ -123,7 +142,7 @@ def run_judge(question, options, debate_history_text, judge_template, response_f
         'raw_response': response_text,
         'parsed': parsed,
         'prompt': prompt,
-        'token_usage': response.get('usage', {})
+        'token_usage': token_usage
     }
 
 def process_question(q_data, debater_template, judge_template, response_format_prompt, debater_template_str, judge_template_str, api_key, config, run_id, run_datetime):
@@ -132,11 +151,11 @@ def process_question(q_data, debater_template, judge_template, response_format_p
     debate_history = []
     
     for turn in range(NUM_TURNS):
-        turn_responses = run_debate_turn(turn, debater_assignments, q_data['question'], debate_history, debater_template, api_key)
+        turn_responses = run_debate_turn(turn, debater_assignments, q_data['question'], debate_history, debater_template, api_key, run_id, record_id)
         debate_history.extend(turn_responses)
     
     debate_history_text = format_debate_history(debate_history)
-    judge_verdict = run_judge(q_data['question'], q_data['options'], debate_history_text, judge_template, response_format_prompt, api_key)
+    judge_verdict = run_judge(q_data['question'], q_data['options'], debate_history_text, judge_template, response_format_prompt, api_key, run_id, record_id)
     
     return {
         'run_id': run_id,

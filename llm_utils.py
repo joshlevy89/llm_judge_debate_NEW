@@ -1,5 +1,7 @@
 import re
+import json
 import requests
+from pathlib import Path
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from config_general import REQUEST_TIMEOUT, MAX_RETRIES, RETRY_BACKOFF_FACTOR
@@ -17,7 +19,20 @@ def _get_session():
 
 _session = _get_session()
 
-def call_openrouter(prompt, model_name, api_key, temperature=0.0):
+def log_llm_error(run_id, record_id, error_message, error_log_dir='results/debate/error_logs'):
+    error_log_path = Path(error_log_dir)
+    error_log_path.mkdir(parents=True, exist_ok=True)
+    error_file = error_log_path / f'{run_id}.txt'
+    
+    with open(error_file, 'a') as f:
+        f.write('=' * 80 + '\n')
+        f.write(f'Run ID: {run_id}\n')
+        f.write(f'Record ID: {record_id}\n')
+        f.write('=' * 80 + '\n')
+        f.write(f'{error_message}\n')
+        f.write('=' * 80 + '\n\n')
+
+def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None):
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -28,8 +43,38 @@ def call_openrouter(prompt, model_name, api_key, temperature=0.0):
         "messages": [{"role": "user", "content": prompt}],
         "temperature": temperature
     }
+    
+    if reasoning_effort or reasoning_max_tokens:
+        reasoning_config = {}
+        if reasoning_effort:
+            reasoning_config["effort"] = reasoning_effort
+        if reasoning_max_tokens:
+            reasoning_config["max_tokens"] = reasoning_max_tokens
+        data["reasoning"] = reasoning_config
+    
     response = _session.post(url, headers=headers, json=data, timeout=REQUEST_TIMEOUT)
     return response.json()
+
+def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, run_id=None, record_id=None, context=None, error_log_dir='results/debate/error_logs'):
+    try:
+        response_json = _make_openrouter_request(prompt, model_name, api_key, temperature, reasoning_effort, reasoning_max_tokens)
+        
+        if 'choices' in response_json and len(response_json['choices']) > 0:
+            return response_json['choices'][0]['message']['content'], response_json.get('usage', {})
+        
+        error_msg = json.dumps(response_json.get('error', response_json), indent=2)
+        if run_id and record_id:
+            full_error = f"{context + ' ' if context else ''}Error:\n{error_msg}"
+            log_llm_error(run_id, record_id, full_error, error_log_dir)
+        
+        error_text = response_json.get('error', {}).get('message', 'Unknown error') if 'error' in response_json else 'No response from model'
+        return f"Error: {error_text}", {}
+        
+    except Exception as e:
+        if run_id and record_id:
+            error_msg = f"{context + ' ' if context else ''}Exception:\n{str(e)}"
+            log_llm_error(run_id, record_id, error_msg, error_log_dir)
+        return f"Error: {str(e)}", {}
 
 def get_openrouter_key_info(api_key):
     if not api_key:

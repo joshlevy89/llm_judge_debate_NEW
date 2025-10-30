@@ -13,6 +13,14 @@ def parse_gpqa_item(item):
     correct_answer = correct_answer.strip() if correct_answer else None
     return question, correct_answer, all_choices
 
+def parse_mmlu_pro_item(item):
+    question = item.get('question')
+    options = item.get('options', [])
+    answer_index = item.get('answer_index')
+    all_choices = [opt.strip() for opt in options if opt]
+    correct_answer = all_choices[answer_index] if answer_index is not None and answer_index < len(all_choices) else None
+    return question, correct_answer, all_choices
+
 def select_questions_and_options(dataset_name, dataset, num_questions, num_choices, seed):
     # Use seed to select questions
     rng_questions = random.Random(seed)
@@ -26,6 +34,8 @@ def select_questions_and_options(dataset_name, dataset, num_questions, num_choic
         # Parse dataset item based on dataset name
         if dataset_name == "Idavidrein/gpqa":
             question, correct_answer, all_choices = parse_gpqa_item(item)
+        elif dataset_name == "TIGER-Lab/MMLU-Pro":
+            question, correct_answer, all_choices = parse_mmlu_pro_item(item)
         else:
             raise ValueError(f"Unsupported dataset: {dataset_name}")
         
