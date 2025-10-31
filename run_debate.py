@@ -25,7 +25,7 @@ def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
 
 def setup_output_path(run_id):
-    output_dir = Path('results') / 'debate'
+    output_dir = Path('results') / 'debates'
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir / f'{run_id}.jsonl'
 
@@ -194,10 +194,10 @@ def main():
                 f.flush()
     
     duration = time.time() - start_time
+    
     print(f"\nRun ID: {run_id}")
-    print(f"{completed}/{len(questions_data)} questions completed in {duration:.1f}s")
-    if failed > 0:
-        print(f"Failed: {failed}/{len(questions_data)}")
+    print(f"Duration: {duration:.1f}s")
+    print(f"Results: total {len(questions_data)}, success {completed}, error {failed}")
     
     key_info_end = get_openrouter_key_info(api_key)
     end_usage = key_info_end.get('data', {}).get('usage', 0)

@@ -125,7 +125,7 @@ def main():
     print(f"Datetime: {run_datetime}")
     print(f"Results: {results_path}")
     
-    debate_path = Path('results') / 'debate' / f'{DEBATE_RUN_ID}.jsonl'
+    debate_path = Path('results') / 'debates' / f'{DEBATE_RUN_ID}.jsonl'
     if not debate_path.exists():
         raise ValueError(f"Debate results not found: {debate_path}")
     
@@ -181,10 +181,15 @@ def main():
                 f.flush()
     
     duration = time.time() - start_time
+    
+    results_path = f"results/verdicts/{verdict_run_id}.jsonl"
+    with open(results_path, 'r') as f:
+        results = [json.loads(line) for line in f]
+    null_count = sum(1 for r in results if r.get('success') and r.get('judge_verdict', {}).get('parsed', {}).get('answer') is None)
+    
     print(f"\nRun ID: {verdict_run_id}")
-    print(f"{completed}/{len(debate_records)} verdicts completed in {duration:.1f}s")
-    if failed > 0:
-        print(f"Failed: {failed}/{len(debate_records)}")
+    print(f"Duration: {duration:.1f}s")
+    print(f"Results: total {len(debate_records)}, success {completed}, error {failed}, null {null_count}")
     
     key_info_end = get_openrouter_key_info(api_key)
     end_usage = key_info_end.get('data', {}).get('usage', 0)

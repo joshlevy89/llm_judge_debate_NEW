@@ -154,11 +154,15 @@ def main():
                 f.write(json.dumps(result) + '\n')
                 f.flush()
     
-    duration = time.time() - start_time    
-    print(f"\n{completed}/{len(questions_data)} questions completed in {duration:.1f}s")
-    if failed > 0:
-        print(f"Failed: {failed}/{len(questions_data)}")
-    print(f"Results: {results_path}")
+    duration = time.time() - start_time
+    
+    with open(results_path, 'r') as f:
+        results = [json.loads(line) for line in f]
+    null_count = sum(1 for r in results if r.get('success') and not r.get('parsed_model_response', {}).get('is_valid'))
+    
+    print(f"\nRun ID: {run_id}")
+    print(f"Duration: {duration:.1f}s")
+    print(f"Results: total {len(questions_data)}, success {completed}, error {failed}, null {null_count}")
     
     key_info_end = get_openrouter_key_info(api_key)
     end_usage = key_info_end.get('data', {}).get('usage', 0)
