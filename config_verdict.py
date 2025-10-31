@@ -1,4 +1,4 @@
-DEBATE_RUN_ID = "rag8x8z"
+DEBATE_RUN_ID = "dcg8y0b"
 
 JUDGE_MODEL = "openai/gpt-4o-mini"
 JUDGE_TEMPERATURE = 0.0

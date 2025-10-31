@@ -6,12 +6,12 @@ DATASET_NAME = "TIGER-Lab/MMLU-Pro"
 DATASET_SUBSET = None
 DATASET_SPLIT = "test"
 
-# MODEL_NAME = "openai/gpt-4o-mini" 
-MODEL_NAME = "x-ai/grok-4-fast" 
+MODEL_NAME = "openai/gpt-4o-mini" 
+# MODEL_NAME = "x-ai/grok-4-fast" 
 
 TEMPERATURE = 0.0
 
-NUM_QUESTIONS = 100
+NUM_QUESTIONS = 20
 RANDOM_SEED = 42 
 NUM_CHOICES = 4  
 

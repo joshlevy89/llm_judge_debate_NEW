@@ -92,6 +92,10 @@ def run_debate_turn(turn_num, debater_assignments, question, history, debater_te
         )
         
         response_text = response['content']
+        
+        if response_text.startswith('Error:'):
+            return None
+        
         parsed_response, parse_error = parse_debater_response(response_text, PRIVATE_SCRATCHPAD)
         
         if parse_error:
@@ -188,7 +192,8 @@ def main():
                     continue
     
     duration = time.time() - start_time
-    print(f"\n{completed}/{len(questions_data)} questions completed in {duration:.1f}s")
+    print(f"\nRun ID: {run_id}")
+    print(f"{completed}/{len(questions_data)} questions completed in {duration:.1f}s")
     
     key_info_end = get_openrouter_key_info(api_key)
     end_usage = key_info_end.get('data', {}).get('usage', 0)

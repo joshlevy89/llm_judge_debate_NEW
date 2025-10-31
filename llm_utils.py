@@ -3,9 +3,21 @@ import json
 import time
 import requests
 from pathlib import Path
+from threading import Thread
 from config_general import REQUEST_TIMEOUT, MAX_RETRIES, RETRY_BACKOFF_FACTOR
 
 _session = requests.Session()
+
+class RequestWithTimeout:
+    def __init__(self):
+        self.result = None
+        self.exception = None
+    
+    def make_request(self, url, headers, json_data):
+        try:
+            self.result = _session.post(url, headers=headers, json=json_data, timeout=30)
+        except Exception as e:
+            self.exception = e
 
 def log_llm_error(run_id, record_id, error_message, error_log_dir='results/debate/error_logs'):
     error_log_path = Path(error_log_dir)
@@ -43,8 +55,22 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
             reasoning_config["max_tokens"] = reasoning_max_tokens
         data["reasoning"] = reasoning_config
     
-    response = _session.post(url, headers=headers, json=data, timeout=REQUEST_TIMEOUT)
-    return response.json()
+    req = RequestWithTimeout()
+    thread = Thread(target=req.make_request, args=(url, headers, data))
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout=REQUEST_TIMEOUT)
+    
+    if thread.is_alive():
+        raise requests.Timeout(f"Request exceeded {REQUEST_TIMEOUT} second timeout")
+    
+    if req.exception:
+        raise req.exception
+    
+    if req.result is None:
+        raise Exception("Request returned no result")
+    
+    return req.result.json()
 
 def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, max_tokens=None, run_id=None, record_id=None, context=None, error_log_dir='results/debate/error_logs'):
     for attempt in range(MAX_RETRIES + 1):

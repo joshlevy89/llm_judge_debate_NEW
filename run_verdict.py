@@ -68,6 +68,10 @@ def run_judge(question, options, public_debate_history_text, judge_template, res
     )
     
     response_text = response['content']
+    
+    if response_text.startswith('Error:'):
+        return None
+    
     parsed = parse_answer(response_text)
     
     return {
@@ -92,6 +96,9 @@ def process_debate_record(debate_record, judge_template, response_format_prompt,
         verdict_run_id,
         debate_record['record_id']
     )
+    
+    if judge_verdict is None:
+        return None
     
     return {
         'verdict_run_id': verdict_run_id,
@@ -150,6 +157,8 @@ def main():
             for future in as_completed(futures):
                 try:
                     result = future.result()
+                    if result is None:
+                        continue
                     f.write(json.dumps(result) + '\n')
                     f.flush()
                     completed += 1
@@ -164,7 +173,8 @@ def main():
                     continue
     
     duration = time.time() - start_time
-    print(f"\n{completed}/{len(debate_records)} verdicts completed in {duration:.1f}s")
+    print(f"\nRun ID: {verdict_run_id}")
+    print(f"{completed}/{len(debate_records)} verdicts completed in {duration:.1f}s")
     
     key_info_end = get_openrouter_key_info(api_key)
     end_usage = key_info_end.get('data', {}).get('usage', 0)
