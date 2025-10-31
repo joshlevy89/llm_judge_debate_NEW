@@ -25,7 +25,7 @@ def generate_run_id():
 def setup_output_path():
     output_dir = Path('results')
     output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir / 'qa_results.jsonl'
+    return output_dir / 'qa' / 'qa_results.jsonl'
 
 def get_config():
     return {
@@ -129,6 +129,7 @@ def main():
             for future in as_completed(futures):
                 try:
                     result = future.result()
+                    is_correct = result['parsed_model_response']['answer'] == result['correct_idx'] if result['parsed_model_response']['answer'] is not None else False
                     f.write(json.dumps(result) + '\n')
                     f.flush()
                     completed += 1
@@ -136,7 +137,7 @@ def main():
                     key_info_current = get_openrouter_key_info(api_key)
                     current_usage = key_info_current.get('data', {}).get('usage', 0)
                     cost_so_far = current_usage - start_usage
-                    print(f"Completed {completed}/{len(questions_data)} - Cost: ${cost_so_far:.6f}")
+                    print(f"Completed {completed}/{len(questions_data)} - Run ID: {result['run_id']} - Record ID: {result['record_id']} - Correct: {is_correct} - Cost: ${cost_so_far:.6f}")
                 except Exception as e:
                     print(f"Error: {e}")
                     continue

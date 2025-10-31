@@ -10,7 +10,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
 from config_verdict import (
     DEBATE_RUN_ID, JUDGE_MODEL, JUDGE_TEMPERATURE,
-    JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS
+    JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
+    SUBSET_N, MAX_THREADS
 )
 from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer
 from debate_utils import format_debate_history
@@ -64,7 +65,8 @@ def run_judge(question, options, public_debate_history_text, judge_template, res
         max_tokens=MAX_OUTPUT_TOKENS,
         run_id=verdict_run_id,
         record_id=record_id,
-        context="Judge"
+        context="Judge",
+        error_log_dir='results/verdicts/error_logs'
     )
     
     response_text = response['content']
@@ -138,6 +140,9 @@ def main():
         for line in f:
             debate_records.append(json.loads(line))
     
+    if SUBSET_N is not None:
+        debate_records = debate_records[:SUBSET_N]
+    
     judge_template, response_format_prompt = load_prompts()
     
     key_info_start = get_openrouter_key_info(api_key)
@@ -147,7 +152,7 @@ def main():
     print(f"Processing {len(debate_records)} debates...")
     completed = 0
     
-    with ThreadPoolExecutor(max_workers=1000) as executor:
+    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
             executor.submit(process_debate_record, debate_record, judge_template, response_format_prompt, judge_template, api_key, config, verdict_run_id, run_datetime): i
             for i, debate_record in enumerate(debate_records)

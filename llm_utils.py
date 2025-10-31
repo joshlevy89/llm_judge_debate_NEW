@@ -27,7 +27,7 @@ class RequestWithTimeout:
         except Exception as e:
             self.exception = e
 
-def log_llm_error(run_id, record_id, error_message, error_log_dir='results/debate/error_logs'):
+def log_llm_error(run_id, record_id, error_message, error_log_dir='results/debates/error_logs'):
     error_log_path = Path(error_log_dir)
     error_log_path.mkdir(parents=True, exist_ok=True)
     error_file = error_log_path / f'{run_id}.txt'
@@ -80,7 +80,7 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
     
     return req.result.json()
 
-def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, max_tokens=None, run_id=None, record_id=None, context=None, error_log_dir='results/debate/error_logs'):
+def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, max_tokens=None, run_id=None, record_id=None, context=None, error_log_dir='results/debates/error_logs'):
     for attempt in range(MAX_RETRIES + 1):
         try:
             response_json = _make_openrouter_request(prompt, model_name, api_key, temperature, max_tokens, reasoning_effort, reasoning_max_tokens)
