@@ -1,7 +1,6 @@
-# DEBATER_MODEL = "x-ai/grok-4-fast"
+DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "deepseek/deepseek-v3.2-exp"
-DEBATER_MODEL = "google/gemini-2.5-flash-lite"
-JUDGE_MODEL = "openai/gpt-4o-mini"
+# DEBATER_MODEL = "google/gemini-2.5-flash-lite"
 
 # DATASET_NAME = "Idavidrein/gpqa"
 # DATASET_SUBSET = "gpqa_diamond"
@@ -12,13 +11,10 @@ DATASET_SUBSET = None
 DATASET_SPLIT = "test"
 
 DEBATER_TEMPERATURE = 0.0
-JUDGE_TEMPERATURE = 0.0
 
-MAX_OUTPUT_TOKENS = 5000
+MAX_OUTPUT_TOKENS = None
 DEBATER_REASONING_EFFORT = None
 DEBATER_REASONING_MAX_TOKENS = None
-JUDGE_REASONING_EFFORT = None
-JUDGE_REASONING_MAX_TOKENS = None
 
 PRIVATE_SCRATCHPAD = True
 

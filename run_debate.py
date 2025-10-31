@@ -12,13 +12,12 @@ from datasets import load_dataset
 from dotenv import load_dotenv
 from config_debate import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
-    DEBATER_MODEL, JUDGE_MODEL, DEBATER_TEMPERATURE, JUDGE_TEMPERATURE,
+    DEBATER_MODEL, DEBATER_TEMPERATURE,
     DEBATER_REASONING_EFFORT, DEBATER_REASONING_MAX_TOKENS,
-    JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES, NUM_TURNS,
     PRIVATE_SCRATCHPAD, MAX_THREADS, MAX_OUTPUT_TOKENS
 )
-from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, parse_debater_response, log_llm_error
+from llm_utils import call_openrouter, get_openrouter_key_info, parse_debater_response, log_llm_error
 from dataset_utils import select_questions_and_options, format_options
 from debate_utils import format_debate_history
 
@@ -36,14 +35,10 @@ def get_config():
         'dataset_subset': DATASET_SUBSET,
         'dataset_split': DATASET_SPLIT,
         'debater_model': DEBATER_MODEL,
-        'judge_model': JUDGE_MODEL,
         'debater_temperature': DEBATER_TEMPERATURE,
-        'judge_temperature': JUDGE_TEMPERATURE,
         'max_output_tokens': MAX_OUTPUT_TOKENS,
         'debater_reasoning_effort': DEBATER_REASONING_EFFORT,
         'debater_reasoning_max_tokens': DEBATER_REASONING_MAX_TOKENS,
-        'judge_reasoning_effort': JUDGE_REASONING_EFFORT,
-        'judge_reasoning_max_tokens': JUDGE_REASONING_MAX_TOKENS,
         'num_questions': NUM_QUESTIONS,
         'random_seed': RANDOM_SEED,
         'num_choices': NUM_CHOICES,
@@ -55,7 +50,7 @@ def get_config():
 def load_prompts():
     with open('prompts.yaml', 'r') as f:
         prompts = yaml.safe_load(f)
-    return prompts['debater_prompt_template'], prompts['judge_prompt_template'], prompts['response_format_prompt'], prompts['private_reasoning_prompt']
+    return prompts['debater_prompt_template'], prompts['private_reasoning_prompt']
 
 def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, debater_template, private_reasoning_prompt):
     opponents_text = "\nYour opponents are arguing for:\n"
@@ -116,48 +111,7 @@ def run_debate_turn(turn_num, debater_assignments, question, history, debater_te
     
     return turn_responses
 
-def run_judge(question, options, public_debate_history_text, judge_template, response_format_prompt, api_key, run_id, record_id):
-    options_text = ""
-    for i, option in enumerate(options):
-        options_text += f"Debater {i} is arguing for: {option}\n"
-    
-    min_confidence = int(100 / len(options))
-    
-    prompt = judge_template.format(
-        question=question,
-        num_debaters=len(options),
-        options_text=options_text.strip(),
-        public_debate_history_text=public_debate_history_text,
-        min_confidence=min_confidence,
-        response_format_prompt=response_format_prompt
-    )
-    
-    response, token_usage = call_openrouter(
-        prompt, 
-        JUDGE_MODEL, 
-        api_key, 
-        JUDGE_TEMPERATURE,
-        reasoning_effort=JUDGE_REASONING_EFFORT,
-        reasoning_max_tokens=JUDGE_REASONING_MAX_TOKENS,
-        max_tokens=MAX_OUTPUT_TOKENS,
-        run_id=run_id,
-        record_id=record_id,
-        context="Judge"
-    )
-    
-    response_text = response['content']
-    parsed = parse_answer(response_text)
-    
-    return {
-        'raw_response': response_text,
-        'internal_model_reasoning': response.get('reasoning'),
-        'internal_model_reasoning_details': response.get('reasoning_details'),
-        'parsed': parsed,
-        'prompt': prompt,
-        'token_usage': token_usage
-    }
-
-def process_question(q_data, debater_template, judge_template, response_format_prompt, private_reasoning_prompt, debater_template_str, judge_template_str, api_key, config, run_id, run_datetime):
+def process_question(q_data, debater_template, private_reasoning_prompt, debater_template_str, api_key, config, run_id, run_datetime):
     record_id = generate_run_id()
     debater_assignments = q_data['options']
     debate_history = []
@@ -168,24 +122,17 @@ def process_question(q_data, debater_template, judge_template, response_format_p
             return None
         debate_history.extend(turn_responses)
     
-    public_debate_history_text = format_debate_history(debate_history, show_private=False)
-    judge_verdict = run_judge(q_data['question'], q_data['options'], public_debate_history_text, judge_template, response_format_prompt, api_key, run_id, record_id)
-    
     return {
         'run_id': run_id,
         'record_id': record_id,
         'datetime': run_datetime,
         'config': config,
-        'prompt_templates': {
-            'debater': debater_template_str,
-            'judge': judge_template_str
-        },
+        'prompt_template': debater_template_str,
         'question_idx': q_data['original_idx'],
         'question': q_data['question'],
         'options': q_data['options'],
         'correct_idx': q_data['correct_idx'],
-        'debate_history': debate_history,
-        'judge_verdict': judge_verdict
+        'debate_history': debate_history
     }
 
 def main():
@@ -206,7 +153,7 @@ def main():
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
     
-    debater_template, judge_template, response_format_prompt, private_reasoning_prompt = load_prompts()
+    debater_template, private_reasoning_prompt = load_prompts()
     
     key_info_start = get_openrouter_key_info(api_key)
     start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
@@ -217,7 +164,7 @@ def main():
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, debater_template, judge_template, response_format_prompt, private_reasoning_prompt, debater_template, judge_template, api_key, config, run_id, run_datetime): i
+            executor.submit(process_question, q_data, debater_template, private_reasoning_prompt, debater_template, api_key, config, run_id, run_datetime): i
             for i, q_data in enumerate(questions_data)
         }
         
