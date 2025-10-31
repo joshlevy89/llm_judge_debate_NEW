@@ -15,7 +15,8 @@ from config_debate import (
     DEBATER_MODEL, DEBATER_TEMPERATURE,
     DEBATER_REASONING_EFFORT, DEBATER_REASONING_MAX_TOKENS,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES, NUM_TURNS,
-    PRIVATE_SCRATCHPAD, MAX_THREADS, MAX_OUTPUT_TOKENS
+    PRIVATE_SCRATCHPAD, MAX_THREADS, MAX_OUTPUT_TOKENS,
+    PUBLIC_ARGUMENT_WORD_LIMIT, PRIVATE_REASONING_WORD_LIMIT
 )
 from llm_utils import call_openrouter, get_openrouter_key_info, parse_debater_response, log_progress
 from dataset_utils import select_questions_and_options, format_options
@@ -44,6 +45,8 @@ def get_config():
         'num_choices': NUM_CHOICES,
         'num_turns': NUM_TURNS,
         'private_scratchpad': PRIVATE_SCRATCHPAD,
+        'public_argument_word_limit': PUBLIC_ARGUMENT_WORD_LIMIT,
+        'private_reasoning_word_limit': PRIVATE_REASONING_WORD_LIMIT,
         'max_threads': MAX_THREADS
     }
 
@@ -60,7 +63,10 @@ def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, d
     
     public_debate_history_text = format_debate_history(history, show_private=False) if history else "\nThis is the first turn of the debate."
     
-    private_reasoning_text = private_reasoning_prompt if PRIVATE_SCRATCHPAD else ""
+    private_reasoning_text = private_reasoning_prompt.format(
+        public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
+        private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
+    ) if PRIVATE_SCRATCHPAD else ""
     
     return debater_template.format(
         role=debater_idx,
@@ -68,7 +74,9 @@ def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, d
         my_answer=my_answer,
         opponents_arguing_for_text=opponents_text,
         public_debate_history_text=public_debate_history_text,
-        private_reasoning_prompt=private_reasoning_text
+        private_reasoning_prompt=private_reasoning_text,
+        public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
+        private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
     )
 
 def run_debate_turn(turn_num, debater_assignments, question, history, debater_template, private_reasoning_prompt, api_key, run_id, record_id):

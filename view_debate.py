@@ -15,7 +15,7 @@ def main():
     parser.add_argument('--verdict', help='Verdict run ID to show judgment from')
     args = parser.parse_args()
     
-    debate_path = Path('results') / 'debate' / f'{args.run_id}.jsonl'
+    debate_path = Path('results') / 'debates' / f'{args.run_id}.jsonl'
     
     debate_data = None
     for line in open(debate_path):
