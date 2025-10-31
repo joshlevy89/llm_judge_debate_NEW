@@ -1,23 +1,11 @@
 import re
 import json
+import time
 import requests
 from pathlib import Path
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from config_general import REQUEST_TIMEOUT, MAX_RETRIES, RETRY_BACKOFF_FACTOR
 
-def _get_session():
-    session = requests.Session()
-    retry = Retry(
-        total=MAX_RETRIES,
-        backoff_factor=RETRY_BACKOFF_FACTOR,
-        status_forcelist=[429, 500, 502, 503, 504]
-    )
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount("https://", adapter)
-    return session
-
-_session = _get_session()
+_session = requests.Session()
 
 def log_llm_error(run_id, record_id, error_message, error_log_dir='results/debate/error_logs'):
     error_log_path = Path(error_log_dir)
@@ -32,7 +20,7 @@ def log_llm_error(run_id, record_id, error_message, error_log_dir='results/debat
         f.write(f'{error_message}\n')
         f.write('=' * 80 + '\n\n')
 
-def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None):
+def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_tokens=None, reasoning_effort=None, reasoning_max_tokens=None):
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -41,8 +29,11 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, reaso
     data = {
         "model": model_name,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": temperature
+        "temperature": temperature,
     }
+    
+    if max_tokens:
+        data["max_tokens"] = max_tokens
     
     if reasoning_effort or reasoning_max_tokens:
         reasoning_config = {}
@@ -55,26 +46,41 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, reaso
     response = _session.post(url, headers=headers, json=data, timeout=REQUEST_TIMEOUT)
     return response.json()
 
-def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, run_id=None, record_id=None, context=None, error_log_dir='results/debate/error_logs'):
-    try:
-        response_json = _make_openrouter_request(prompt, model_name, api_key, temperature, reasoning_effort, reasoning_max_tokens)
-        
-        if 'choices' in response_json and len(response_json['choices']) > 0:
-            return response_json['choices'][0]['message']['content'], response_json.get('usage', {})
-        
-        error_msg = json.dumps(response_json.get('error', response_json), indent=2)
-        if run_id and record_id:
-            full_error = f"{context + ' ' if context else ''}Error:\n{error_msg}"
-            log_llm_error(run_id, record_id, full_error, error_log_dir)
-        
-        error_text = response_json.get('error', {}).get('message', 'Unknown error') if 'error' in response_json else 'No response from model'
-        return f"Error: {error_text}", {}
-        
-    except Exception as e:
-        if run_id and record_id:
-            error_msg = f"{context + ' ' if context else ''}Exception:\n{str(e)}"
-            log_llm_error(run_id, record_id, error_msg, error_log_dir)
-        return f"Error: {str(e)}", {}
+def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, max_tokens=None, run_id=None, record_id=None, context=None, error_log_dir='results/debate/error_logs'):
+    for attempt in range(MAX_RETRIES + 1):
+        try:
+            response_json = _make_openrouter_request(prompt, model_name, api_key, temperature, max_tokens, reasoning_effort, reasoning_max_tokens)
+            
+            if 'choices' in response_json and len(response_json['choices']) > 0:
+                message = response_json['choices'][0]['message']
+                return {
+                    'content': message.get('content'),
+                    'reasoning': message.get('reasoning'),
+                    'reasoning_details': message.get('reasoning_details')
+                }, response_json.get('usage', {})
+            
+            error_msg = json.dumps(response_json.get('error', response_json), indent=2)
+            if run_id and record_id:
+                full_error = f"{context + ' ' if context else ''}Error:\n{error_msg}"
+                log_llm_error(run_id, record_id, full_error, error_log_dir)
+            
+            error_text = response_json.get('error', {}).get('message', 'Unknown error') if 'error' in response_json else 'No response from model'
+            return {'content': f"Error: {error_text}", 'reasoning': None, 'reasoning_details': None}, {}
+            
+        except requests.Timeout:
+            if attempt < MAX_RETRIES:
+                print(f"⚠️  Timeout (attempt {attempt + 1}/{MAX_RETRIES + 1}) - Run: {run_id} - {context or 'Request'}")
+                time.sleep(RETRY_BACKOFF_FACTOR * (2 ** attempt))
+            else:
+                if run_id and record_id:
+                    error_msg = f"{context + ' ' if context else ''}Timeout after {MAX_RETRIES + 1} attempts"
+                    log_llm_error(run_id, record_id, error_msg, error_log_dir)
+                return {'content': f"Error: Request timeout after {MAX_RETRIES + 1} attempts", 'reasoning': None, 'reasoning_details': None}, {}
+        except Exception as e:
+            if run_id and record_id:
+                error_msg = f"{context + ' ' if context else ''}Exception:\n{str(e)}"
+                log_llm_error(run_id, record_id, error_msg, error_log_dir)
+            return {'content': f"Error: {str(e)}", 'reasoning': None, 'reasoning_details': None}, {}
 
 def get_openrouter_key_info(api_key):
     if not api_key:
@@ -92,7 +98,7 @@ def get_openrouter_key_info(api_key):
         print(f"[Warning] Could not fetch OpenRouter key info: {e}")
     return None
 
-def parse_model_response(response_text):
+def parse_answer(response_text):
     parsed = {
         'is_valid': False,
         'answer': None,
@@ -100,7 +106,7 @@ def parse_model_response(response_text):
         'reasoning': None
     }
     
-    final_answer_match = re.search(r'<BEGIN FINAL ANSWER>(.*?)</END FINAL ANSWER>', response_text, re.DOTALL | re.IGNORECASE)
+    final_answer_match = re.search(r'<BEGIN FINAL ANSWER>(.*?)</?END FINAL ANSWER>', response_text, re.DOTALL | re.IGNORECASE)
     if not final_answer_match:
         return parsed
     
@@ -120,3 +126,19 @@ def parse_model_response(response_text):
         parsed['reasoning'] = reasoning_match.group(1).strip()
     
     return parsed
+
+def parse_debater_response(response_text, private_scratchpad):
+    public_match = re.search(r'<BEGIN PUBLIC ARGUMENT>(.*?)</?END PUBLIC ARGUMENT>', response_text, re.DOTALL | re.IGNORECASE)
+    
+    if not public_match:
+        return None, "Missing <BEGIN PUBLIC ARGUMENT> or </END PUBLIC ARGUMENT> tags"
+    
+    parsed = {'public_argument': public_match.group(1).strip()}
+    
+    if private_scratchpad:
+        private_match = re.search(r'<BEGIN PRIVATE REASONING>(.*?)</?END PRIVATE REASONING>', response_text, re.DOTALL | re.IGNORECASE)
+        if not private_match:
+            return None, "Missing <BEGIN PRIVATE REASONING> or </END PRIVATE REASONING> tags"
+        parsed['private_reasoning'] = private_match.group(1).strip()
+    
+    return parsed, None

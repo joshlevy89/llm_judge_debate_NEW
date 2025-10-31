@@ -16,7 +16,7 @@ from config_qa import (
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
     MAX_THREADS
 )
-from llm_utils import call_openrouter, get_openrouter_key_info, parse_model_response
+from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer
 from dataset_utils import select_questions_and_options, format_options
 
 def generate_run_id():
@@ -57,7 +57,7 @@ def process_question(q_data, prompt_template, response_format_prompt, prompt_tem
         response_format_prompt=response_format_prompt
     )
     
-    raw_model_response, token_usage = call_openrouter(
+    response, token_usage = call_openrouter(
         prompt, 
         MODEL_NAME, 
         api_key, 
@@ -68,7 +68,8 @@ def process_question(q_data, prompt_template, response_format_prompt, prompt_tem
         error_log_dir='results/qa/error_logs'
     )
     
-    parsed_model_response = parse_model_response(raw_model_response)
+    raw_model_response = response['content']
+    parsed_model_response = parse_answer(raw_model_response)
     
     return {
         'run_id': run_id,
@@ -81,6 +82,8 @@ def process_question(q_data, prompt_template, response_format_prompt, prompt_tem
         'options': q_data['options'],
         'correct_idx': q_data['correct_idx'],
         'raw_model_response': raw_model_response,
+        'internal_model_reasoning': response.get('reasoning'),
+        'internal_model_reasoning_details': response.get('reasoning_details'),
         'parsed_model_response': parsed_model_response,
         'prompt': prompt,
         'token_usage': token_usage
