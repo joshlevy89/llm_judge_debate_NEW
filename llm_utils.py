@@ -100,8 +100,8 @@ def log_progress(status_type, count, total, run_id, record_id, api_key, start_us
     cost = current_usage - start_usage
     
     if status_type == "completed":
-        extra = f"Correct: {is_correct}" if is_correct is not None else ""
-        print(f"Completed {count}/{total} - Run ID: {run_id} - Record ID: {record_id} - {extra} - Cost: ${cost:.6f}")
+        extra = f" - Correct: {is_correct}" if is_correct is not None else ""
+        print(f"Completed {count}/{total} - Run ID: {run_id} - Record ID: {record_id}{extra} - Cost: ${cost:.6f}")
     else:
         error_msg = str(error)[:100] if error else "Unknown error"
         print(f"Failed {count}/{total} - Run ID: {run_id} - Record ID: {record_id} - Error: {error_msg} - Cost: ${cost:.6f}")

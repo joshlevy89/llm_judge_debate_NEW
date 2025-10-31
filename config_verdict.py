@@ -1,4 +1,4 @@
-DEBATE_RUN_ID = "wstfsq6"
+DEBATE_RUN_ID = "og10l7q"
 
 JUDGE_MODEL = "openai/gpt-4o-mini"
 # JUDGE_MODEL = "openai/gpt-3.5-turbo"
