@@ -1,9 +1,9 @@
-DEBATE_RUN_ID = "exl35wu"
+DEBATE_RUN_ID = "wstfsq6"
 
-# JUDGE_MODEL = "openai/gpt-4o-mini"
+JUDGE_MODEL = "openai/gpt-4o-mini"
 # JUDGE_MODEL = "openai/gpt-3.5-turbo"
 # JUDGE_MODEL = "qwen/qwen-2.5-7b-instruct"
-JUDGE_MODEL = "meta-llama/llama-3-8b-instruct"
+# JUDGE_MODEL = "meta-llama/llama-3-8b-instruct"
 JUDGE_TEMPERATURE = 0.0
 JUDGE_REASONING_EFFORT = None
 JUDGE_REASONING_MAX_TOKENS = None

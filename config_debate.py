@@ -2,13 +2,13 @@ DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "deepseek/deepseek-v3.2-exp"
 # DEBATER_MODEL = "google/gemini-2.5-flash-lite"
 
-# DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-# DATASET_SPLIT = "train"
+DATASET_NAME = "Idavidrein/gpqa"
+DATASET_SUBSET = "gpqa_diamond"
+DATASET_SPLIT = "train"
 
-DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-DATASET_SUBSET = None
-DATASET_SPLIT = "test"
+# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+# DATASET_SUBSET = None
+# DATASET_SPLIT = "test"
 
 DEBATER_TEMPERATURE = 0.0
 
@@ -18,9 +18,9 @@ DEBATER_REASONING_MAX_TOKENS = None
 
 PRIVATE_SCRATCHPAD = True
 
-NUM_QUESTIONS = 2000
+NUM_QUESTIONS = 198
 RANDOM_SEED = 42
-NUM_CHOICES = 4
+NUM_CHOICES = 2
 NUM_TURNS = 1
 
 MAX_THREADS = 5000
