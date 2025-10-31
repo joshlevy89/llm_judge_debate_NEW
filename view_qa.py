@@ -12,7 +12,7 @@ def main():
     parser.add_argument('record_id')
     args = parser.parse_args()
     
-    path = Path('results') / 'qa_results.jsonl'
+    path = Path('results') / 'qa' / 'qa_results.jsonl'
     
     for line in open(path):
         data = json.loads(line)

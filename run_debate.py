@@ -17,7 +17,7 @@ from config_debate import (
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES, NUM_TURNS,
     PRIVATE_SCRATCHPAD, MAX_THREADS, MAX_OUTPUT_TOKENS
 )
-from llm_utils import call_openrouter, get_openrouter_key_info, parse_debater_response, log_llm_error
+from llm_utils import call_openrouter, get_openrouter_key_info, parse_debater_response, log_progress
 from dataset_utils import select_questions_and_options, format_options
 from debate_utils import format_debate_history
 
@@ -92,16 +92,10 @@ def run_debate_turn(turn_num, debater_assignments, question, history, debater_te
         )
         
         response_text = response['content']
-        
-        if response_text.startswith('Error:'):
-            return None
-        
         parsed_response, parse_error = parse_debater_response(response_text, PRIVATE_SCRATCHPAD)
         
         if parse_error:
-            error_msg = f"{context} Parsing Error: {parse_error}\n\nRaw Response:\n{response_text}"
-            log_llm_error(run_id, record_id, error_msg)
-            return None
+            raise Exception(f"{context} Parsing Error: {parse_error}")
 
         turn_responses.append({
             'turn': turn_num,
@@ -122,8 +116,6 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
     
     for turn in range(NUM_TURNS):
         turn_responses = run_debate_turn(turn, debater_assignments, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
-        if turn_responses is None:
-            return None
         debate_history.extend(turn_responses)
     
     return {
@@ -136,6 +128,8 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
         'question': q_data['question'],
         'options': q_data['options'],
         'correct_idx': q_data['correct_idx'],
+        'success': True,
+        'error_message': None,
         'debate_history': debate_history
     }
 
@@ -165,35 +159,45 @@ def main():
     start_time = time.time()
     print(f"Processing {len(questions_data)} questions...")
     completed = 0
+    failed = 0
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, debater_template, private_reasoning_prompt, debater_template, api_key, config, run_id, run_datetime): i
+            executor.submit(process_question, q_data, debater_template, private_reasoning_prompt, debater_template, api_key, config, run_id, run_datetime): q_data
             for i, q_data in enumerate(questions_data)
         }
         
         with open(results_path, 'w') as f:
             for future in as_completed(futures):
+                q_data = futures[future]
                 try:
                     result = future.result()
-                    if result is None:
-                        continue
-                    f.write(json.dumps(result) + '\n')
-                    f.flush()
                     completed += 1
-                    
-                    key_info_current = get_openrouter_key_info(api_key)
-                    current_usage = key_info_current.get('data', {}).get('usage', 0)
-                    cost_so_far = current_usage - start_usage
-                    print(f"Completed {completed}/{len(questions_data)} - Record ID: {result['record_id']} - Cost: ${cost_so_far:.6f}")
-
+                    log_progress("completed", completed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage)
                 except Exception as e:
-                    print(f"Error: {e}")
-                    continue
+                    failed += 1
+                    result = {
+                        'success': False,
+                        'error_message': str(e),
+                        'run_id': run_id,
+                        'record_id': None,
+                        'datetime': run_datetime,
+                        'config': config,
+                        'question_idx': q_data['original_idx'],
+                        'question': q_data['question'],
+                        'options': q_data['options'],
+                        'correct_idx': q_data['correct_idx']
+                    }
+                    log_progress("failed", failed, len(questions_data), run_id, None, api_key, start_usage, error=str(e))
+                
+                f.write(json.dumps(result) + '\n')
+                f.flush()
     
     duration = time.time() - start_time
     print(f"\nRun ID: {run_id}")
     print(f"{completed}/{len(questions_data)} questions completed in {duration:.1f}s")
+    if failed > 0:
+        print(f"Failed: {failed}/{len(questions_data)}")
     
     key_info_end = get_openrouter_key_info(api_key)
     end_usage = key_info_end.get('data', {}).get('usage', 0)

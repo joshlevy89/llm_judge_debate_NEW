@@ -9,7 +9,8 @@ DATASET_SPLIT = "test"
 # MODEL_NAME = "openai/gpt-4o-mini" 
 # MODEL_NAME = "x-ai/grok-4-fast" 
 # MODEL_NAME = "openai/gpt-3.5-turbo"
-MODEL_NAME = "qwen/qwen-2.5-7b-instruct" 
+# MODEL_NAME = "qwen/qwen-2.5-7b-instruct" 
+MODEL_NAME = "deepseek/deepseek-r1-distill-qwen-1.5b"
 
 
 TEMPERATURE = 0.0

@@ -16,7 +16,7 @@ from config_qa import (
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
     MAX_THREADS
 )
-from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer
+from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from dataset_utils import select_questions_and_options, format_options
 
 def generate_run_id():
@@ -64,8 +64,7 @@ def process_question(q_data, prompt_template, response_format_prompt, prompt_tem
         TEMPERATURE,
         run_id=run_id,
         record_id=record_id,
-        context="QA",
-        error_log_dir='results/qa/error_logs'
+        context="QA"
     )
     
     raw_model_response = response['content']
@@ -81,11 +80,13 @@ def process_question(q_data, prompt_template, response_format_prompt, prompt_tem
         'question': q_data['question'],
         'options': q_data['options'],
         'correct_idx': q_data['correct_idx'],
+        'prompt': prompt,
+        'success': True,
+        'error_message': None,
         'raw_model_response': raw_model_response,
         'internal_model_reasoning': response.get('reasoning'),
         'internal_model_reasoning_details': response.get('reasoning_details'),
         'parsed_model_response': parsed_model_response,
-        'prompt': prompt,
         'token_usage': token_usage
     }
 
@@ -118,32 +119,45 @@ def main():
     start_time = time.time()
     print(f"Processing {len(questions_data)} questions...")
     completed = 0
+    failed = 0
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, prompt_template, response_format_prompt, prompt_template, api_key, i+1, len(questions_data), config, run_id, run_datetime): i
+            executor.submit(process_question, q_data, prompt_template, response_format_prompt, prompt_template, api_key, i+1, len(questions_data), config, run_id, run_datetime): q_data
             for i, q_data in enumerate(questions_data)
         }
         
         with open(results_path, 'a') as f:
             for future in as_completed(futures):
+                q_data = futures[future]
                 try:
                     result = future.result()
-                    is_correct = result['parsed_model_response']['answer'] == result['correct_idx'] if result['parsed_model_response']['answer'] is not None else False
-                    f.write(json.dumps(result) + '\n')
-                    f.flush()
                     completed += 1
-                    
-                    key_info_current = get_openrouter_key_info(api_key)
-                    current_usage = key_info_current.get('data', {}).get('usage', 0)
-                    cost_so_far = current_usage - start_usage
-                    print(f"Completed {completed}/{len(questions_data)} - Run ID: {result['run_id']} - Record ID: {result['record_id']} - Correct: {is_correct} - Cost: ${cost_so_far:.6f}")
+                    is_correct = result['parsed_model_response']['answer'] == result['correct_idx'] if result['parsed_model_response']['answer'] is not None else False
+                    log_progress("completed", completed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
                 except Exception as e:
-                    print(f"Error: {e}")
-                    continue
+                    failed += 1
+                    result = {
+                        'success': False,
+                        'error_message': str(e),
+                        'run_id': run_id,
+                        'record_id': None,
+                        'datetime': run_datetime,
+                        'config': config,
+                        'question_idx': q_data['original_idx'],
+                        'question': q_data['question'],
+                        'options': q_data['options'],
+                        'correct_idx': q_data['correct_idx']
+                    }
+                    log_progress("failed", failed, len(questions_data), run_id, None, api_key, start_usage, error=str(e))
+                
+                f.write(json.dumps(result) + '\n')
+                f.flush()
     
     duration = time.time() - start_time    
     print(f"\n{completed}/{len(questions_data)} questions completed in {duration:.1f}s")
+    if failed > 0:
+        print(f"Failed: {failed}/{len(questions_data)}")
     print(f"Results: {results_path}")
     
     key_info_end = get_openrouter_key_info(api_key)

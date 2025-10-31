@@ -13,7 +13,7 @@ from config_verdict import (
     JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
     SUBSET_N, MAX_THREADS
 )
-from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer
+from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from debate_utils import format_debate_history
 
 def generate_run_id():
@@ -65,15 +65,10 @@ def run_judge(question, options, public_debate_history_text, judge_template, res
         max_tokens=MAX_OUTPUT_TOKENS,
         run_id=verdict_run_id,
         record_id=record_id,
-        context="Judge",
-        error_log_dir='results/verdicts/error_logs'
+        context="Judge"
     )
     
     response_text = response['content']
-    
-    if response_text.startswith('Error:'):
-        return None
-    
     parsed = parse_answer(response_text)
     
     return {
@@ -99,9 +94,6 @@ def process_debate_record(debate_record, judge_template, response_format_prompt,
         debate_record['record_id']
     )
     
-    if judge_verdict is None:
-        return None
-    
     return {
         'verdict_run_id': verdict_run_id,
         'debate_run_id': DEBATE_RUN_ID,
@@ -112,6 +104,8 @@ def process_debate_record(debate_record, judge_template, response_format_prompt,
         'question': debate_record['question'],
         'options': debate_record['options'],
         'correct_idx': debate_record['correct_idx'],
+        'success': True,
+        'error_message': None,
         'judge_verdict': judge_verdict
     }
 
@@ -151,35 +145,46 @@ def main():
     start_time = time.time()
     print(f"Processing {len(debate_records)} debates...")
     completed = 0
+    failed = 0
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_debate_record, debate_record, judge_template, response_format_prompt, judge_template, api_key, config, verdict_run_id, run_datetime): i
+            executor.submit(process_debate_record, debate_record, judge_template, response_format_prompt, judge_template, api_key, config, verdict_run_id, run_datetime): debate_record
             for i, debate_record in enumerate(debate_records)
         }
         
         with open(results_path, 'w') as f:
             for future in as_completed(futures):
+                debate_record = futures[future]
                 try:
                     result = future.result()
-                    if result is None:
-                        continue
-                    f.write(json.dumps(result) + '\n')
-                    f.flush()
                     completed += 1
-                    
-                    key_info_current = get_openrouter_key_info(api_key)
-                    current_usage = key_info_current.get('data', {}).get('usage', 0)
-                    cost_so_far = current_usage - start_usage
-                    print(f"Completed {completed}/{len(debate_records)} - Record ID: {result['record_id']} - Cost: ${cost_so_far:.6f}")
-
+                    is_correct = result['judge_verdict']['parsed']['answer'] == result['correct_idx'] if result['judge_verdict']['parsed']['answer'] is not None else False
+                    log_progress("completed", completed, len(debate_records), result['verdict_run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
                 except Exception as e:
-                    print(f"Error: {e}")
-                    continue
+                    failed += 1
+                    result = {
+                        'success': False,
+                        'error_message': str(e),
+                        'verdict_run_id': verdict_run_id,
+                        'record_id': debate_record['record_id'],
+                        'debate_run_id': DEBATE_RUN_ID,
+                        'datetime': run_datetime,
+                        'config': config,
+                        'question': debate_record['question'],
+                        'options': debate_record['options'],
+                        'correct_idx': debate_record['correct_idx']
+                    }
+                    log_progress("failed", failed, len(debate_records), verdict_run_id, debate_record['record_id'], api_key, start_usage, error=str(e))
+                
+                f.write(json.dumps(result) + '\n')
+                f.flush()
     
     duration = time.time() - start_time
     print(f"\nRun ID: {verdict_run_id}")
     print(f"{completed}/{len(debate_records)} verdicts completed in {duration:.1f}s")
+    if failed > 0:
+        print(f"Failed: {failed}/{len(debate_records)}")
     
     key_info_end = get_openrouter_key_info(api_key)
     end_usage = key_info_end.get('data', {}).get('usage', 0)

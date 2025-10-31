@@ -27,19 +27,6 @@ class RequestWithTimeout:
         except Exception as e:
             self.exception = e
 
-def log_llm_error(run_id, record_id, error_message, error_log_dir='results/debates/error_logs'):
-    error_log_path = Path(error_log_dir)
-    error_log_path.mkdir(parents=True, exist_ok=True)
-    error_file = error_log_path / f'{run_id}.txt'
-    
-    with open(error_file, 'a') as f:
-        f.write('=' * 80 + '\n')
-        f.write(f'Run ID: {run_id}\n')
-        f.write(f'Record ID: {record_id}\n')
-        f.write('=' * 80 + '\n')
-        f.write(f'{error_message}\n')
-        f.write('=' * 80 + '\n\n')
-
 def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_tokens=None, reasoning_effort=None, reasoning_max_tokens=None):
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
@@ -80,7 +67,7 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
     
     return req.result.json()
 
-def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, max_tokens=None, run_id=None, record_id=None, context=None, error_log_dir='results/debates/error_logs'):
+def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, max_tokens=None, run_id=None, record_id=None, context=None):
     for attempt in range(MAX_RETRIES + 1):
         try:
             response_json = _make_openrouter_request(prompt, model_name, api_key, temperature, max_tokens, reasoning_effort, reasoning_max_tokens)
@@ -93,28 +80,33 @@ def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effo
                     'reasoning_details': message.get('reasoning_details')
                 }, response_json.get('usage', {})
             
-            error_msg = json.dumps(response_json.get('error', response_json), indent=2)
-            if run_id and record_id:
-                full_error = f"{context + ' ' if context else ''}Error:\n{error_msg}"
-                log_llm_error(run_id, record_id, full_error, error_log_dir)
-            
             error_text = response_json.get('error', {}).get('message', 'Unknown error') if 'error' in response_json else 'No response from model'
-            return {'content': f"Error: {error_text}", 'reasoning': None, 'reasoning_details': None}, {}
+            raise Exception(f"API Error: {error_text}")
             
         except requests.Timeout:
             if attempt < MAX_RETRIES:
-                print(f"⚠️  Timeout (attempt {attempt + 1}/{MAX_RETRIES + 1}) - Run: {run_id} - {context or 'Request'}")
+                print(f"Timeout (attempt {attempt + 1}/{MAX_RETRIES + 1}) - Run: {run_id} - {context or 'Request'}")
                 time.sleep(RETRY_BACKOFF_FACTOR * (2 ** attempt))
             else:
-                if run_id and record_id:
-                    error_msg = f"{context + ' ' if context else ''}Timeout after {MAX_RETRIES + 1} attempts"
-                    log_llm_error(run_id, record_id, error_msg, error_log_dir)
-                return {'content': f"Error: Request timeout after {MAX_RETRIES + 1} attempts", 'reasoning': None, 'reasoning_details': None}, {}
+                raise Exception(f"Request timeout after {MAX_RETRIES + 1} attempts")
         except Exception as e:
-            if run_id and record_id:
-                error_msg = f"{context + ' ' if context else ''}Exception:\n{str(e)}"
-                log_llm_error(run_id, record_id, error_msg, error_log_dir)
-            return {'content': f"Error: {str(e)}", 'reasoning': None, 'reasoning_details': None}, {}
+            if "API Error:" in str(e) or "Request timeout" in str(e):
+                raise
+            raise Exception(str(e))
+
+def log_progress(status_type, count, total, run_id, record_id, api_key, start_usage, error=None, is_correct=None):
+    key_info = get_openrouter_key_info(api_key)
+    current_usage = key_info.get('data', {}).get('usage', 0)
+    cost = current_usage - start_usage
+    
+    if status_type == "completed":
+        extra = f"Correct: {is_correct}" if is_correct is not None else ""
+        print(f"Completed {count}/{total} - Run ID: {run_id} - Record ID: {record_id} - {extra} - Cost: ${cost:.6f}")
+    else:
+        error_msg = str(error)[:100] if error else "Unknown error"
+        print(f"Failed {count}/{total} - Run ID: {run_id} - Record ID: {record_id} - Error: {error_msg} - Cost: ${cost:.6f}")
+    
+    return cost
 
 def get_openrouter_key_info(api_key):
     if not api_key:
