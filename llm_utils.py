@@ -4,9 +4,17 @@ import time
 import requests
 from pathlib import Path
 from threading import Thread
-from config_general import REQUEST_TIMEOUT, MAX_RETRIES, RETRY_BACKOFF_FACTOR
+from requests.adapters import HTTPAdapter
+from config_general import REQUEST_TIMEOUT, MAX_RETRIES, RETRY_BACKOFF_FACTOR, HTTP_POOL_CONNECTIONS, HTTP_POOL_MAXSIZE
 
 _session = requests.Session()
+adapter = HTTPAdapter(
+    pool_connections=HTTP_POOL_CONNECTIONS,
+    pool_maxsize=HTTP_POOL_MAXSIZE,
+    max_retries=0
+)
+_session.mount('https://', adapter)
+_session.mount('http://', adapter)
 
 class RequestWithTimeout:
     def __init__(self):
