@@ -159,7 +159,7 @@ def main():
                 try:
                     result = future.result()
                     completed += 1
-                    is_correct = result['judge_verdict']['parsed']['answer'] == result['correct_idx'] if result['judge_verdict']['parsed']['answer'] is not None else False
+                    is_correct = result['judge_verdict']['parsed']['answer'] == result['correct_idx'] if result['judge_verdict']['parsed']['answer'] is not None else None
                     log_progress("completed", completed, len(debate_records), result['verdict_run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
                 except Exception as e:
                     failed += 1
