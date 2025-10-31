@@ -133,7 +133,7 @@ def main():
                 try:
                     result = future.result()
                     completed += 1
-                    is_correct = result['parsed_model_response']['answer'] == result['correct_idx'] if result['parsed_model_response']['answer'] is not None else False
+                    is_correct = result['parsed_model_response']['answer'] == result['correct_idx'] if result['parsed_model_response']['answer'] is not None else None
                     log_progress("completed", completed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
                 except Exception as e:
                     failed += 1
