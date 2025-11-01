@@ -5,7 +5,7 @@ import requests
 from pathlib import Path
 from threading import Thread
 from requests.adapters import HTTPAdapter
-from config_general import REQUEST_TIMEOUT, MAX_RETRIES, RETRY_BACKOFF_FACTOR, HTTP_POOL_CONNECTIONS, HTTP_POOL_MAXSIZE
+from config.config_general import REQUEST_TIMEOUT, MAX_RETRIES, RETRY_BACKOFF_FACTOR, HTTP_POOL_CONNECTIONS, HTTP_POOL_MAXSIZE
 
 _session = requests.Session()
 adapter = HTTPAdapter(

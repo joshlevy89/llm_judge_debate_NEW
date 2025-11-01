@@ -10,7 +10,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from dotenv import load_dotenv
-from config_debate import (
+from config.config_debate import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     DEBATER_MODEL, DEBATER_TEMPERATURE,
     DEBATER_REASONING_EFFORT, DEBATER_REASONING_MAX_TOKENS,
@@ -18,9 +18,9 @@ from config_debate import (
     PRIVATE_SCRATCHPAD, MAX_THREADS, MAX_OUTPUT_TOKENS,
     PUBLIC_ARGUMENT_WORD_LIMIT, PRIVATE_REASONING_WORD_LIMIT
 )
-from llm_utils import call_openrouter, get_openrouter_key_info, parse_debater_response, log_progress
-from dataset_utils import select_questions_and_options, format_options
-from debate_utils import format_debate_history
+from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_debater_response, log_progress
+from utils.dataset_utils import select_questions_and_options, format_options
+from utils.debate_utils import format_debate_history
 
 def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))

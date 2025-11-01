@@ -5,7 +5,7 @@ Optionally shows verdict from a separate verdict run.
 import argparse
 import json
 from pathlib import Path
-from debate_utils import format_debate_history
+from utils.debate_utils import format_debate_history
 
 def main():
     parser = argparse.ArgumentParser(description='View debate results')

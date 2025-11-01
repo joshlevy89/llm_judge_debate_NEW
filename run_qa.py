@@ -10,14 +10,14 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from dotenv import load_dotenv
-from config_qa import (
+from config.config_qa import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     MODEL_NAME, TEMPERATURE,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
     MAX_THREADS
 )
-from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
-from dataset_utils import select_questions_and_options, format_options
+from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
+from utils.dataset_utils import select_questions_and_options, format_options
 
 def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))

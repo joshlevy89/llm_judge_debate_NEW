@@ -8,13 +8,13 @@ from datetime import datetime
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
-from config_verdict import (
+from config.config_verdict import (
     DEBATE_RUN_ID, JUDGE_MODEL, JUDGE_TEMPERATURE,
     JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
     SUBSET_N, MAX_THREADS
 )
-from llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
-from debate_utils import format_debate_history
+from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
+from utils.debate_utils import format_debate_history
 
 def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
