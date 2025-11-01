@@ -131,7 +131,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
         'record_id': record_id,
         'datetime': run_datetime,
         'config': config,
-        'prompt_template': debater_template_str,
+        'prompt_template': {'debater_prompt_template': debater_template_str, 'private_reasoning_template': private_reasoning_prompt if PRIVATE_SCRATCHPAD else None},
         'question_idx': q_data['original_idx'],
         'question': q_data['question'],
         'options': q_data['options'],
