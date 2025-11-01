@@ -20,97 +20,82 @@ def shorten_name(name):
     parts = name.split('/')
     return parts[-1] if len(parts) > 1 else name
 
+def read_first_record(file_path):
+    with open(file_path) as f:
+        return json.loads(f.readline())
+
 def count_records(file_path):
     with open(file_path) as f:
         return sum(1 for line in f if line.strip())
 
-def get_debate_config(debate_run_id):
-    debate_file = Path(f"results/debates/{debate_run_id}.jsonl")
-    if not debate_file.exists():
-        return None
+def flatten_config(config, prefix=''):
+    row = {}
+    for key, value in config.items():
+        if key in ['debater_model', 'judge_model', 'dataset_name']:
+            value = shorten_name(value)
+        row[prefix + key] = value
     
-    with open(debate_file) as f:
-        first_line = f.readline()
-        record = json.loads(first_line)
-        return record['config']
-
-def get_verdict_configs():
-    verdict_dir = Path("results/verdicts")
-    configs = []
+    if prefix.startswith('d_') and not config.get('private_scratchpad', True):
+        row[prefix + 'private_reasoning_word_limit'] = None
     
-    for verdict_file in verdict_dir.glob("*.jsonl"):
-        verdict_run_id = verdict_file.stem
-        n_records = count_records(verdict_file)
-        
-        if n_records == 0:
-            continue
-        
-        with open(verdict_file) as f:
-            first_line = f.readline()
-            record = json.loads(first_line)
-            
-            verdict_config = record['config']
-            debate_run_id = verdict_config['debate_run_id']
-            debate_config = get_debate_config(debate_run_id)
-            
-            if debate_config is None:
-                continue
-            
-            row = {
-                'verdict_id': verdict_run_id,
-                'debate_id': debate_run_id,
-                'n_records': n_records,
-                'datetime': format_datetime(record.get('datetime', ''))
-            }
-            
-            for key, value in debate_config.items():
-                if key in ['debater_model', 'judge_model', 'dataset_name']:
-                    value = shorten_name(value)
-                row[f'd_{key}'] = value
-            
-            for key, value in verdict_config.items():
-                if key != 'debate_run_id':
-                    if key == 'judge_model':
-                        value = shorten_name(value)
-                    row[f'v_{key}'] = value
-            
-            configs.append(row)
-    
-    df = pd.DataFrame(configs)
-    if 'datetime' in df.columns:
-        if not df.empty:
-            df = df.sort_values('datetime')
-        df.drop(columns=['datetime'], inplace=True)
-    return df
+    return row
 
 def get_debate_configs():
     debate_dir = Path("results/debates")
-    configs = []
+    rows = []
     
-    for debate_file in debate_dir.glob("*.jsonl"):
-        debate_run_id = debate_file.stem
-        n_records = count_records(debate_file)
-        
+    for file_path in debate_dir.glob("*.jsonl"):
+        n_records = count_records(file_path)
         if n_records == 0:
             continue
         
-        with open(debate_file) as f:
-            first_line = f.readline()
-            record = json.loads(first_line)
-            config = record['config']
-            
-            row = {'debate_id': debate_run_id, 'n_records': n_records, 'datetime': format_datetime(record.get('datetime', ''))}
-            for key, value in config.items():
-                if key in ['debater_model', 'judge_model', 'dataset_name']:
-                    value = shorten_name(value)
-                row[key] = value
-            configs.append(row)
+        record = read_first_record(file_path)
+        row = {
+            'debate_id': file_path.stem,
+            'n_records': n_records,
+            'datetime': format_datetime(record.get('datetime', ''))
+        }
+        row.update(flatten_config(record['config']))
+        rows.append(row)
     
-    df = pd.DataFrame(configs)
-    if 'datetime' in df.columns:
-        if not df.empty:
-            df = df.sort_values('datetime')
-        df.drop(columns=['datetime'], inplace=True)
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.sort_values('datetime').drop(columns=['datetime'])
+    return df
+
+def get_verdict_configs():
+    verdict_dir = Path("results/verdicts")
+    rows = []
+    
+    for file_path in verdict_dir.glob("*.jsonl"):
+        n_records = count_records(file_path)
+        if n_records == 0:
+            continue
+        
+        record = read_first_record(file_path)
+        verdict_config = record['config']
+        debate_run_id = verdict_config['debate_run_id']
+        
+        debate_file = Path(f"results/debates/{debate_run_id}.jsonl")
+        if not debate_file.exists():
+            continue
+        
+        debate_record = read_first_record(debate_file)
+        debate_config = debate_record['config']
+        
+        row = {
+            'verdict_id': file_path.stem,
+            'debate_id': debate_run_id,
+            'n_records': n_records,
+            'datetime': format_datetime(record.get('datetime', ''))
+        }
+        row.update(flatten_config(debate_config, prefix='d_'))
+        row.update(flatten_config({k: v for k, v in verdict_config.items() if k != 'debate_run_id'}, prefix='v_'))
+        rows.append(row)
+    
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.sort_values('datetime').drop(columns=['datetime'])
     return df
 
 def main():
