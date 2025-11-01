@@ -37,7 +37,11 @@ def load_debate(debate_run_id):
     config_df.columns = ['config_debate_' + col for col in config_df.columns]
     df = pd.concat([df, config_df], axis=1)
     df['options_str'] = df['options'].apply(str)
-    df.loc[df['config_debate_private_scratchpad'] == False, 'config_debate_private_reasoning_word_limit'] = None
+    
+    if 'config_debate_private_reasoning_word_limit' in df.columns:
+        df['config_debate_private_reasoning_word_limit'] = df['config_debate_private_reasoning_word_limit'].astype('object')
+        df.loc[df['config_debate_private_scratchpad'] == False, 'config_debate_private_reasoning_word_limit'] = None
+    
     return df
 
 
