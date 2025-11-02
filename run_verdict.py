@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
+import config.config_verdict as config_verdict
 from config.config_verdict import (
     DEBATE_RUN_ID, JUDGE_MODEL, JUDGE_TEMPERATURE,
     JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
@@ -25,14 +26,12 @@ def setup_output_path(verdict_run_id):
     return output_dir / f'{verdict_run_id}.jsonl'
 
 def get_config():
-    return {
-        'debate_run_id': DEBATE_RUN_ID,
-        'judge_model': JUDGE_MODEL,
-        'judge_temperature': JUDGE_TEMPERATURE,
-        'max_output_tokens': MAX_OUTPUT_TOKENS,
-        'judge_reasoning_effort': JUDGE_REASONING_EFFORT,
-        'judge_reasoning_max_tokens': JUDGE_REASONING_MAX_TOKENS
-    }
+    config = {}
+    for key in dir(config_verdict):
+        if key.isupper() and not key.startswith('_'):
+            value = getattr(config_verdict, key)
+            config[key.lower()] = value
+    return config
 
 def load_prompts():
     with open('prompts.yaml', 'r') as f:

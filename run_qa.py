@@ -10,6 +10,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from dotenv import load_dotenv
+import config.config_qa as config_qa
 from config.config_qa import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     MODEL_NAME, TEMPERATURE,
@@ -28,17 +29,12 @@ def setup_output_path():
     return output_dir / 'qa' / 'qa_results.jsonl'
 
 def get_config():
-    return {
-        'dataset_name': DATASET_NAME,
-        'dataset_subset': DATASET_SUBSET,
-        'dataset_split': DATASET_SPLIT,
-        'model_name': MODEL_NAME,
-        'temperature': TEMPERATURE,
-        'num_questions': NUM_QUESTIONS,
-        'random_seed': RANDOM_SEED,
-        'num_choices': NUM_CHOICES,
-        'max_threads': MAX_THREADS
-    }
+    config = {}
+    for key in dir(config_qa):
+        if key.isupper() and not key.startswith('_'):
+            value = getattr(config_qa, key)
+            config[key.lower()] = value
+    return config
 
 def load_prompt_template():
     with open('prompts.yaml', 'r') as f:

@@ -10,6 +10,7 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from dotenv import load_dotenv
+import config.config_debate as config_debate
 from config.config_debate import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     DEBATER_MODEL, DEBATER_TEMPERATURE,
@@ -31,24 +32,12 @@ def setup_output_path(run_id):
     return output_dir / f'{run_id}.jsonl'
 
 def get_config():
-    return {
-        'dataset_name': DATASET_NAME,
-        'dataset_subset': DATASET_SUBSET,
-        'dataset_split': DATASET_SPLIT,
-        'debater_model': DEBATER_MODEL,
-        'debater_temperature': DEBATER_TEMPERATURE,
-        'max_output_tokens': MAX_OUTPUT_TOKENS,
-        'debater_reasoning_effort': DEBATER_REASONING_EFFORT,
-        'debater_reasoning_max_tokens': DEBATER_REASONING_MAX_TOKENS,
-        'num_questions': NUM_QUESTIONS,
-        'random_seed': RANDOM_SEED,
-        'num_choices': NUM_CHOICES,
-        'num_turns': NUM_TURNS,
-        'private_scratchpad': PRIVATE_SCRATCHPAD,
-        'public_argument_word_limit': PUBLIC_ARGUMENT_WORD_LIMIT,
-        'private_reasoning_word_limit': PRIVATE_REASONING_WORD_LIMIT,
-        'max_threads': MAX_THREADS
-    }
+    config = {}
+    for key in dir(config_debate):
+        if key.isupper() and not key.startswith('_'):
+            value = getattr(config_debate, key)
+            config[key.lower()] = value
+    return config
 
 def load_prompts():
     with open('prompts.yaml', 'r') as f:

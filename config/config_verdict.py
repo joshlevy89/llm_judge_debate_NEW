@@ -12,4 +12,4 @@ MAX_OUTPUT_TOKENS = 5000
 SUBSET_N = None # Only run the verdict for the first N debates
 SPECIFIC_RECORD_IDS = None#['wi4kbip'] # List of specific record_ids to run the verdict for
 
-MAX_THREADS = 500
+MAX_THREADS = 20

@@ -18,7 +18,7 @@ NUM_QUESTIONS = 198
 RANDOM_SEED = 42 
 NUM_CHOICES = 2  
 
-MAX_THREADS = 500
+MAX_THREADS = 20
 
 SPECIFIC_QUESTION_IDXS = None # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]
 
