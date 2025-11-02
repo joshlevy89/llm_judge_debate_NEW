@@ -28,6 +28,19 @@ def count_records(file_path):
     with open(file_path) as f:
         return sum(1 for line in f if line.strip())
 
+def count_success_failure(file_path):
+    success = 0
+    failure = 0
+    with open(file_path) as f:
+        for line in f:
+            if line.strip():
+                record = json.loads(line)
+                if record.get('success', True):
+                    success += 1
+                else:
+                    failure += 1
+    return success, failure
+
 def flatten_config(config, prefix=''):
     row = {}
     for key, value in config.items():
@@ -49,10 +62,13 @@ def get_debate_configs():
         if n_records == 0:
             continue
         
+        n_success, n_failure = count_success_failure(file_path)
         record = read_first_record(file_path)
         row = {
             'debate_id': file_path.stem,
             'n_records': n_records,
+            'n_success': n_success,
+            'n_failure': n_failure,
             'datetime': format_datetime(record.get('datetime', ''))
         }
         row.update(flatten_config(record['config']))
@@ -72,6 +88,7 @@ def get_verdict_configs():
         if n_records == 0:
             continue
         
+        n_success, n_failure = count_success_failure(file_path)
         record = read_first_record(file_path)
         verdict_config = record['config']
         debate_run_id = verdict_config['debate_run_id']
@@ -87,6 +104,8 @@ def get_verdict_configs():
             'verdict_id': file_path.stem,
             'debate_id': debate_run_id,
             'n_records': n_records,
+            'n_success': n_success,
+            'n_failure': n_failure,
             'datetime': format_datetime(record.get('datetime', ''))
         }
         row.update(flatten_config(debate_config, prefix='d_'))
@@ -98,15 +117,65 @@ def get_verdict_configs():
         df = df.sort_values('datetime').drop(columns=['datetime'])
     return df
 
+def get_qa_configs():
+    qa_file = Path("results/qa/qa_results.jsonl")
+    if not qa_file.exists():
+        return pd.DataFrame()
+    
+    rows = []
+    seen_runs = {}
+    
+    with open(qa_file) as f:
+        for line in f:
+            if not line.strip():
+                continue
+            record = json.loads(line)
+            run_id = record.get('run_id')
+            if not run_id or 'config' not in record:
+                continue
+            
+            if run_id not in seen_runs:
+                seen_runs[run_id] = {
+                    'config': record['config'],
+                    'datetime': record.get('datetime', ''),
+                    'count': 0,
+                    'success': 0,
+                    'failure': 0
+                }
+            seen_runs[run_id]['count'] += 1
+            if record.get('success', True):
+                seen_runs[run_id]['success'] += 1
+            else:
+                seen_runs[run_id]['failure'] += 1
+    
+    for run_id, data in seen_runs.items():
+        row = {
+            'run_id': run_id,
+            'n_records': data['count'],
+            'n_success': data['success'],
+            'n_failure': data['failure'],
+            'datetime': format_datetime(data['datetime'])
+        }
+        row.update(flatten_config(data['config']))
+        rows.append(row)
+    
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.sort_values('datetime').drop(columns=['datetime'])
+    return df
+
 def main():
     parser = argparse.ArgumentParser(description='Display experimental parameters')
-    parser.add_argument('type', choices=['verdicts', 'debates'], 
+    parser.add_argument('type', choices=['verdicts', 'debates', 'qa'], 
                        help='Type of experiments to display')
     args = parser.parse_args()
     
     if args.type == 'verdicts':
         df = get_verdict_configs()
         index_col = 'verdict_id'
+    elif args.type == 'qa':
+        df = get_qa_configs()
+        index_col = 'run_id'
     else:
         df = get_debate_configs()
         index_col = 'debate_id'

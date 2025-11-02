@@ -21,6 +21,18 @@ def main():
         if args.record_id and data.get('record_id') != args.record_id:
             continue
         
+        if not data.get('success', True):
+            print(f"{'='*80}")
+            print(f"ERROR: QA failed")
+            print(f"{'='*80}")
+            print(f"Run ID: {data.get('run_id')}")
+            print(f"Record ID: {data.get('record_id')}")
+            print(f"Question Idx: {data.get('question_idx')}")
+            print(f"Error message: {data.get('error_message', 'Unknown error')}")
+            if args.record_id:
+                break
+            continue
+        
         print(f"{'='*80}")
         print(f"Run: {data['run_id']} | Record: {data['record_id']} | Question Idx: {data['question_idx']}")
         print(f"{'='*80}\nQuestion\n{'='*80}")

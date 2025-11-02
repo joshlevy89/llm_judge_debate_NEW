@@ -46,12 +46,24 @@ def main():
         print(f"Record {args.record_id} not found in verdict run {args.verdict_run_id}")
         return
     
+    if not verdict_data.get('success', True):
+        print(f"{'='*80}")
+        print(f"ERROR: Verdict failed")
+        print(f"{'='*80}")
+        print(f"Verdict Run ID: {args.verdict_run_id}")
+        print(f"Record ID: {args.record_id}")
+        print(f"Error message: {verdict_data.get('error_message', 'Unknown error')}")
+        return
+    
     debate_data = load_debate_data(verdict_data['debate_run_id'], args.record_id)
     if not debate_data:
         print(f"Record {args.record_id} not found in debate run {verdict_data['debate_run_id']}")
         return
     
-    display_debate(debate_data, hide_private=args.hide_private)
+    success = display_debate(debate_data, hide_private=args.hide_private)
+    if not success:
+        return
+    
     print()
     display_verdict(verdict_data, debate_data)
 

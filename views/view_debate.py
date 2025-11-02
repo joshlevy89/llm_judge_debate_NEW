@@ -11,6 +11,15 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from utils.debate_utils import format_debate_history
 
 def display_debate(debate_data, hide_private=False):
+    if not debate_data.get('success', True):
+        print(f"{'='*80}")
+        print(f"ERROR: Debate failed")
+        print(f"{'='*80}")
+        print(f"Run ID: {debate_data.get('run_id')}")
+        print(f"Record ID: {debate_data.get('record_id')}")
+        print(f"Error message: {debate_data.get('error_message', 'Unknown error')}")
+        return False
+    
     if hide_private:
         show_private = False
     else:
@@ -24,6 +33,7 @@ def display_debate(debate_data, hide_private=False):
     print(f"Options: {debate_data['options']}")
     print(f"{'='*80}\nDebate\n{'='*80}")
     print(f"{debate_text}")
+    return True
 
 def load_debate_data(run_id, record_id):
     debate_path = Path('results') / 'debates' / f'{run_id}.jsonl'
