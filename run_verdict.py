@@ -12,14 +12,12 @@ import config.config_verdict as config_verdict
 from config.config_verdict import (
     DEBATE_RUN_ID, JUDGE_MODEL, JUDGE_TEMPERATURE,
     JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
-    SUBSET_N, SPECIFIC_RECORD_IDS, MAX_THREADS
+    SKIP_QA, SUBSET_N, SPECIFIC_RECORD_IDS, MAX_THREADS
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
-from utils.shared_utils import extract_config
-
-def generate_run_id():
-    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
+from utils.shared_utils import extract_config, generate_run_id
+from utils.qa_utils import format_qa_prompt, check_qa_exists, run_qa_for_questions
 
 def setup_output_path(verdict_run_id):
     output_dir = Path('results') / 'verdicts'
@@ -71,6 +69,51 @@ def run_judge(question, options, public_debate_history_text, judge_template, res
         'prompt': prompt,
         'token_usage': token_usage
     }
+
+def check_and_run_missing_qa(debate_records, api_key):
+    if SKIP_QA:
+        return
+    
+    qa_results_path = Path('results') / 'qa' / 'qa_results.jsonl'
+    debate_config = debate_records[0]['config']
+    debater_model = debate_config['debater_model']
+    debater_temperature = debate_config['debater_temperature']
+    
+    dataset_config = {
+        'dataset_name': debate_config['dataset_name'],
+        'dataset_subset': debate_config['dataset_subset'],
+        'dataset_split': debate_config['dataset_split']
+    }
+    num_choices = len(debate_records[0]['options'])
+    
+    for model_name, temperature in [(JUDGE_MODEL, JUDGE_TEMPERATURE), (debater_model, debater_temperature)]:
+        missing_question_idxs = []
+        
+        for record in debate_records:
+            question_idx = record['question_idx']
+            num_choices = len(record['options'])
+            prompt = format_qa_prompt(record['question'], record['options'], num_choices)
+            
+            if not check_qa_exists(question_idx, model_name, prompt, qa_results_path):
+                if question_idx not in missing_question_idxs:
+                    missing_question_idxs.append(question_idx)
+        
+        if missing_question_idxs:
+            print(f"\nFound {len(missing_question_idxs)} questions without QA results for {model_name}")
+            print(f"Running QA for question indices: {missing_question_idxs}")
+            
+            qa_result = run_qa_for_questions(
+                question_idxs=missing_question_idxs,
+                model_name=model_name,
+                temperature=temperature,
+                dataset_config=dataset_config,
+                num_choices=num_choices,
+                api_key=api_key,
+                max_threads=MAX_THREADS,
+                qa_results_path=qa_results_path
+            )
+            
+            print(f"QA completed: {qa_result['completed']} success, {qa_result['failed']} failed, cost ${qa_result['cost']:.6f}\n")
 
 def process_debate_record(debate_record, judge_template, response_format_prompt, judge_template_str, api_key, config, verdict_run_id, run_datetime):
     public_debate_history_text = format_debate_history(debate_record['debate_history'], show_private=False)
@@ -131,6 +174,8 @@ def main():
         debate_records = [r for r in debate_records if r['record_id'] in record_id_set]
     elif SUBSET_N is not None:
         debate_records = debate_records[:SUBSET_N]
+    
+    check_and_run_missing_qa(debate_records, api_key)
     
     judge_template, response_format_prompt = load_prompts()
     

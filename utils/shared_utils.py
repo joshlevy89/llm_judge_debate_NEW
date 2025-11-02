@@ -1,3 +1,9 @@
+import random
+import string
+
+def generate_run_id():
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
+
 def extract_config(config_module):
     """
     Extract all UPPERCASE config variables from a module and return as a dict.

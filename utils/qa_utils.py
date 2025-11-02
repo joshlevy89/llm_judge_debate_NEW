@@ -1,0 +1,154 @@
+import json
+import yaml
+import random
+import string
+import time
+from pathlib import Path
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datasets import load_dataset
+from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
+from utils.dataset_utils import select_questions_and_options, format_options
+
+def load_qa_prompts():
+    with open('prompts.yaml', 'r') as f:
+        prompts = yaml.safe_load(f)
+    return prompts['qa_prompt_template'], prompts['response_format_prompt']
+
+def format_qa_prompt(question, options, num_choices):
+    prompt_template, response_format_prompt = load_qa_prompts()
+    options_text = format_options(options)
+    number_choices = ', '.join(str(i) for i in range(num_choices))
+    
+    return prompt_template.format(
+        question=question,
+        options_text=options_text,
+        letter_choices=number_choices,
+        response_format_prompt=response_format_prompt
+    )
+
+def check_qa_exists(question_idx, model_name, prompt, qa_results_path):
+    if not qa_results_path.exists():
+        return False
+    
+    with open(qa_results_path, 'r') as f:
+        for line in f:
+            record = json.loads(line)
+            if (record.get('success') is not False and
+                record.get('question_idx') == question_idx and
+                record.get('config', {}).get('model_name') == model_name and
+                record.get('prompt') == prompt):
+                return True
+    return False
+
+def process_qa_question(q_data, prompt_template_str, api_key, config, run_id, run_datetime, model_name, temperature, num_choices):
+    from utils.shared_utils import generate_run_id
+    
+    record_id = generate_run_id()
+    prompt = format_qa_prompt(q_data['question'], q_data['options'], num_choices)
+    
+    response, token_usage = call_openrouter(
+        prompt, 
+        model_name, 
+        api_key, 
+        temperature,
+        run_id=run_id,
+        record_id=record_id,
+        context="QA"
+    )
+    
+    raw_model_response = response['content']
+    parsed_model_response = parse_answer(raw_model_response)
+    
+    return {
+        'run_id': run_id,
+        'record_id': record_id,
+        'datetime': run_datetime,
+        'config': config,
+        'prompt_template': prompt_template_str,
+        'question_idx': q_data['original_idx'],
+        'question': q_data['question'],
+        'options': q_data['options'],
+        'correct_idx': q_data['correct_idx'],
+        'prompt': prompt,
+        'success': True,
+        'error_message': None,
+        'raw_model_response': raw_model_response,
+        'internal_model_reasoning': response.get('reasoning'),
+        'internal_model_reasoning_details': response.get('reasoning_details'),
+        'parsed_model_response': parsed_model_response,
+        'token_usage': token_usage
+    }
+
+def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config, num_choices, api_key, max_threads, run_id=None, qa_results_path=None):
+    if run_id is None:
+        run_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
+    
+    if qa_results_path is None:
+        qa_results_path = Path('results') / 'qa' / 'qa_results.jsonl'
+    
+    qa_results_path.parent.mkdir(parents=True, exist_ok=True)
+    run_datetime = datetime.now().isoformat()
+    
+    dataset = load_dataset(dataset_config['dataset_name'], dataset_config['dataset_subset'])[dataset_config['dataset_split']]
+    questions_data = select_questions_and_options(
+        dataset_config['dataset_name'], 
+        dataset, 
+        len(question_idxs), 
+        num_choices, 
+        None,
+        question_idxs
+    )
+    
+    prompt_template, _ = load_qa_prompts()
+    config = {**dataset_config, 'model_name': model_name, 'temperature': temperature, 'num_choices': num_choices}
+    
+    key_info_start = get_openrouter_key_info(api_key)
+    start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
+    
+    completed = 0
+    failed = 0
+    
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
+        futures = {
+            executor.submit(process_qa_question, q_data, prompt_template, api_key, config, run_id, run_datetime, model_name, temperature, num_choices): q_data
+            for q_data in questions_data
+        }
+        
+        with open(qa_results_path, 'a') as f:
+            for future in as_completed(futures):
+                q_data = futures[future]
+                try:
+                    result = future.result()
+                    completed += 1
+                    is_correct = result['parsed_model_response']['answer'] == result['correct_idx'] if result['parsed_model_response']['answer'] is not None else None
+                    log_progress("completed", completed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
+                except Exception as e:
+                    failed += 1
+                    result = {
+                        'success': False,
+                        'error_message': str(e),
+                        'run_id': run_id,
+                        'record_id': None,
+                        'datetime': run_datetime,
+                        'config': config,
+                        'question_idx': q_data['original_idx'],
+                        'question': q_data['question'],
+                        'options': q_data['options'],
+                        'correct_idx': q_data['correct_idx']
+                    }
+                    log_progress("failed", failed, len(questions_data), run_id, None, api_key, start_usage, error=str(e))
+                
+                f.write(json.dumps(result) + '\n')
+                f.flush()
+    
+    key_info_end = get_openrouter_key_info(api_key)
+    end_usage = key_info_end.get('data', {}).get('usage', 0)
+    
+    return {
+        'run_id': run_id,
+        'completed': completed,
+        'failed': failed,
+        'cost': end_usage - start_usage
+    }
+

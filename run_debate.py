@@ -22,10 +22,7 @@ from config.config_debate import (
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_debater_response, log_progress
 from utils.dataset_utils import select_questions_and_options, format_options
 from utils.debate_utils import format_debate_history
-from utils.shared_utils import extract_config
-
-def generate_run_id():
-    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
+from utils.shared_utils import extract_config, generate_run_id
 
 def setup_output_path(run_id):
     output_dir = Path('results') / 'debates'

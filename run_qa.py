@@ -1,14 +1,6 @@
 import os
-import re
-import json
-import yaml
-import random
-import string
 import time
-from datetime import datetime
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datasets import load_dataset
 from dotenv import load_dotenv
 import config.config_qa as config_qa
 from config.config_qa import (
@@ -17,67 +9,10 @@ from config.config_qa import (
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
     SPECIFIC_QUESTION_IDXS, MAX_THREADS
 )
-from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
-from utils.dataset_utils import select_questions_and_options, format_options
+from datasets import load_dataset
+from utils.dataset_utils import select_questions_and_options
 from utils.shared_utils import extract_config
-
-def generate_run_id():
-    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
-
-def setup_output_path():
-    output_dir = Path('results')
-    output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir / 'qa' / 'qa_results.jsonl'
-
-def load_prompt_template():
-    with open('prompts.yaml', 'r') as f:
-        prompts = yaml.safe_load(f)
-    return prompts['qa_prompt_template'], prompts['response_format_prompt']
-
-def process_question(q_data, prompt_template, response_format_prompt, prompt_template_str, api_key, question_num, total_questions, config, run_id, run_datetime):
-    record_id = generate_run_id()
-    options_text = format_options(q_data['options'])
-    number_choices = ', '.join(str(i) for i in range(NUM_CHOICES))
-    
-    prompt = prompt_template.format(
-        question=q_data['question'],
-        options_text=options_text,
-        letter_choices=number_choices,
-        response_format_prompt=response_format_prompt
-    )
-    
-    response, token_usage = call_openrouter(
-        prompt, 
-        MODEL_NAME, 
-        api_key, 
-        TEMPERATURE,
-        run_id=run_id,
-        record_id=record_id,
-        context="QA"
-    )
-    
-    raw_model_response = response['content']
-    parsed_model_response = parse_answer(raw_model_response)
-    
-    return {
-        'run_id': run_id,
-        'record_id': record_id,
-        'datetime': run_datetime,
-        'config': config,
-        'prompt_template': prompt_template_str,
-        'question_idx': q_data['original_idx'],
-        'question': q_data['question'],
-        'options': q_data['options'],
-        'correct_idx': q_data['correct_idx'],
-        'prompt': prompt,
-        'success': True,
-        'error_message': None,
-        'raw_model_response': raw_model_response,
-        'internal_model_reasoning': response.get('reasoning'),
-        'internal_model_reasoning_details': response.get('reasoning_details'),
-        'parsed_model_response': parsed_model_response,
-        'token_usage': token_usage
-    }
+from utils.qa_utils import run_qa_for_questions
 
 def main():
     load_dotenv()    
@@ -85,81 +20,43 @@ def main():
     if not api_key:
         raise ValueError("Please set OPENROUTER_API_KEY environment variable")
     
-    run_id = generate_run_id()
-    run_datetime = datetime.now().isoformat()
-    results_path = setup_output_path()
-    config = extract_config(config_qa)
+    results_path = Path('results') / 'qa' / 'qa_results.jsonl'
+    dataset_config = extract_config(config_qa)
     
-    print(f"Run ID: {run_id}")
-    print(f"Datetime: {run_datetime}")
     print(f"Results will be appended to: {results_path}")
-    
     print(f"Loading dataset: {DATASET_NAME}/{DATASET_SUBSET}")
+    
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     
     if SPECIFIC_QUESTION_IDXS is not None:
         print(f"Using specific question indices: {SPECIFIC_QUESTION_IDXS}")
-        questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED, SPECIFIC_QUESTION_IDXS)
+        question_idxs = SPECIFIC_QUESTION_IDXS
     else:
         print(f"Selecting {NUM_QUESTIONS} questions with seed {RANDOM_SEED}")
-        questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
+        import random
+        rng = random.Random(RANDOM_SEED)
+        question_idxs = rng.sample(range(len(dataset)), min(NUM_QUESTIONS, len(dataset)))
     
-    prompt_template, response_format_prompt = load_prompt_template()
-
-    key_info_start = get_openrouter_key_info(api_key)
-    start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
-
     start_time = time.time()
-    print(f"Processing {len(questions_data)} questions...")
-    completed = 0
-    failed = 0
+    print(f"Processing {len(question_idxs)} questions...")
     
-    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-        futures = {
-            executor.submit(process_question, q_data, prompt_template, response_format_prompt, prompt_template, api_key, i+1, len(questions_data), config, run_id, run_datetime): q_data
-            for i, q_data in enumerate(questions_data)
-        }
-        
-        with open(results_path, 'a') as f:
-            for future in as_completed(futures):
-                q_data = futures[future]
-                try:
-                    result = future.result()
-                    completed += 1
-                    is_correct = result['parsed_model_response']['answer'] == result['correct_idx'] if result['parsed_model_response']['answer'] is not None else None
-                    log_progress("completed", completed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
-                except Exception as e:
-                    failed += 1
-                    result = {
-                        'success': False,
-                        'error_message': str(e),
-                        'run_id': run_id,
-                        'record_id': None,
-                        'datetime': run_datetime,
-                        'config': config,
-                        'question_idx': q_data['original_idx'],
-                        'question': q_data['question'],
-                        'options': q_data['options'],
-                        'correct_idx': q_data['correct_idx']
-                    }
-                    log_progress("failed", failed, len(questions_data), run_id, None, api_key, start_usage, error=str(e))
-                
-                f.write(json.dumps(result) + '\n')
-                f.flush()
+    result = run_qa_for_questions(
+        question_idxs=question_idxs,
+        model_name=MODEL_NAME,
+        temperature=TEMPERATURE,
+        dataset_config=dataset_config,
+        num_choices=NUM_CHOICES,
+        api_key=api_key,
+        max_threads=MAX_THREADS,
+        qa_results_path=results_path
+    )
     
     duration = time.time() - start_time
     
-    with open(results_path, 'r') as f:
-        results = [json.loads(line) for line in f]
-    null_count = sum(1 for r in results if r.get('success') and not r.get('parsed_model_response', {}).get('is_valid'))
-    
-    print(f"\nRun ID: {run_id}")
+    print(f"\nRun ID: {result['run_id']}")
     print(f"Duration: {duration:.1f}s")
-    print(f"Results: total {len(questions_data)}, success {completed}, error {failed}, null {null_count}")
-    
-    key_info_end = get_openrouter_key_info(api_key)
-    end_usage = key_info_end.get('data', {}).get('usage', 0)
-    print(f"Cost: ${end_usage - start_usage:.6f} (Total: ${end_usage:.2f})")
+    print(f"Results: total {len(question_idxs)}, success {result['completed']}, error {result['failed']}")
+    print(f"Cost: ${result['cost']:.6f}")
 
 if __name__ == "__main__":
     main()

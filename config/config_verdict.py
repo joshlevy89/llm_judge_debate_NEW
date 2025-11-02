@@ -9,6 +9,8 @@ JUDGE_REASONING_EFFORT = None
 JUDGE_REASONING_MAX_TOKENS = None
 MAX_OUTPUT_TOKENS = 5000
 
+SKIP_QA = False
+
 SUBSET_N = None # Only run the verdict for the first N debates
 SPECIFIC_RECORD_IDS = None#['wi4kbip'] # List of specific record_ids to run the verdict for
 
