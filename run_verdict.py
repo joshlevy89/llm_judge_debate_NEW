@@ -16,6 +16,7 @@ from config.config_verdict import (
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
+from utils.shared_utils import extract_config
 
 def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
@@ -24,14 +25,6 @@ def setup_output_path(verdict_run_id):
     output_dir = Path('results') / 'verdicts'
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir / f'{verdict_run_id}.jsonl'
-
-def get_config():
-    config = {}
-    for key in dir(config_verdict):
-        if key.isupper() and not key.startswith('_'):
-            value = getattr(config_verdict, key)
-            config[key.lower()] = value
-    return config
 
 def load_prompts():
     with open('prompts.yaml', 'r') as f:
@@ -117,7 +110,7 @@ def main():
     verdict_run_id = generate_run_id()
     run_datetime = datetime.now().isoformat()
     results_path = setup_output_path(verdict_run_id)
-    config = get_config()
+    config = extract_config(config_verdict)
     
     print(f"Verdict Run ID: {verdict_run_id}")
     print(f"Debate Run ID: {DEBATE_RUN_ID}")

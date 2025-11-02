@@ -19,6 +19,7 @@ from config.config_qa import (
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.dataset_utils import select_questions_and_options, format_options
+from utils.shared_utils import extract_config
 
 def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
@@ -27,14 +28,6 @@ def setup_output_path():
     output_dir = Path('results')
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir / 'qa' / 'qa_results.jsonl'
-
-def get_config():
-    config = {}
-    for key in dir(config_qa):
-        if key.isupper() and not key.startswith('_'):
-            value = getattr(config_qa, key)
-            config[key.lower()] = value
-    return config
 
 def load_prompt_template():
     with open('prompts.yaml', 'r') as f:
@@ -95,7 +88,7 @@ def main():
     run_id = generate_run_id()
     run_datetime = datetime.now().isoformat()
     results_path = setup_output_path()
-    config = get_config()
+    config = extract_config(config_qa)
     
     print(f"Run ID: {run_id}")
     print(f"Datetime: {run_datetime}")
