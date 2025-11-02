@@ -37,6 +37,7 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
         "model": model_name,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": temperature,
+        "seed": 42,
     }
     
     if max_tokens:

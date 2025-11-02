@@ -22,7 +22,7 @@ def main():
             continue
         
         print(f"{'='*80}")
-        print(f"Run: {data['run_id']} | Record: {data['record_id']}")
+        print(f"Run: {data['run_id']} | Record: {data['record_id']} | Question Idx: {data['question_idx']}")
         print(f"{'='*80}\nQuestion\n{'='*80}")
         print(f"{data['question']}\n")
         print(f"Options: {data['options']}")

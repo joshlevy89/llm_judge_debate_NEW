@@ -1,4 +1,4 @@
-DEBATE_RUN_ID = "nm6vgqk"
+DEBATE_RUN_ID = "og10l7q"
 
 JUDGE_MODEL = "openai/gpt-4o-mini"
 # JUDGE_MODEL = "openai/gpt-3.5-turbo"
@@ -10,5 +10,6 @@ JUDGE_REASONING_MAX_TOKENS = None
 MAX_OUTPUT_TOKENS = 5000
 
 SUBSET_N = None # Only run the verdict for the first N debates
+SPECIFIC_RECORD_IDS = ['6js3etf'] # List of specific record_ids to run the verdict for
 
 MAX_THREADS = 500

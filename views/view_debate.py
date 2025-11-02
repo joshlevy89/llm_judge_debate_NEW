@@ -18,7 +18,7 @@ def display_debate(debate_data, hide_private=False):
     debate_text = format_debate_history(debate_data['debate_history'], show_private=show_private)
     
     print(f"{'='*80}")
-    print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']}")
+    print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']} | Question Idx: {debate_data['question_idx']}")
     print(f"{'='*80}\nQuestion\n{'='*80}")
     print(f"{debate_data['question']}\n")
     print(f"Options: {debate_data['options']}")

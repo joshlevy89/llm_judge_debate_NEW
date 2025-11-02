@@ -14,7 +14,7 @@ from config.config_qa import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     MODEL_NAME, TEMPERATURE,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
-    MAX_THREADS
+    SPECIFIC_QUESTION_IDXS, MAX_THREADS
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.dataset_utils import select_questions_and_options, format_options
@@ -108,8 +108,12 @@ def main():
     print(f"Loading dataset: {DATASET_NAME}/{DATASET_SUBSET}")
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     
-    print(f"Selecting {NUM_QUESTIONS} questions with seed {RANDOM_SEED}")
-    questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
+    if SPECIFIC_QUESTION_IDXS is not None:
+        print(f"Using specific question indices: {SPECIFIC_QUESTION_IDXS}")
+        questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED, SPECIFIC_QUESTION_IDXS)
+    else:
+        print(f"Selecting {NUM_QUESTIONS} questions with seed {RANDOM_SEED}")
+        questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
     
     prompt_template, response_format_prompt = load_prompt_template()
 

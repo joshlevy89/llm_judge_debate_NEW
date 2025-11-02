@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from config.config_verdict import (
     DEBATE_RUN_ID, JUDGE_MODEL, JUDGE_TEMPERATURE,
     JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
-    SUBSET_N, MAX_THREADS
+    SUBSET_N, SPECIFIC_RECORD_IDS, MAX_THREADS
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
@@ -134,7 +134,10 @@ def main():
         for line in f:
             debate_records.append(json.loads(line))
     
-    if SUBSET_N is not None:
+    if SPECIFIC_RECORD_IDS is not None:
+        record_id_set = set(SPECIFIC_RECORD_IDS)
+        debate_records = [r for r in debate_records if r['record_id'] in record_id_set]
+    elif SUBSET_N is not None:
         debate_records = debate_records[:SUBSET_N]
     
     judge_template, response_format_prompt = load_prompts()

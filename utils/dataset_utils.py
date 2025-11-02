@@ -21,11 +21,13 @@ def parse_mmlu_pro_item(item):
     correct_answer = all_choices[answer_index] if answer_index is not None and answer_index < len(all_choices) else None
     return question, correct_answer, all_choices
 
-def select_questions_and_options(dataset_name, dataset, num_questions, num_choices, seed):
-    # Use seed to select questions
-    rng_questions = random.Random(seed)
-    total_questions = len(dataset)
-    question_indices = rng_questions.sample(range(total_questions), min(num_questions, total_questions))
+def select_questions_and_options(dataset_name, dataset, num_questions, num_choices, seed, specific_idxs=None):
+    if specific_idxs is not None:
+        question_indices = specific_idxs
+    else:
+        rng_questions = random.Random(seed)
+        total_questions = len(dataset)
+        question_indices = rng_questions.sample(range(total_questions), min(num_questions, total_questions))
     
     results = []
     for idx in question_indices:

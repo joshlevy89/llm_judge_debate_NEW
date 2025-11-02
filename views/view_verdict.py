@@ -19,8 +19,8 @@ def load_verdict_data(verdict_run_id, record_id):
             return data
     return None
 
-def display_verdict(verdict_data):
-    print(f"{'='*80}\nJudge (Verdict Run: {verdict_data['verdict_run_id']})\n{'='*80}")
+def display_verdict(verdict_data, debate_data):
+    print(f"{'='*80}\nJudge (Verdict Run: {verdict_data['verdict_run_id']} | Question Idx: {debate_data['question_idx']})\n{'='*80}")
     if verdict_data['judge_verdict'].get('internal_model_reasoning') is not None:
         print(f"[BEGIN INTERNAL REASONING]\n{verdict_data['judge_verdict']['internal_model_reasoning']}\n[END INTERNAL REASONING]\n")
     print(f"[BEGIN RAW RESPONSE]\n{verdict_data['judge_verdict']['raw_response']}\n[END RAW RESPONSE]")
@@ -53,7 +53,7 @@ def main():
     
     display_debate(debate_data, hide_private=args.hide_private)
     print()
-    display_verdict(verdict_data)
+    display_verdict(verdict_data, debate_data)
 
 if __name__ == '__main__':
     main()
