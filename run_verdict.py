@@ -86,6 +86,19 @@ def check_and_run_missing_qa(debate_records, api_key):
     }
     num_choices = len(debate_records[0]['options'])
     
+    existing_qa = set()
+    if qa_results_path.exists():
+        with open(qa_results_path, 'r') as f:
+            for line in f:
+                record = json.loads(line)
+                if record.get('success') is not False:
+                    key = (
+                        record.get('question_idx'),
+                        record.get('config', {}).get('model_name'),
+                        record.get('prompt')
+                    )
+                    existing_qa.add(key)
+    
     for model_name, temperature in [(JUDGE_MODEL, JUDGE_TEMPERATURE), (debater_model, debater_temperature)]:
         missing_question_idxs = []
         
@@ -94,13 +107,13 @@ def check_and_run_missing_qa(debate_records, api_key):
             num_choices = len(record['options'])
             prompt = format_qa_prompt(record['question'], record['options'], num_choices)
             
-            if not check_qa_exists(question_idx, model_name, prompt, qa_results_path):
+            key = (question_idx, model_name, prompt)
+            if key not in existing_qa:
                 if question_idx not in missing_question_idxs:
                     missing_question_idxs.append(question_idx)
         
         if missing_question_idxs:
-            print(f"\nFound {len(missing_question_idxs)} questions without QA results for {model_name}")
-            print(f"Running QA for question indices: {missing_question_idxs}")
+            print(f"\nFound {len(missing_question_idxs)} questions without QA results for {model_name}. Running QA for them...")
             
             qa_result = run_qa_for_questions(
                 question_idxs=missing_question_idxs,
@@ -114,6 +127,8 @@ def check_and_run_missing_qa(debate_records, api_key):
             )
             
             print(f"QA completed: {qa_result['completed']} success, {qa_result['failed']} failed, cost ${qa_result['cost']:.6f}\n")
+        else:
+            print(f"All questions already have QA results for {model_name}. Skipping QA...")
 
 def process_debate_record(debate_record, judge_template, response_format_prompt, judge_template_str, api_key, config, verdict_run_id, run_datetime):
     public_debate_history_text = format_debate_history(debate_record['debate_history'], show_private=False)
