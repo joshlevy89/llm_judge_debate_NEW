@@ -1,4 +1,5 @@
 import pandas as pd
+from typing import Literal
 
 def load_qa(filters=None):
     df = pd.read_json("results/qa/qa_results.jsonl", lines=True)
@@ -49,7 +50,7 @@ def load_debate(debate_run_id):
 
 def load_verdict(verdict_run_id):
     df = pd.read_json(f"results/verdicts/{verdict_run_id}.jsonl", lines=True)
-    
+
     df = df[df['judge_verdict'].apply(
         lambda x: isinstance(x, dict) and isinstance(x.get('parsed'), dict) and 'answer' in x.get('parsed', {})
     )].reset_index(drop=True)
@@ -96,12 +97,42 @@ def load_debate_and_verdict_and_qa(verdict_run_id):
     
     df = df[df['is_correct_verdict'].notna() & df['is_correct_judge_qa'].notna() & df['is_correct_debater_qa'].notna()]
     
-    print(f"starting records: {start_count}")
-    if judge_missing > 0:
-        print(f"dropped {judge_missing} without judge QA")
-    if debater_missing > 0:
-        print(f"dropped {debater_missing} without debater QA")
-    print(f"final records: {len(df)}")
+    print(f"loaded verdict: {verdict_run_id}: starting records: {start_count}, dropped {judge_missing} without judge QA, dropped {debater_missing} without debater QA, final records: {len(df)}")
     
     return df
+
+
+
+def load_unique_over_runs(run_ids, type: Literal['load_debate_and_verdict_and_qa']):
+    if type == 'load_debate_and_verdict_and_qa':
+        # marginalizes over the verdict run id
+        fn = load_debate_and_verdict_and_qa
+        dedupe_columns = [
+            "record_id",
+            "config_verdict_debate_run_id",
+            "config_debate_dataset_name", 
+            "config_debate_dataset_subset", 
+            "config_debate_dataset_split", 
+            "config_debate_debater_model", 
+            "config_debate_debater_temperature", 
+            "config_debate_random_seed", 
+            "config_debate_num_choices", 
+            "config_debate_num_turns", 
+            "config_debate_private_scratchpad",
+            "config_debate_public_argument_word_limit",
+            "config_debate_private_reasoning_word_limit",
+            "config_verdict_judge_model", 
+            "config_verdict_judge_temperature", 
+            "config_verdict_max_output_tokens"
+        ]
+    
+    master_df = pd.DataFrame()
+    for run_id in run_ids:
+        df = fn(run_id)
+        master_df = pd.concat([master_df, df])
+    
+    master_df = master_df.sort_values('datetime').drop_duplicates(subset=dedupe_columns, keep='last')
+
+    return master_df, dedupe_columns
+
 
