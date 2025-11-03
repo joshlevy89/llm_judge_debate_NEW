@@ -32,7 +32,6 @@ response_format_prompt: |
 
   Your response MUST contain both the <BEGIN FINAL ANSWER> and </END FINAL ANSWER> tags.
   Be very careful not to omit the </END FINAL ANSWER> tag.
-  Critical!!! Again - you ABSOLUTELY MUST output the </END FINAL ANSWER> tag!!!!
 
 debater_prompt_template: |
   You are Debater {role} in a debate. A judge is evaluating your arguments.

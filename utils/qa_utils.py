@@ -43,6 +43,9 @@ def check_qa_exists(question_idx, model_name, prompt, qa_results_path):
                 return True
     return False
 
+def normalize_whitespace(text):
+    return ' '.join(text.split())
+
 def get_existing_qa_keys(qa_results_path):
     existing_qa = set()
     if not qa_results_path.exists():
@@ -55,7 +58,7 @@ def get_existing_qa_keys(qa_results_path):
                 key = (
                     record.get('question_idx'),
                     record.get('config', {}).get('model_name'),
-                    record.get('prompt')
+                    normalize_whitespace(record.get('prompt', ''))  # added because one time i added a white line and this made all the qa re-run
                 )
                 existing_qa.add(key)
     return existing_qa
@@ -65,7 +68,7 @@ def filter_existing_questions(question_idxs, questions_data, model_name, num_cho
     
     for idx, q_data in zip(question_idxs, questions_data):
         prompt = format_qa_prompt(q_data['question'], q_data['options'], num_choices)
-        key = (idx, model_name, prompt)
+        key = (idx, model_name, normalize_whitespace(prompt))
         
         if key not in existing_qa:
             missing_idxs.append(idx)

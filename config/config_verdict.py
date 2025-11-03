@@ -4,7 +4,7 @@
 # JUDGE_MODEL = "qwen/qwen-2.5-72b-instruct"
 # JUDGE_MODEL = "qwen/qwen3-8b"
 # JUDGE_MODEL = "qwen/qwen3-14b"
-# JUDGE_MODEL = "qwen/qwen3-32b"
+JUDGE_MODEL = "qwen/qwen3-32b"
 # JUDGE_MODEL = "qwen/qwen3-235b-a22b"
 # JUDGE_MODEL = "meta-llama/llama-3-8b-instruct"
 # JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"
@@ -14,7 +14,7 @@
 # JUDGE_MODEL = "meta-llama/llama-4-scout"
 # JUDGE_MODEL = "meta-llama/llama-4-maverick"
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
-JUDGE_MODEL = "google/gemma-3-12b-it"
+# JUDGE_MODEL = "google/gemma-3-12b-it"
 # JUDGE_MODEL = "google/gemma-3-27b-it"
 
 

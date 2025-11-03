@@ -18,7 +18,7 @@ from config.config_verdict import (
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
 from utils.shared_utils import extract_config, generate_run_id
-from utils.qa_utils import format_qa_prompt, get_existing_qa_keys, run_qa_for_questions
+from utils.qa_utils import format_qa_prompt, get_existing_qa_keys, run_qa_for_questions, normalize_whitespace
 
 def setup_output_path(verdict_run_id):
     output_dir = Path('results') / 'verdicts'
@@ -98,7 +98,7 @@ def check_and_run_missing_qa(debate_records, api_key):
             num_choices = len(record['options'])
             prompt = format_qa_prompt(record['question'], record['options'], num_choices)
             
-            key = (question_idx, model_name, prompt)
+            key = (question_idx, model_name, normalize_whitespace(prompt))
             if key not in existing_qa:
                 if question_idx not in missing_question_idxs:
                     missing_question_idxs.append(question_idx)
