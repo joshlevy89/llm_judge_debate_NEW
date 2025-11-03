@@ -1,9 +1,13 @@
+import sys
 import json
 import argparse
 from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
 import pandas as pd
 from tabulate import tabulate
 from datetime import datetime as dt
+from views.view_utils import shorten_name
 
 def format_datetime(datetime_str):
     if not datetime_str:
@@ -13,12 +17,6 @@ def format_datetime(datetime_str):
         return d.strftime('%Y-%m-%d %H:%M')
     except:
         return datetime_str[:16] if len(datetime_str) > 16 else datetime_str
-
-def shorten_name(name):
-    if not name or not isinstance(name, str):
-        return name
-    parts = name.split('/')
-    return parts[-1] if len(parts) > 1 else name
 
 def read_first_record(file_path):
     with open(file_path) as f:
@@ -160,8 +158,8 @@ def get_qa_configs():
         rows.append(row)
     
     df = pd.DataFrame(rows)
-    if not df.empty:
-        df = df.sort_values('datetime').drop(columns=['datetime'])
+    # if not df.empty:
+        # df = df.sort_values('datetime').drop(columns=['datetime'])
     return df
 
 def main():

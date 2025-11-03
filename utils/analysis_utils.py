@@ -3,9 +3,11 @@ import pandas as pd
 def load_qa(filters=None):
     df = pd.read_json("results/qa/qa_results.jsonl", lines=True)
     
-    df = df[df['parsed_model_response'].apply(
-        lambda x: isinstance(x, dict) and x.get('is_valid', False) and 'answer' in x
-    )].reset_index(drop=True)
+    df = df[
+        df['parsed_model_response'].apply(
+            lambda x: isinstance(x, dict) and x.get('is_valid', False) and 'answer' in x
+        ) & (df['success'].fillna(True))
+    ].reset_index(drop=True)
     
     config_df = pd.json_normalize(df['config'])
     config_df.columns = ['config_' + col for col in config_df.columns]

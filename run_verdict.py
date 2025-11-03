@@ -4,6 +4,7 @@ import yaml
 import random
 import string
 import time
+import traceback
 from datetime import datetime
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -12,12 +13,12 @@ import config.config_verdict as config_verdict
 from config.config_verdict import (
     DEBATE_RUN_ID, JUDGE_MODEL, JUDGE_TEMPERATURE,
     JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
-    SKIP_QA, SUBSET_N, SPECIFIC_RECORD_IDS, MAX_THREADS
+    SKIP_QA, RERUN, SUBSET_N, SPECIFIC_RECORD_IDS, MAX_THREADS
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
 from utils.shared_utils import extract_config, generate_run_id
-from utils.qa_utils import format_qa_prompt, check_qa_exists, run_qa_for_questions
+from utils.qa_utils import format_qa_prompt, get_existing_qa_keys, run_qa_for_questions
 
 def setup_output_path(verdict_run_id):
     output_dir = Path('results') / 'verdicts'
@@ -78,6 +79,7 @@ def check_and_run_missing_qa(debate_records, api_key):
     debate_config = debate_records[0]['config']
     debater_model = debate_config['debater_model']
     debater_temperature = debate_config['debater_temperature']
+    random_seed = debate_config.get('random_seed')
     
     dataset_config = {
         'dataset_name': debate_config['dataset_name'],
@@ -86,18 +88,7 @@ def check_and_run_missing_qa(debate_records, api_key):
     }
     num_choices = len(debate_records[0]['options'])
     
-    existing_qa = set()
-    if qa_results_path.exists():
-        with open(qa_results_path, 'r') as f:
-            for line in f:
-                record = json.loads(line)
-                if record.get('success') is not False:
-                    key = (
-                        record.get('question_idx'),
-                        record.get('config', {}).get('model_name'),
-                        record.get('prompt')
-                    )
-                    existing_qa.add(key)
+    existing_qa = get_existing_qa_keys(qa_results_path) if not RERUN else set()
     
     for model_name, temperature in [(JUDGE_MODEL, JUDGE_TEMPERATURE), (debater_model, debater_temperature)]:
         missing_question_idxs = []
@@ -123,7 +114,8 @@ def check_and_run_missing_qa(debate_records, api_key):
                 num_choices=num_choices,
                 api_key=api_key,
                 max_threads=MAX_THREADS,
-                qa_results_path=qa_results_path
+                qa_results_path=qa_results_path,
+                random_seed=random_seed
             )
             
             print(f"QA completed: {qa_result['completed']} success, {qa_result['failed']} failed, cost ${qa_result['cost']:.6f}\n")
@@ -218,11 +210,13 @@ def main():
                     log_progress("completed", completed, len(debate_records), result['verdict_run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
                 except Exception as e:
                     failed += 1
+                    error_trace = traceback.format_exc()
+                    error_record_id = generate_run_id()
                     result = {
                         'success': False,
-                        'error_message': str(e),
+                        'error_message': error_trace,
                         'verdict_run_id': verdict_run_id,
-                        'record_id': debate_record['record_id'],
+                        'record_id': error_record_id,
                         'debate_run_id': DEBATE_RUN_ID,
                         'datetime': run_datetime,
                         'config': config,
@@ -230,7 +224,7 @@ def main():
                         'options': debate_record['options'],
                         'correct_idx': debate_record['correct_idx']
                     }
-                    log_progress("failed", failed, len(debate_records), verdict_run_id, debate_record['record_id'], api_key, start_usage, error=str(e))
+                    log_progress("failed", failed, len(debate_records), verdict_run_id, error_record_id, api_key, start_usage, error=error_trace)
                 
                 f.write(json.dumps(result) + '\n')
                 f.flush()

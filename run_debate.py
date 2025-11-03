@@ -5,6 +5,7 @@ import yaml
 import random
 import string
 import time
+import traceback
 from datetime import datetime
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -163,11 +164,13 @@ def main():
                     log_progress("completed", completed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage)
                 except Exception as e:
                     failed += 1
+                    error_trace = traceback.format_exc()
+                    error_record_id = generate_run_id()
                     result = {
                         'success': False,
-                        'error_message': str(e),
+                        'error_message': error_trace,
                         'run_id': run_id,
-                        'record_id': None,
+                        'record_id': error_record_id,
                         'datetime': run_datetime,
                         'config': config,
                         'question_idx': q_data['original_idx'],
@@ -175,7 +178,7 @@ def main():
                         'options': q_data['options'],
                         'correct_idx': q_data['correct_idx']
                     }
-                    log_progress("failed", failed, len(questions_data), run_id, None, api_key, start_usage, error=str(e))
+                    log_progress("failed", failed, len(questions_data), run_id, error_record_id, api_key, start_usage, error=error_trace)
                 
                 f.write(json.dumps(result) + '\n')
                 f.flush()

@@ -66,7 +66,22 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
     if req.result is None:
         raise Exception("Request returned no result")
     
-    return req.result.json()
+    if req.result.status_code != 200:
+        try:
+            error_json = req.result.json()
+            error_msg = error_json.get('error', {}).get('message', str(error_json))
+        except:
+            error_msg = req.result.text[:500]
+        raise Exception(f"API returned status {req.result.status_code}: {error_msg}")
+    
+    try:
+        return req.result.json()
+    except (json.JSONDecodeError, requests.exceptions.JSONDecodeError) as e:
+        raise Exception(
+            f"JSON decode error: {str(e)}\n"
+            f"Status code: {req.result.status_code}\n"
+            f"Response preview: {req.result.text[:500]}"
+        )
 
 def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effort=None, reasoning_max_tokens=None, max_tokens=None, run_id=None, record_id=None, context=None):
     for attempt in range(MAX_RETRIES + 1):
@@ -97,8 +112,8 @@ def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effo
 
 def log_progress(status_type, count, total, run_id, record_id, api_key, start_usage, error=None, is_correct=None):
     key_info = get_openrouter_key_info(api_key)
-    current_usage = key_info.get('data', {}).get('usage', 0)
-    cost = current_usage - start_usage
+    current_usage = key_info.get('data', {}).get('usage', 0) if key_info else 0
+    cost = current_usage - start_usage if current_usage else 0
     
     if status_type == "completed":
         extra = f" - Correct: {is_correct}" if is_correct is not None else ""

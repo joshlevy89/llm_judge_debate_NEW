@@ -3,12 +3,14 @@ import yaml
 import random
 import string
 import time
+import traceback
 from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.dataset_utils import select_questions_and_options, format_options
+from utils.shared_utils import generate_run_id
 
 def load_qa_prompts():
     with open('prompts.yaml', 'r') as f:
@@ -40,6 +42,35 @@ def check_qa_exists(question_idx, model_name, prompt, qa_results_path):
                 record.get('prompt') == prompt):
                 return True
     return False
+
+def get_existing_qa_keys(qa_results_path):
+    existing_qa = set()
+    if not qa_results_path.exists():
+        return existing_qa
+    
+    with open(qa_results_path, 'r') as f:
+        for line in f:
+            record = json.loads(line)
+            if record.get('success') is not False:
+                key = (
+                    record.get('question_idx'),
+                    record.get('config', {}).get('model_name'),
+                    record.get('prompt')
+                )
+                existing_qa.add(key)
+    return existing_qa
+
+def filter_existing_questions(question_idxs, questions_data, model_name, num_choices, existing_qa):
+    missing_idxs = []
+    
+    for idx, q_data in zip(question_idxs, questions_data):
+        prompt = format_qa_prompt(q_data['question'], q_data['options'], num_choices)
+        key = (idx, model_name, prompt)
+        
+        if key not in existing_qa:
+            missing_idxs.append(idx)
+    
+    return missing_idxs
 
 def process_qa_question(q_data, prompt_template_str, api_key, config, run_id, run_datetime, model_name, temperature, num_choices):
     from utils.shared_utils import generate_run_id
@@ -80,7 +111,7 @@ def process_qa_question(q_data, prompt_template_str, api_key, config, run_id, ru
         'token_usage': token_usage
     }
 
-def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config, num_choices, api_key, max_threads, run_id=None, qa_results_path=None):
+def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config, num_choices, api_key, max_threads, run_id=None, qa_results_path=None, random_seed=None):
     if run_id is None:
         run_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
     
@@ -101,7 +132,7 @@ def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config,
     )
     
     prompt_template, _ = load_qa_prompts()
-    config = {**dataset_config, 'model_name': model_name, 'temperature': temperature, 'num_choices': num_choices}
+    config = {**dataset_config, 'model_name': model_name, 'temperature': temperature, 'num_choices': num_choices, 'random_seed': random_seed}
     
     key_info_start = get_openrouter_key_info(api_key)
     start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
@@ -125,11 +156,13 @@ def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config,
                     log_progress("completed", completed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
                 except Exception as e:
                     failed += 1
+                    error_trace = traceback.format_exc()
+                    error_record_id = generate_run_id()
                     result = {
                         'success': False,
-                        'error_message': str(e),
+                        'error_message': error_trace,
                         'run_id': run_id,
-                        'record_id': None,
+                        'record_id': error_record_id,
                         'datetime': run_datetime,
                         'config': config,
                         'question_idx': q_data['original_idx'],
@@ -137,7 +170,7 @@ def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config,
                         'options': q_data['options'],
                         'correct_idx': q_data['correct_idx']
                     }
-                    log_progress("failed", failed, len(questions_data), run_id, None, api_key, start_usage, error=str(e))
+                    log_progress("failed", failed, len(questions_data), run_id, error_record_id, api_key, start_usage, error=error_trace)
                 
                 f.write(json.dumps(result) + '\n')
                 f.flush()

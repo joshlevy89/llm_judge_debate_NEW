@@ -7,12 +7,12 @@ from config.config_qa import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
     MODEL_NAME, TEMPERATURE,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
-    SPECIFIC_QUESTION_IDXS, MAX_THREADS
+    SPECIFIC_QUESTION_IDXS, MAX_THREADS, RERUN
 )
 from datasets import load_dataset
 from utils.dataset_utils import select_questions_and_options
 from utils.shared_utils import extract_config
-from utils.qa_utils import run_qa_for_questions
+from utils.qa_utils import run_qa_for_questions, get_existing_qa_keys, filter_existing_questions
 
 def main():
     load_dotenv()    
@@ -37,6 +37,17 @@ def main():
         rng = random.Random(RANDOM_SEED)
         question_idxs = rng.sample(range(len(dataset)), min(NUM_QUESTIONS, len(dataset)))
     
+    if not RERUN:
+        existing_qa = get_existing_qa_keys(results_path)
+        questions_data = select_questions_and_options(DATASET_NAME, dataset, len(question_idxs), NUM_CHOICES, None, question_idxs)
+        question_idxs = filter_existing_questions(question_idxs, questions_data, MODEL_NAME, NUM_CHOICES, existing_qa)
+        
+        if not question_idxs:
+            print("All questions already have QA results. Nothing to run. Can set RERUN = True to rerun.")
+            return
+        
+        print(f"Filtered to {len(question_idxs)} questions without existing results")
+    
     start_time = time.time()
     print(f"Processing {len(question_idxs)} questions...")
     
@@ -48,7 +59,8 @@ def main():
         num_choices=NUM_CHOICES,
         api_key=api_key,
         max_threads=MAX_THREADS,
-        qa_results_path=results_path
+        qa_results_path=results_path,
+        random_seed=RANDOM_SEED
     )
     
     duration = time.time() - start_time
