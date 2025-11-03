@@ -140,7 +140,7 @@ def get_openrouter_key_info(api_key):
         print(f"[Warning] Could not fetch OpenRouter key info: {e}")
     return None
 
-def parse_answer(response_text):
+def parse_answer(response_text, lenient=True):
     parsed = {
         'is_valid': False,
         'answer': None,
@@ -148,11 +148,18 @@ def parse_answer(response_text):
         'reasoning': None
     }
     
-    final_answer_match = re.search(r'<BEGIN FINAL ANSWER>(.*?)</?END FINAL ANSWER>', response_text, re.DOTALL | re.IGNORECASE)
-    if not final_answer_match:
-        return parsed
-    
-    final_answer_text = final_answer_match.group(1)
+    if lenient:
+        final_answer_match = re.search(r'<BEGIN FINAL ANSWER>(.*)', response_text, re.DOTALL | re.IGNORECASE)
+        if not final_answer_match:
+            return parsed
+        final_answer_text = final_answer_match.group(1)
+        if '</END FINAL ANSWER>' in final_answer_text.upper():
+            final_answer_text = re.split(r'</?END FINAL ANSWER>', final_answer_text, flags=re.IGNORECASE)[0]
+    else:
+        final_answer_match = re.search(r'<BEGIN FINAL ANSWER>(.*?)</?END FINAL ANSWER>', response_text, re.DOTALL | re.IGNORECASE)
+        if not final_answer_match:
+            return parsed
+        final_answer_text = final_answer_match.group(1)
     parsed['is_valid'] = True
     
     answer_match = re.search(r'Answer:\s*(\d+)', final_answer_text, re.IGNORECASE)
