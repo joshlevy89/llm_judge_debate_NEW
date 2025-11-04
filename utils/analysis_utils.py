@@ -1,4 +1,8 @@
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import re
 from typing import Literal
 
 def load_qa(filters=None):
@@ -136,3 +140,34 @@ def load_unique_over_runs(run_ids, type: Literal['load_debate_and_verdict_and_qa
     return master_df, dedupe_columns
 
 
+def sort_and_color_by_model_family(names):
+    def normalize_model_name(text):
+        return re.sub(r'([a-zA-Z])(\d)', r'\1-\2', text)
+    
+    def natural_sort_key(text):
+        normalized = normalize_model_name(text)
+        return [int(c) if c.isdigit() else c.lower() for c in re.split(r'(\d+)', normalized)]
+    
+    models_df = pd.DataFrame({'name': names})
+    models_df['family'] = models_df['name'].str.split('/').str[0]
+    models_df['model'] = models_df['name'].str.split('/').str[1]
+    models_df['sort_key'] = models_df.apply(lambda row: (row['family'], natural_sort_key(row['model'])), axis=1)
+    models_df = models_df.sort_values('sort_key').reset_index(drop=True)
+    
+    families = models_df['family'].unique()
+    n_families = len(families)
+    base_colors = plt.cm.tab10(np.linspace(0, 1, n_families)) if n_families <= 10 else plt.cm.hsv(np.linspace(0, 0.9, n_families))
+    
+    color_map = {}
+    for family_idx, family in enumerate(families):
+        family_rows = models_df[models_df['family'] == family]
+        n_models = len(family_rows)
+        base_color = base_colors[family_idx][:3]
+        
+        for model_idx, name in enumerate(family_rows['name']):
+            lightness = 0.4 + (0.6 * model_idx / max(1, n_models - 1))
+            color = mcolors.to_rgb(base_color)
+            adjusted_color = tuple(c * lightness + (1 - lightness) for c in color)
+            color_map[name] = adjusted_color
+    
+    return models_df['name'].tolist(), color_map
