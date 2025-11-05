@@ -7,6 +7,8 @@ from typing import Literal
 from typing import Literal
 import scipy
 from scipy import stats
+from scipy import stats
+from sklearn.linear_model import LinearRegression
 
 def load_qa(filters=None):
     df = pd.read_json("results/qa/qa_results.jsonl", lines=True)
@@ -417,6 +419,68 @@ def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_d
 
     # ax.set_xlim(-.5, .5)
     # ax.set_ylim(-1, 1)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_gain_over_gap(results, xfield, yfield):
+
+    xfield = 'gap'
+    # xfield = 'judge_acc'
+    yfield = 'gain'
+
+    x = results[xfield].values.astype(float)
+    y = results[yfield].values.astype(float)
+    weights = results['count'].values.astype(float)
+
+    model = LinearRegression()
+    model.fit(x.reshape(-1, 1), y, sample_weight=weights)
+    slope = model.coef_[0]
+    intercept = model.intercept_
+
+    y_pred = model.predict(x.reshape(-1, 1))
+    ss_res = np.sum(weights * (y - y_pred)**2)
+    ss_tot = np.sum(weights * (y - np.average(y, weights=weights))**2)
+    r_squared = 1 - (ss_res / ss_tot)
+
+    pearson_r, p_value = stats.pearsonr(x, y)
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    scatter = ax.scatter(results[xfield], results[yfield], 
+                        c=results['count'], s=100, cmap='Blues', alpha=0.7, edgecolors='black')
+
+    x_line = np.linspace(x.min(), x.max(), 100)
+    y_line = slope * x_line + intercept
+    ax.plot(x_line, y_line, 'r--', linewidth=2, alpha=0.5, label=f'Weighted fit (slope={slope:.3f})')
+
+    for i, row in results.iterrows():
+        ax.annotate(row['category'], (row[xfield], row[yfield]), 
+                    fontsize=8, ha='center', va='bottom', alpha=0.8)
+
+    ax.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+    ax.axvline(x=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
+
+    stats_text = f'R² = {r_squared:.3f}\np = {p_value:.4f}\nslope = {slope:.3f}'
+    ax.text(0.05, 0.95, stats_text, transform=ax.transAxes, fontsize=11,
+            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+    fieldname_to_label_map = {
+        'gap': 'Gap (Debater QA - Judge QA)',
+        'gain': 'Gain (Verdict - Judge QA)',
+        'judge_acc': 'Judge QA'
+    }
+
+
+    ax.set_xlabel(fieldname_to_label_map[xfield])
+    ax.set_ylabel(fieldname_to_label_map[yfield])
+    ax.set_title(f'Verdict: {verdict_run_id}')
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+
+    cbar = plt.colorbar(scatter, ax=ax)
+    cbar.set_label('Number of Samples')
 
     plt.tight_layout()
     plt.show()
