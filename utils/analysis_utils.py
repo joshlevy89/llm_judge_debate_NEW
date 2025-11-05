@@ -368,7 +368,7 @@ def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 
 
 
 
-def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_delta'], yfield: Literal['gain_delta', 'gap_delta']):
+def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_delta'], yfield: Literal['gain_delta', 'gap_delta'], n_min: int = 50):
     merged['gap_delta'] = merged[f'debater_minus_judge_qa{suffixes[0]}'] - merged[f'debater_minus_judge_qa{suffixes[1]}']
     merged['gain_delta'] = merged[f'verdict_minus_judge_qa{suffixes[0]}'] - merged[f'verdict_minus_judge_qa{suffixes[1]}']
     merged['judge_delta'] = merged[f'judge_qa_acc{suffixes[0]}'] - merged[f'judge_qa_acc{suffixes[1]}']
@@ -380,9 +380,10 @@ def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_d
         row = merged[merged['name'] == name].iloc[0]
         n_0 = int(row[f'n_total{suffixes[0]}'])
         n_1 = int(row[f'n_total{suffixes[1]}'])
-        if n_0 < 50 or n_1 < 50:
-            # print('hi')
+        if n_0 < n_min or n_1 < n_min:
             print(f'skipping {name} because too few samples: n_0 = {n_0} and n_1 = {n_1}')
+            # drop from the merged dataframe
+            merged = merged[merged['name'] != name]
             continue
         ax.scatter(row[xfield], row[yfield], 
                 color=color_map[name], 
