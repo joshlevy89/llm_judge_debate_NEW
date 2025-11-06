@@ -166,6 +166,7 @@ def main():
     parser = argparse.ArgumentParser(description='Display experimental parameters')
     parser.add_argument('type', choices=['verdicts', 'debates', 'qa'], 
                        help='Type of experiments to display')
+    parser.add_argument('--ids', nargs='+', help='Space-separated list of run IDs to display')
     args = parser.parse_args()
     
     if args.type == 'verdicts':
@@ -181,6 +182,12 @@ def main():
     if df.empty:
         print("No data found")
         return
+    
+    if args.ids:
+        df = df[df[index_col].isin(args.ids)]
+        if df.empty:
+            print("No matching run IDs found")
+            return
     
     df = df.dropna(axis=1, how='all')
     df = df.set_index(index_col)
