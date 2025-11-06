@@ -166,7 +166,10 @@ def main():
     parser = argparse.ArgumentParser(description='Display experimental parameters')
     parser.add_argument('type', choices=['verdicts', 'debates', 'qa'], 
                        help='Type of experiments to display')
-    parser.add_argument('--ids', nargs='+', help='Space-separated list of run IDs to display')
+    parser.add_argument('--filter', nargs='+', metavar='field=value',
+                       help='Filter by field values (e.g., --filter debater_model=gpt-4 n_records=100)')
+    parser.add_argument('--varying', action='store_true',
+                       help='Show only columns with varying values')
     args = parser.parse_args()
     
     if args.type == 'verdicts':
@@ -183,13 +186,34 @@ def main():
         print("No data found")
         return
     
-    if args.ids:
-        df = df[df[index_col].isin(args.ids)]
+    if args.filter:
+        for filter_expr in args.filter:
+            if '=' not in filter_expr:
+                print(f"Invalid filter format: {filter_expr}. Expected field=value")
+                return
+            field, value = filter_expr.split('=', 1)
+            
+            if field not in df.columns:
+                print(f"Unknown field: {field}. Available fields: {', '.join(df.columns)}")
+                return
+            
+            try:
+                if pd.api.types.is_numeric_dtype(df[field]):
+                    value = pd.to_numeric(value)
+                df = df[df[field] == value]
+            except ValueError:
+                df = df[df[field].astype(str) == value]
+        
         if df.empty:
-            print("No matching run IDs found")
+            print("No matching records found")
             return
     
     df = df.dropna(axis=1, how='all')
+    
+    if args.varying:
+        varying_cols = [col for col in df.columns if col != index_col and df[col].nunique() > 1]
+        df = df[[index_col] + varying_cols]
+    
     df = df.set_index(index_col)
     
     print(tabulate(df, headers='keys', tablefmt='simple', showindex=True))
