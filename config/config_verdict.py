@@ -4,7 +4,7 @@
 # JUDGE_MODEL = "qwen/qwen-2.5-72b-instruct"
 # JUDGE_MODEL = "qwen/qwen3-8b"
 # JUDGE_MODEL = "qwen/qwen3-14b"
-JUDGE_MODEL = "qwen/qwen3-32b"
+# JUDGE_MODEL = "qwen/qwen3-32b"
 # JUDGE_MODEL = "qwen/qwen3-235b-a22b"
 # JUDGE_MODEL = "meta-llama/llama-3-8b-instruct"
 # JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"

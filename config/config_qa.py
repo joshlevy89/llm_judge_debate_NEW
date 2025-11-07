@@ -12,7 +12,9 @@ DATASET_SPLIT = "train"
 # MODEL_NAME = "qwen/qwen-2.5-7b-instruct" 
 # MODEL_NAME = "meta-llama/llama-3-8b-instruct"
 # MODEL_NAME = "qwen/qwen3-8b"
-MODEL_NAME = "qwen/qwen3-235b-a22b"
+# MODEL_NAME = "qwen/qwen3-235b-a22b"
+
+MODEL_NAME = "deepseek/deepseek-v3.1-terminus"
 
 TEMPERATURE = 0.0
 
@@ -24,4 +26,4 @@ RERUN = False  # will rerun a question/choice set even if it already exists
 
 SPECIFIC_QUESTION_IDXS = None # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]
 
-MAX_THREADS = 20
+MAX_THREADS = 2000

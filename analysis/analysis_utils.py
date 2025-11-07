@@ -57,9 +57,20 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
     if isinstance(types, str):
         types = [types]
     
-    if types == ['qa']:
-        return load_all_records_into_df('qa', filter_errors=filter_errors, filter_nulls=filter_nulls)
-    
+    if 'qa' in types:
+        qa_df = load_all_records_into_df('qa', filter_errors=filter_errors, filter_nulls=filter_nulls)
+        # Keep only most recent QA record for each (question, options, model) triplet
+        if 'datetime_qa' in qa_df.columns:
+            qa_df = qa_df.sort_values('datetime_qa', ascending=False)
+        qa_df = qa_df.drop_duplicates(subset=['question_qa', 'options_str_qa', 'config_model_name_qa'], keep='first')
+        qa_df['is_correct_qa'] = qa_df['parsed_answer_qa'] == qa_df['correct_idx_qa']
+        if filter_errors:
+            qa_df = qa_df[((qa_df['success_qa'] == True) | (qa_df['success_qa'].isna()))]
+        if filter_nulls:
+            qa_df = qa_df[qa_df['parsed_answer_qa'].notnull()]
+        if types == ['qa']:
+            return qa_df
+
     if types == ['debates']:
         return load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
 
@@ -76,14 +87,7 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
             merged = pd.concat([merged, invalid_verdicts], ignore_index=True, sort=False)
         
         return merged
-    
-    qa_df = load_all_records_into_df('qa', filter_errors=filter_errors, filter_nulls=filter_nulls)
-    
-    # Keep only most recent QA record for each (question, options, model) triplet
-    if 'datetime_qa' in qa_df.columns:
-        qa_df = qa_df.sort_values('datetime_qa', ascending=False)
-    qa_df = qa_df.drop_duplicates(subset=['question_qa', 'options_str_qa', 'config_model_name_qa'], keep='first')
-    
+
     valid_verdicts = verdict_df[verdict_df['record_id_verdicts'].notna()]
     valid_debates = debate_df[debate_df['record_id_debates'].notna()]
     verdict_and_debate_df = valid_verdicts.merge(valid_debates, left_on=['record_id_verdicts'], right_on=['record_id_debates'], how='left')
@@ -94,16 +98,15 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
     debater_qa_df = qa_df.copy()
     debater_qa_df.columns = [col + '_debater' for col in qa_df.columns]
 
-
     all_df = verdict_and_debate_df.merge(
-        judge_qa_df[['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge', 'parsed_answer_qa_judge', 'success_qa_judge']], 
+        judge_qa_df[['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge', 'parsed_answer_qa_judge', 'is_correct_qa_judge', 'success_qa_judge']], 
         left_on=['question_verdicts', 'options_str_verdicts', 'config_judge_model_verdicts'], 
         right_on=['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge'],
         how='left'
     )
 
     all_df = all_df.merge(
-        debater_qa_df[['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'success_qa_debater']], 
+        debater_qa_df[['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'is_correct_qa_debater', 'success_qa_debater']], 
         left_on=['question_verdicts', 'options_str_verdicts', 'config_debater_model_debates'], 
         right_on=['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater'],
         how='left',
@@ -113,24 +116,34 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
     # Filter to only valid records if requested (default for analysis)
     # Note: success can be NaN after left joins if matching records weren't found,
     # or for legacy data that predates the success field
-    if filter_errors and filter_nulls:
+    if filter_errors:
         all_df = all_df[
             ((all_df['success_verdicts'] == True) | (all_df['success_verdicts'].isna())) & 
-            ((all_df['success_debates'] == True) | (all_df['success_debates'].isna())) & 
-            ((all_df['success_qa_judge'] == True) | (all_df['success_qa_judge'].isna())) & 
-            ((all_df['success_qa_debater'] == True) | (all_df['success_qa_debater'].isna())) &
-            all_df['parsed_answer_qa_judge'].notnull() & 
-            all_df['parsed_answer_qa_debater'].notnull() & 
-            all_df['parsed_answer_verdicts'].notnull()
+            ((all_df['success_debates'] == True) | (all_df['success_debates'].isna())) 
         ]
+    if filter_nulls:
+        all_df = all_df[all_df['parsed_answer_verdicts'].notnull()]
 
-    # Add correctness columns
-    all_df['is_correct_qa_judge'] = all_df['parsed_answer_qa_judge'] == all_df['correct_idx_verdicts']
-    all_df['is_correct_qa_debater'] = all_df['parsed_answer_qa_debater'] == all_df['correct_idx_verdicts']
     all_df['is_correct_verdict'] = all_df['parsed_answer_verdicts'] == all_df['correct_idx_verdicts']
 
     return all_df
 
+def aggregate_acc(df):
+
+    result = ({
+        'debater_qa_acc': df['is_correct_qa_debater'].mean(),
+        'judge_qa_acc': df['is_correct_qa_judge'].mean(),
+        'verdict_acc': df['is_correct_verdict'].mean(),
+        'debater_qa_n_correct': df['is_correct_qa_debater'].sum(),
+        'judge_qa_n_correct': df['is_correct_qa_judge'].sum(),
+        'verdict_n_correct': df['is_correct_verdict'].sum(),
+        'n_total': len(df),
+        'pgr': (df['is_correct_verdict'].mean() - df['is_correct_qa_judge'].mean()) / (df['is_correct_qa_debater'].mean() - df['is_correct_qa_judge'].mean()),
+        'gap': df['is_correct_qa_debater'].mean() - df['is_correct_qa_judge'].mean(),
+        'gain':df['is_correct_verdict'].mean() - df['is_correct_qa_judge'].mean()
+    })
+
+    return result
 
 def aggregate_by_fields(input_df, fields):
     results = []
@@ -138,18 +151,17 @@ def aggregate_by_fields(input_df, fields):
     for group_vals, group_df in input_df.groupby(fields):
         name = ", ".join([str(v) for v in (group_vals if isinstance(group_vals, tuple) else (group_vals,))])
         
-        results.append({
-            'name': name,
-            'debater_qa_acc': group_df['is_correct_qa_debater'].mean(),
-            'judge_qa_acc': group_df['is_correct_qa_judge'].mean(),
-            'verdict_acc': group_df['is_correct_verdict'].mean(),
-            'debater_qa_n_correct': group_df['is_correct_qa_debater'].sum(),
-            'judge_qa_n_correct': group_df['is_correct_qa_judge'].sum(),
-            'verdict_n_correct': group_df['is_correct_verdict'].sum(),
-            'n_total': len(group_df),
-            'pgr': (group_df['is_correct_verdict'].mean() - group_df['is_correct_qa_judge'].mean()) / (group_df['is_correct_qa_debater'].mean() - group_df['is_correct_qa_judge'].mean()),
-            'gap': group_df['is_correct_qa_debater'].mean() - group_df['is_correct_qa_judge'].mean(),
-            'gain':group_df['is_correct_verdict'].mean() - group_df['is_correct_qa_judge'].mean()
-        })
+        result = aggregate_acc(group_df)
+        result['name'] = name
+        results.append(result)
     
     return pd.DataFrame(results)
+
+
+def sum_reasoning_tokens_over_turns(turns):
+    tot = 0
+    for turn in turns:
+        if turn['token_usage'].get('completion_tokens_details') is None:
+            continue
+        tot += turn['token_usage']['completion_tokens_details']['reasoning_tokens']
+    return tot

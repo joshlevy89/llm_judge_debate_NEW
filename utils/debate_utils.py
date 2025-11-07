@@ -6,7 +6,7 @@ def format_debate_history(history, show_private=False):
     for entry in history:
         text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn {entry['turn']})\n{'-'*80}\n"
         
-        if entry.get('internal_model_reasoning') is not None:
+        if show_private and entry.get('internal_model_reasoning') is not None:
             text += f"[BEGIN INTERNAL REASONING]\n{entry['internal_model_reasoning']}\n[END INTERNAL REASONING]\n\n"
         
         if show_private and 'parsed_response' in entry and 'private_reasoning' in entry['parsed_response']:
