@@ -134,6 +134,7 @@ def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 
 
 
 def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_delta'], yfield: Literal['gain_delta', 'gap_delta'], n_min: int = 50):
+    merged = merged.copy()
     merged['gap_delta'] = merged[f'gap{suffixes[0]}'] - merged[f'gap{suffixes[1]}']
     merged['gain_delta'] = merged[f'gain{suffixes[0]}'] - merged[f'gain{suffixes[1]}']
     merged['judge_delta'] = merged[f'judge_qa_acc{suffixes[0]}'] - merged[f'judge_qa_acc{suffixes[1]}']
