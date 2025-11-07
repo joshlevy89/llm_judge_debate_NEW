@@ -10,18 +10,11 @@ from scipy import stats
 from sklearn.linear_model import LinearRegression
 
 
-def _prep_results_df(results_df):
-    results_df = results_df.copy()
-    results_df['verdict_minus_judge_qa'] = results_df['verdict_acc'] - results_df['judge_qa_acc']
-    names, _ = sort_and_color_by_model_family(results_df['name'].unique())
-    return results_df.set_index('name').loc[names].reset_index()
 
-
-def plot_accuracy_bars(results_df, ax=None):
+def plot_accuracy_bars(results_df, ax=None, color_map=None):
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 6))
     
-    results_df = _prep_results_df(results_df)
     x = np.arange(len(results_df))
     width = 0.25
 
@@ -57,9 +50,8 @@ def plot_verdict_difference(results_df, ax=None, type='gain'):
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 2))
     
-    results_df = _prep_results_df(results_df)
     if type == 'gain':
-        bars =ax.bar(results_df['name'], results_df['verdict_minus_judge_qa'], color='purple')
+        bars =ax.bar(results_df['name'], results_df['gain'], color='purple')
         ylabel = 'Gain'
     elif type == 'pgr':
         bars = ax.bar(results_df['name'], results_df['pgr'], color='purple')
@@ -73,7 +65,12 @@ def plot_verdict_difference(results_df, ax=None, type='gain'):
     ax.set_xticklabels(results_df['name'], rotation=45, ha='right')
     return bars
 
-def plot_results_by_name(results_df):
+
+
+def plot_results_by_name(results_df, field='config_judge_model_verdicts'):
+    if field == 'config_judge_model_verdicts':
+        sorted_names, _ = sort_and_color_by_model_family(results_df['name'].unique())
+        results_df = results_df.set_index('name').loc[sorted_names].reset_index()
     fig, ax = plt.subplots(2, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [3, 1]}, sharex=True)
     plot_accuracy_bars(results_df, ax=ax[0])
     plot_verdict_difference(results_df, ax=ax[1])
@@ -93,7 +90,7 @@ def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 
         xfield = f'judge_qa_acc'
 
     x = results_df[xfield]
-    y = results_df[f'verdict_minus_judge_qa']
+    y = results_df[f'gain']
 
     names, color_map = sort_and_color_by_model_family(results_df['name'].unique())
     results_df['sort_order'] = results_df['name'].map({name: i for i, name in enumerate(names)})
@@ -101,7 +98,7 @@ def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 
 
     for i, row in results_df.iterrows():
         x_val = row[xfield]
-        y_val = row[f'verdict_minus_judge_qa']
+        y_val = row[f'gain']
         
         ax.scatter(x_val, y_val, color=color_map[row['name']], alpha=0.7, s=80, label=row['name'])
         ax.annotate(row['name'], (x_val, y_val), fontsize=7, ha='left', va='bottom', alpha=0.7)
@@ -137,8 +134,8 @@ def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 
 
 
 def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_delta'], yfield: Literal['gain_delta', 'gap_delta'], n_min: int = 50):
-    merged['gap_delta'] = merged[f'debater_minus_judge_qa{suffixes[0]}'] - merged[f'debater_minus_judge_qa{suffixes[1]}']
-    merged['gain_delta'] = merged[f'verdict_minus_judge_qa{suffixes[0]}'] - merged[f'verdict_minus_judge_qa{suffixes[1]}']
+    merged['gap_delta'] = merged[f'gap{suffixes[0]}'] - merged[f'gap{suffixes[1]}']
+    merged['gain_delta'] = merged[f'gain{suffixes[0]}'] - merged[f'gain{suffixes[1]}']
     merged['judge_delta'] = merged[f'judge_qa_acc{suffixes[0]}'] - merged[f'judge_qa_acc{suffixes[1]}']
 
     fig, ax = plt.subplots(figsize=(12, 6))
@@ -198,7 +195,7 @@ def plot_gain_over_gap(results, xfield, yfield):
 
     x = results[xfield].values.astype(float)
     y = results[yfield].values.astype(float)
-    weights = results['count'].values.astype(float)
+    weights = results['n_total'].values.astype(float)
 
     model = LinearRegression()
     model.fit(x.reshape(-1, 1), y, sample_weight=weights)
@@ -215,14 +212,14 @@ def plot_gain_over_gap(results, xfield, yfield):
     fig, ax = plt.subplots(figsize=(10, 8))
 
     scatter = ax.scatter(results[xfield], results[yfield], 
-                        c=results['count'], s=100, cmap='Blues', alpha=0.7, edgecolors='black')
+                        c=results['n_total'], s=100, cmap='Blues', alpha=0.7, edgecolors='black')
 
     x_line = np.linspace(x.min(), x.max(), 100)
     y_line = slope * x_line + intercept
     ax.plot(x_line, y_line, 'r--', linewidth=2, alpha=0.5, label=f'Weighted fit (slope={slope:.3f})')
 
     for i, row in results.iterrows():
-        ax.annotate(row['category'], (row[xfield], row[yfield]), 
+        ax.annotate(row['name'], (row[xfield], row[yfield]), 
                     fontsize=8, ha='center', va='bottom', alpha=0.8)
 
     ax.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
@@ -241,7 +238,7 @@ def plot_gain_over_gap(results, xfield, yfield):
 
     ax.set_xlabel(fieldname_to_label_map[xfield])
     ax.set_ylabel(fieldname_to_label_map[yfield])
-    ax.set_title(f'Verdict: {verdict_run_id}')
+    ax.set_title(f'Gain vs Gap by Category')
     ax.grid(True, alpha=0.3)
     ax.legend()
 
@@ -298,10 +295,10 @@ def plot_spaghetti(merged, suffixes):
     for _, row in merged.iterrows():
         n_2choice = int(row[f'n_total{suffixes[0]}'])
         n_4choice = int(row[f'n_total{suffixes[1]}'])
-        ax.plot([0, 1], [row[f'verdict_minus_judge_qa{suffixes[0]}'], row[f'verdict_minus_judge_qa{suffixes[1]}']], 
+        ax.plot([0, 1], [row[f'gain{suffixes[0]}'], row[f'gain{suffixes[1]}']], 
                 marker='o', label=f"{row['name']} (N={n_2choice}, {n_4choice})", color=color_map[row['name']], linewidth=2, markersize=8, linestyle='--')
 
-    ax.plot([0, 1], [merged[f'verdict_minus_judge_qa{suffixes[0]}'].median(), merged[f'verdict_minus_judge_qa{suffixes[1]}'].median()], 
+    ax.plot([0, 1], [merged[f'gain{suffixes[0]}'].median(), merged[f'gain{suffixes[1]}'].median()], 
             marker='o', label='Median', color='black', linewidth=2, markersize=8, linestyle='-')
 
     ax.set_xticks([0, 1])

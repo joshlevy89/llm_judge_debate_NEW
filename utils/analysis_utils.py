@@ -1,207 +1,151 @@
 import pandas as pd
-from typing import Literal
+import glob
 
 
-def load_qa(filters=None):
-    df = pd.read_json("results/qa/qa_results.jsonl", lines=True)
-    
-    df = df[
-        df['parsed_model_response'].apply(
-            lambda x: isinstance(x, dict) and x.get('is_valid', False) and 'answer' in x
-        ) & (df['success'].fillna(True))
-    ].reset_index(drop=True)
-    
-    config_df = pd.json_normalize(df['config'])
-    config_df.columns = ['config_' + col for col in config_df.columns]
-    df = pd.concat([df, config_df], axis=1)
-
-    df['options_str'] = df['options'].apply(str)
-
-    df = df.sort_values('datetime', ascending=False).drop_duplicates(
-        subset=['question', 'options_str', 'config_model_name'], keep='first')
-
-    df['parsed_answer'] = df['parsed_model_response'].apply(lambda x: x['answer'])
-    df = df[df['parsed_answer'].notna()]
-
-    df['is_correct'] = df['parsed_answer'] == df['correct_idx']
-    
-    if filters:
-        for col, val in filters.items():
-            if val is None:
-                df = df[df[col].isna()]
-            else:
-                df = df[df[col] == val]
-    
-    return df
+def extract_parsed_answer(df, type):
+    if type == 'verdicts':
+        return df['judge_verdict'].apply(lambda x: x.get('parsed', {}).get('answer') if pd.notna(x) and isinstance(x, dict) else None)
+    elif type == 'qa':
+        return df['parsed_model_response'].apply(lambda x: x.get('answer') if pd.notna(x) else None)
+    return None
 
 
-def load_debate(debate_run_id):
-    df = pd.read_json(f"results/debates/{debate_run_id}.jsonl", lines=True)
-    config_df = pd.json_normalize(df['config'])
-    config_df.columns = ['config_debate_' + col for col in config_df.columns]
-    df = pd.concat([df, config_df], axis=1)
-    df['options_str'] = df['options'].apply(str)
+def load_all_records_into_df(type, filter_errors=True, filter_nulls=True):
+    files = glob.glob(f'results/{type}/*.jsonl')
+    dfs = []
+    for file in files:
+        df = pd.read_json(file, lines=True)
+        if df.shape[0] == 0:
+            continue
+
+        config_df = pd.json_normalize(df['config'])
+        config_df.columns = ['config_' + col for col in config_df.columns]
+        df = pd.concat([df.drop(columns=['config']), config_df], axis=1)
+
+        df['options_str'] = df['options'].apply(str)
+
+        parsed_answer = extract_parsed_answer(df, type)
+        if parsed_answer is not None:
+            df['parsed_answer'] = parsed_answer
+        
+        if filter_errors and 'success' in df.columns:
+            # Keep records that succeeded OR where success is NaN (legacy records before this field existed)
+            df = df[(df['success'] == True) | (df['success'].isna())]
+        
+        if filter_nulls and 'parsed_answer' in df.columns:
+            df = df[df['parsed_answer'].notna()]
+        
+        df.columns = [col + '_' + type for col in df.columns]
+        dfs.append(df)
+
+    if not dfs:
+        return pd.DataFrame()
     
-    if 'config_debate_private_reasoning_word_limit' in df.columns:
-        df['config_debate_private_reasoning_word_limit'] = df['config_debate_private_reasoning_word_limit'].astype('object')
-        df.loc[df['config_debate_private_scratchpad'] == False, 'config_debate_private_reasoning_word_limit'] = None
+    if len(dfs) == 1:
+        return dfs[0]
     
-    return df
+    all_columns = sorted(set().union(*[df.columns for df in dfs]))
+    aligned_dfs = [df.reindex(columns=all_columns) for df in dfs]
+    return pd.concat(aligned_dfs, ignore_index=True)
 
 
-def load_verdict(verdict_run_id):
-    df = pd.read_json(f"results/verdicts/{verdict_run_id}.jsonl", lines=True)
+def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_nulls=True):
+    if isinstance(types, str):
+        types = [types]
+    
+    if types == ['qa']:
+        return load_all_records_into_df('qa', filter_errors=filter_errors, filter_nulls=filter_nulls)
+    
+    if types == ['debates']:
+        return load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
 
-    df = df[df['judge_verdict'].apply(
-        lambda x: isinstance(x, dict) and isinstance(x.get('parsed'), dict) and 'answer' in x.get('parsed', {})
-    )].reset_index(drop=True)
+    verdict_df = load_all_records_into_df('verdicts', filter_errors=filter_errors, filter_nulls=filter_nulls)
+    debate_df = load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
     
-    config_df = pd.json_normalize(df['config'])
-    config_df.columns = ['config_verdict_' + col for col in config_df.columns]
-    df = pd.concat([df, config_df], axis=1)
+    if types == ['verdicts']:
+        valid_verdicts = verdict_df[verdict_df['record_id_verdicts'].notna()]
+        valid_debates = debate_df[debate_df['record_id_debates'].notna()]
+        merged = valid_verdicts.merge(valid_debates, left_on=['record_id_verdicts'], right_on=['record_id_debates'], how='left')
+        
+        invalid_verdicts = verdict_df[verdict_df['record_id_verdicts'].isna()]
+        if not invalid_verdicts.empty:
+            merged = pd.concat([merged, invalid_verdicts], ignore_index=True, sort=False)
+        
+        return merged
     
-    df['parsed_answer'] = df['judge_verdict'].apply(lambda x: x['parsed']['answer'])
-    df = df[df['parsed_answer'].notna()]
-    df['is_correct_verdict'] = df['parsed_answer'] == df['correct_idx']
+    qa_df = load_all_records_into_df('qa', filter_errors=filter_errors, filter_nulls=filter_nulls)
     
-    return df
+    # Keep only most recent QA record for each (question, options, model) triplet
+    if 'datetime_qa' in qa_df.columns:
+        qa_df = qa_df.sort_values('datetime_qa', ascending=False)
+    qa_df = qa_df.drop_duplicates(subset=['question_qa', 'options_str_qa', 'config_model_name_qa'], keep='first')
+    
+    valid_verdicts = verdict_df[verdict_df['record_id_verdicts'].notna()]
+    valid_debates = debate_df[debate_df['record_id_debates'].notna()]
+    verdict_and_debate_df = valid_verdicts.merge(valid_debates, left_on=['record_id_verdicts'], right_on=['record_id_debates'], how='left')
 
+    judge_qa_df = qa_df.copy()
+    judge_qa_df.columns = [col + '_judge' for col in qa_df.columns]
 
-def load_debate_and_verdict(verdict_run_id):
-    verdict_df = load_verdict(verdict_run_id)
-    debate_run_id = verdict_df['config_verdict_debate_run_id'].iloc[0]
-    debate_df = load_debate(debate_run_id)
-    
-    verdict_cols = ['record_id', 'verdict_run_id', 'parsed_answer', 'is_correct_verdict'] + \
-                   [col for col in verdict_df.columns if col.startswith('config_verdict_')]
-    df = debate_df.merge(verdict_df[verdict_cols], on='record_id')
-    
-    return df
-
-
-def load_debate_and_verdict_and_qa(verdict_run_id):
-    df = load_debate_and_verdict(verdict_run_id)
-    start_count = len(df)
-    
-    qa_df = load_qa(filters=None)
-    qa_df = qa_df[['question', 'options_str', 'config_model_name', 'is_correct']]
-    
-    judge_qa = qa_df.rename(columns={'is_correct': 'is_correct_judge_qa'})
-    df = df.merge(judge_qa, left_on=['question', 'options_str', 'config_verdict_judge_model'], 
-                  right_on=['question', 'options_str', 'config_model_name'], how='left')
-    judge_missing = df['is_correct_judge_qa'].isna().sum()
-    
-    debater_qa = qa_df.rename(columns={'is_correct': 'is_correct_debater_qa'})
-    df = df.merge(debater_qa, left_on=['question', 'options_str', 'config_debate_debater_model'], 
-                  right_on=['question', 'options_str', 'config_model_name'], how='left')
-    debater_missing = df['is_correct_debater_qa'].isna().sum()
-    
-    df = df[df['is_correct_verdict'].notna() & df['is_correct_judge_qa'].notna() & df['is_correct_debater_qa'].notna()]
-    
-    print(f"loaded verdict: {verdict_run_id}: starting records: {start_count}, dropped {judge_missing} without judge QA, dropped {debater_missing} without debater QA, final records: {len(df)}")
-    
-    return df
-
-def load_all_over_runs(run_ids, type: Literal['load_debate_and_verdict_and_qa']):
-    if type == 'load_debate_and_verdict_and_qa':
-        # marginalizes over the verdict run id
-        fn = load_debate_and_verdict_and_qa
-    
-    master_df = pd.DataFrame()
-    for run_id in run_ids:
-        df = fn(run_id)
-        master_df = pd.concat([master_df, df])
-    return master_df
+    debater_qa_df = qa_df.copy()
+    debater_qa_df.columns = [col + '_debater' for col in qa_df.columns]
 
 
-def load_unique_over_runs(run_ids, type: Literal['load_debate_and_verdict_and_qa']):
-    if type == 'load_debate_and_verdict_and_qa':
-        dedupe_columns = [
-            "record_id",
-            "config_verdict_debate_run_id",
-            "config_debate_dataset_name", 
-            "config_debate_dataset_subset", 
-            "config_debate_dataset_split", 
-            "config_debate_debater_model", 
-            "config_debate_debater_temperature", 
-            "config_debate_random_seed", 
-            "config_debate_num_choices", 
-            "config_debate_num_turns", 
-            "config_debate_private_scratchpad",
-            "config_debate_public_argument_word_limit",
-            "config_debate_private_reasoning_word_limit",
-            "config_verdict_judge_model", 
-            "config_verdict_judge_temperature", 
-            "config_verdict_max_output_tokens"
+    all_df = verdict_and_debate_df.merge(
+        judge_qa_df[['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge', 'parsed_answer_qa_judge', 'success_qa_judge']], 
+        left_on=['question_verdicts', 'options_str_verdicts', 'config_judge_model_verdicts'], 
+        right_on=['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge'],
+        how='left'
+    )
+
+    all_df = all_df.merge(
+        debater_qa_df[['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'success_qa_debater']], 
+        left_on=['question_verdicts', 'options_str_verdicts', 'config_debater_model_debates'], 
+        right_on=['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater'],
+        how='left',
+        suffixes=('', '_debater')
+    )
+
+    # Filter to only valid records if requested (default for analysis)
+    # Note: success can be NaN after left joins if matching records weren't found,
+    # or for legacy data that predates the success field
+    if filter_errors and filter_nulls:
+        all_df = all_df[
+            ((all_df['success_verdicts'] == True) | (all_df['success_verdicts'].isna())) & 
+            ((all_df['success_debates'] == True) | (all_df['success_debates'].isna())) & 
+            ((all_df['success_qa_judge'] == True) | (all_df['success_qa_judge'].isna())) & 
+            ((all_df['success_qa_debater'] == True) | (all_df['success_qa_debater'].isna())) &
+            all_df['parsed_answer_qa_judge'].notnull() & 
+            all_df['parsed_answer_qa_debater'].notnull() & 
+            all_df['parsed_answer_verdicts'].notnull()
         ]
-    
-    master_df = load_all_over_runs(run_ids, type)
-    master_df = master_df.sort_values('datetime').drop_duplicates(subset=dedupe_columns, keep='last')
 
-    dedupe_columns = [col for col in dedupe_columns if col != 'record_id']
-    unique_configs = master_df[dedupe_columns].drop_duplicates().to_dict('records')
-    unique_configs_df = pd.DataFrame(unique_configs).reset_index().rename(columns={'index': 'unique_config_id'})
-    master_df = master_df.merge(unique_configs_df, on=dedupe_columns, how='left')
+    # Add correctness columns
+    all_df['is_correct_qa_judge'] = all_df['parsed_answer_qa_judge'] == all_df['correct_idx_verdicts']
+    all_df['is_correct_qa_debater'] = all_df['parsed_answer_qa_debater'] == all_df['correct_idx_verdicts']
+    all_df['is_correct_verdict'] = all_df['parsed_answer_verdicts'] == all_df['correct_idx_verdicts']
 
-    return master_df, unique_configs
+    return all_df
 
 
-def results_by_config(unique_df, unique_configs):
-    """
-    Collapses across runs to get the unique records pertaining to each config (or, the config params that matter)
-    """
+def aggregate_by_fields(input_df, fields):
     results = []
-    varying_cols = [col for col in unique_configs[0].keys() if unique_df[col].nunique() > 1]
-
-    # Get the records and summary for each unique config
-    for unique_config in unique_configs:
-        filtered_df = unique_df.copy()
-        for key, value in unique_config.items():
-            if value is None or pd.isna(value):
-                filtered_df = filtered_df[filtered_df[key].isna()]
-            else:
-                filtered_df = filtered_df[filtered_df[key] == value]
-
-        # Name the column for the value of the varying columns
-        name = ""
-        for col in varying_cols:
-            if col in unique_config:
-                name += (f"{unique_config[col]},")
-        name = name.strip(",")
-
+    
+    for group_vals, group_df in input_df.groupby(fields):
+        name = ", ".join([str(v) for v in (group_vals if isinstance(group_vals, tuple) else (group_vals,))])
+        
         results.append({
             'name': name,
-            'debater_qa_acc': filtered_df['is_correct_debater_qa'].mean(),
-            'judge_qa_acc': filtered_df['is_correct_judge_qa'].mean(),
-            'verdict_acc': filtered_df['is_correct_verdict'].mean(),
-            'debater_qa_n_correct': filtered_df['is_correct_debater_qa'].sum(),
-            'judge_qa_n_correct': filtered_df['is_correct_judge_qa'].sum(),
-            'verdict_n_correct': filtered_df['is_correct_verdict'].sum(),
-            'n_total': len(filtered_df),
-            'verdict_minus_judge_qa': filtered_df['is_correct_verdict'].mean() - filtered_df['is_correct_judge_qa'].mean(),
-            'pgr': (filtered_df['is_correct_verdict'].mean() - filtered_df['is_correct_judge_qa'].mean()) / (filtered_df['is_correct_debater_qa'].mean() - filtered_df['is_correct_judge_qa'].mean()),
-            'debater_minus_judge_qa': filtered_df['is_correct_debater_qa'].mean() - filtered_df['is_correct_judge_qa'].mean(),
+            'debater_qa_acc': group_df['is_correct_qa_debater'].mean(),
+            'judge_qa_acc': group_df['is_correct_qa_judge'].mean(),
+            'verdict_acc': group_df['is_correct_verdict'].mean(),
+            'debater_qa_n_correct': group_df['is_correct_qa_debater'].sum(),
+            'judge_qa_n_correct': group_df['is_correct_qa_judge'].sum(),
+            'verdict_n_correct': group_df['is_correct_verdict'].sum(),
+            'n_total': len(group_df),
+            'pgr': (group_df['is_correct_verdict'].mean() - group_df['is_correct_qa_judge'].mean()) / (group_df['is_correct_qa_debater'].mean() - group_df['is_correct_qa_judge'].mean()),
+            'gap': group_df['is_correct_qa_debater'].mean() - group_df['is_correct_qa_judge'].mean(),
+            'gain':group_df['is_correct_verdict'].mean() - group_df['is_correct_qa_judge'].mean()
         })
-
-    results_df = pd.DataFrame(results)
-    return results_df
-
-def results_by_run(verdict_ids):
-    results = []
-    for vid in verdict_ids:
-        df = load_debate_and_verdict_and_qa(vid)
-        n = len(df)
-        results.append({
-            'name': vid,
-            'debater_qa_acc': df['is_correct_debater_qa'].mean(),
-            'judge_qa_acc': df['is_correct_judge_qa'].mean(),
-            'verdict_acc': df['is_correct_verdict'].mean(),
-            'debater_qa_n_correct': df['is_correct_debater_qa'].sum(),
-            'judge_qa_n_correct': df['is_correct_judge_qa'].sum(),
-            'verdict_n_correct': df['is_correct_verdict'].sum(),
-            'n_total': n
-        })
-    results_df = pd.DataFrame(results)
-    return results_df
-
-
+    
+    return pd.DataFrame(results)
