@@ -4,7 +4,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 import pandas as pd
 from tabulate import tabulate
-from utils.analysis_utils import load_qa
+from analysis.analysis_utils import load_qa
 from views.view_utils import shorten_name
 
 IGNORED_COLS = ['config_num_questions', 'config_max_threads', 'config_specific_question_idxs', 'config_rerun']

@@ -1,6 +1,9 @@
 import pandas as pd
 import glob
+from pathlib import Path
 
+def get_project_root():
+    return Path(__file__).parent.parent
 
 def extract_parsed_answer(df, type):
     if type == 'verdicts':
@@ -11,7 +14,8 @@ def extract_parsed_answer(df, type):
 
 
 def load_all_records_into_df(type, filter_errors=True, filter_nulls=True):
-    files = glob.glob(f'results/{type}/*.jsonl')
+    results_dir = get_project_root() / 'results'
+    files = glob.glob(str(results_dir / type / '*.jsonl'))
     dfs = []
     for file in files:
         df = pd.read_json(file, lines=True)

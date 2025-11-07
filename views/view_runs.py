@@ -5,7 +5,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 import pandas as pd
 from tabulate import tabulate
-from utils.analysis_utils import prepare_df
+from analysis.analysis_utils import prepare_df
 
 
 # Operational/metadata config params to ignore when determining duplicate configs
