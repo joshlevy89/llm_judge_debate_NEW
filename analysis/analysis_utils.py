@@ -71,11 +71,15 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
         if types == ['qa']:
             return qa_df
 
-    if types == ['debates']:
-        return load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
+
+    if 'debates' in types:
+        debate_df = load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
+        debate_df = debate_df.drop(columns=['config_judge_model_debates']) # this field shouldn't exist
+        if types == ['debates']:
+            return debate_df
+        
 
     verdict_df = load_all_records_into_df('verdicts', filter_errors=filter_errors, filter_nulls=filter_nulls)
-    debate_df = load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
     
     if types == ['verdicts']:
         valid_verdicts = verdict_df[verdict_df['record_id_verdicts'].notna()]
@@ -161,7 +165,15 @@ def aggregate_by_fields(input_df, fields):
 def sum_reasoning_tokens_over_turns(turns):
     tot = 0
     for turn in turns:
-        if turn['token_usage'].get('completion_tokens_details') is None:
-            continue
-        tot += turn['token_usage']['completion_tokens_details']['reasoning_tokens']
+        # if turn['token_usage'].get('completion_tokens_details') is None:
+        #     continue
+        reasoning_tokens = get_reasoning_tokens(turn)
+        tot += reasoning_tokens
     return tot
+
+def get_reasoning_tokens(x):
+    completion_tokens_details = x['token_usage'].get('completion_tokens_details')
+    if completion_tokens_details is None:
+        return 0
+    else:
+        return completion_tokens_details.get('reasoning_tokens', 0)

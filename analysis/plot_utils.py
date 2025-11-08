@@ -54,28 +54,30 @@ def plot_verdict_difference(results_df, ax=None, type='gain'):
         bars =ax.bar(results_df['name'], results_df['gain'], color='purple')
         ylabel = 'Gain'
     elif type == 'pgr':
-        bars = ax.bar(results_df['name'], results_df['pgr'], color='purple')
+        bars = ax.bar(results_df['name'], results_df['pgr'], color='cyan')
         ylabel = 'PGR'
     elif type == 'gap':
-        bars = ax.bar(results_df['name'], results_df['debater_minus_judge_qa'], color='purple')
+        bars = ax.bar(results_df['name'], results_df['gap'], color='pink')
         ylabel = 'Gap'
-    ax.set_ylim(-.1, 0.2)
+    # ax.set_ylim(-.1, 0.2)
+    # add a horizontal line at 0
+    ax.axhline(y=0, color='gray', linestyle='--', linewidth=1, alpha=0.5)
     ax.set_ylabel(ylabel)
     ax.set_xlabel('Judge Model')
     ax.set_xticklabels(results_df['name'], rotation=45, ha='right')
-    return bars
-
+    return ax, bars
 
 
 def plot_results_by_name(results_df, field='config_judge_model_verdicts'):
     if field == 'config_judge_model_verdicts':
         sorted_names, _ = sort_and_color_by_model_family(results_df['name'].unique())
         results_df = results_df.set_index('name').loc[sorted_names].reset_index()
-    fig, ax = plt.subplots(2, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [3, 1]}, sharex=True)
+    fig, ax = plt.subplots(3, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [3, 1, 1]}, sharex=True)
     plot_accuracy_bars(results_df, ax=ax[0])
-    plot_verdict_difference(results_df, ax=ax[1])
+    ax_gain, _ = plot_verdict_difference(results_df, ax=ax[1])
+    ax_gap, _ = plot_verdict_difference(results_df, ax=ax[2], type='gap')
     plt.tight_layout()
-    plt.show()
+    return plt, ax_gain, ax_gap
 
 
 def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 'gap'):
@@ -100,7 +102,7 @@ def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 
         x_val = row[xfield]
         y_val = row[f'gain']
         
-        ax.scatter(x_val, y_val, color=color_map[row['name']], alpha=0.7, s=80, label=row['name'])
+        ax.scatter(x_val, y_val, color=color_map[row['name']], alpha=0.7, s=80, label=f"{row['name']} (N={row['n_total']})")
         ax.annotate(row['name'], (x_val, y_val), fontsize=7, ha='left', va='bottom', alpha=0.7)
 
     if xfield == f'judge_qa_acc':
@@ -156,6 +158,8 @@ def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_d
                 label=f"{name} (N={n_0}, {n_1})",
                 alpha=0.7,
                 s=100)
+        # Add labels to each scatter dot
+        ax.annotate(name, (row[xfield], row[yfield]), fontsize=9, ha='center', va='bottom', alpha=0.75)
 
     from scipy import stats
     slope, intercept, r, p, se = stats.linregress(merged[xfield], merged[yfield])
