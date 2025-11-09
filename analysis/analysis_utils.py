@@ -72,7 +72,7 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
             return qa_df
 
 
-    if 'debates' in types:
+    if 'debates' in types or 'verdicts' in types:
         debate_df = load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
         debate_df = debate_df.drop(columns=['config_judge_model_debates']) # this field shouldn't exist
         if types == ['debates']:

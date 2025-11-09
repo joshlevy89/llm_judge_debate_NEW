@@ -4,7 +4,7 @@
 # JUDGE_MODEL = "qwen/qwen-2.5-72b-instruct"
 # JUDGE_MODEL = "qwen/qwen3-8b"
 # JUDGE_MODEL = "qwen/qwen3-14b"
-JUDGE_MODEL = "qwen/qwen3-32b"
+# JUDGE_MODEL = "qwen/qwen3-32b"
 # JUDGE_MODEL = "qwen/qwen3-235b-a22b"
 # JUDGE_MODEL = "meta-llama/llama-3-8b-instruct"
 # JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"
@@ -16,6 +16,18 @@ JUDGE_MODEL = "qwen/qwen3-32b"
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
 # JUDGE_MODEL = "google/gemma-3-12b-it"
 # JUDGE_MODEL = "google/gemma-3-27b-it"
+
+
+# JUDGE_MODEL = "deepseek/deepseek-r1-distill-llama-70b"
+# JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
+# JUDGE_MODEL = "deepseek/deepseek-chat"
+# JUDGE_MODEL = "deepseek/deepseek-r1-0528-qwen3-8b"
+# JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-32b"
+# JUDGE_MODEL = "deepseek/deepseek-chat-v3-0324"
+# JUDGE_MODEL = "deepseek/deepseek-r1"
+# JUDGE_MODEL = "deepseek/deepseek-chat-v3.1"
+# JUDGE_MODEL = "deepseek/deepseek-v3.2-exp"
+JUDGE_MODEL = "deepseek/deepseek-v3.1-terminus"
 
 
 # DEBATE_RUN_ID = "17zguxe" # 2 choice gpqa
