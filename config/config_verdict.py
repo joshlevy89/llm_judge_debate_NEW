@@ -4,7 +4,7 @@
 # JUDGE_MODEL = "qwen/qwen-2.5-72b-instruct"
 # JUDGE_MODEL = "qwen/qwen3-8b"
 # JUDGE_MODEL = "qwen/qwen3-14b"
-# JUDGE_MODEL = "qwen/qwen3-32b"
+JUDGE_MODEL = "qwen/qwen3-32b"
 # JUDGE_MODEL = "qwen/qwen3-235b-a22b"
 # JUDGE_MODEL = "meta-llama/llama-3-8b-instruct"
 # JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"
@@ -18,8 +18,9 @@
 # JUDGE_MODEL = "google/gemma-3-27b-it"
 
 
-DEBATE_RUN_ID = "17zguxe" # 2 choice gpqa
+# DEBATE_RUN_ID = "17zguxe" # 2 choice gpqa
 # DEBATE_RUN_ID = "q6wpwb7" # 4 choice gpqa
+DEBATE_RUN_ID = "z1qae3w" # 4 choice gpqa - deepseek/deepseek-v3.1-terminus as debater
 
 JUDGE_TEMPERATURE = 0.0
 JUDGE_REASONING_EFFORT = None
@@ -32,4 +33,4 @@ RERUN = False
 SUBSET_N = None # Only run the verdict for the first N debates
 SPECIFIC_RECORD_IDS = None#['wi4kbip'] # List of specific record_ids to run the verdict for
 
-MAX_THREADS = 20  
+MAX_THREADS = 200  
