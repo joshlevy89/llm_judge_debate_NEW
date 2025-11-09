@@ -18,7 +18,7 @@
 # JUDGE_MODEL = "google/gemma-3-27b-it"
 
 
-# JUDGE_MODEL = "deepseek/deepseek-r1-distill-llama-70b"
+JUDGE_MODEL = "deepseek/deepseek-r1-distill-llama-70b"
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
 # JUDGE_MODEL = "deepseek/deepseek-chat"
 # JUDGE_MODEL = "deepseek/deepseek-r1-0528-qwen3-8b"
@@ -27,7 +27,7 @@
 # JUDGE_MODEL = "deepseek/deepseek-r1"
 # JUDGE_MODEL = "deepseek/deepseek-chat-v3.1"
 # JUDGE_MODEL = "deepseek/deepseek-v3.2-exp"
-JUDGE_MODEL = "deepseek/deepseek-v3.1-terminus"
+# JUDGE_MODEL = "deepseek/deepseek-v3.1-terminus"
 
 
 # DEBATE_RUN_ID = "17zguxe" # 2 choice gpqa

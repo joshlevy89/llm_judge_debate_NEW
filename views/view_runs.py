@@ -6,6 +6,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 import pandas as pd
 from tabulate import tabulate
 from analysis.analysis_utils import prepare_df
+from views.view_utils import apply_filters, get_varying_cols
 
 
 # Operational/metadata config params to ignore when determining duplicate configs
@@ -83,24 +84,9 @@ def main():
     
     df = get_run_summary(df, args.type)
     
-    if args.filter:
-        for filter_expr in args.filter:
-            if '=' not in filter_expr:
-                print(f"Invalid filter format: {filter_expr}. Expected field=value")
-                return
-            field, value = filter_expr.split('=', 1)
-            
-            if field not in df.columns:
-                print(f"Unknown field: {field}. Available fields: {', '.join(df.columns)}")
-                return
-            
-            if pd.api.types.is_numeric_dtype(df[field]):
-                value = pd.to_numeric(value)
-            df = df[df[field] == value]
-        
-        if df.empty:
-            print("No matching records found")
-            return
+    df = apply_filters(df, args.filter)
+    if df is None:
+        return
     
     df = df.dropna(axis=1, how='all')
     
@@ -115,15 +101,7 @@ def main():
         df = df.drop_duplicates(subset=dedup_cols, keep='first')
     
     if args.varying:
-        varying_cols = []
-        for col in df.columns:
-            if col == 'run_id':
-                continue
-            try:
-                if df[col].nunique(dropna=False) > 1:
-                    varying_cols.append(col)
-            except TypeError:
-                pass
+        varying_cols = get_varying_cols(df, exclude_cols=['run_id'])
         df = df[['run_id'] + varying_cols]
     
     # Sort by config columns (alphabetically) to group similar configs together
