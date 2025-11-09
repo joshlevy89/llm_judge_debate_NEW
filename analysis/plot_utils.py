@@ -135,7 +135,7 @@ def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 
 
 
 
-def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_delta'], yfield: Literal['gain_delta', 'gap_delta'], n_min: int = 50):
+def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_delta'], yfield: Literal['gain_delta', 'gap_delta']):
     merged = merged.copy()
     merged['gap_delta'] = merged[f'gap{suffixes[0]}'] - merged[f'gap{suffixes[1]}']
     merged['gain_delta'] = merged[f'gain{suffixes[0]}'] - merged[f'gain{suffixes[1]}']
@@ -148,11 +148,6 @@ def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_d
         row = merged[merged['name'] == name].iloc[0]
         n_0 = int(row[f'n_total{suffixes[0]}'])
         n_1 = int(row[f'n_total{suffixes[1]}'])
-        if n_0 < n_min or n_1 < n_min:
-            print(f'skipping {name} because too few samples: n_0 = {n_0} and n_1 = {n_1}')
-            # drop from the merged dataframe
-            merged = merged[merged['name'] != name]
-            continue
         ax.scatter(row[xfield], row[yfield], 
                 color=color_map[name], 
                 label=f"{name} (N={n_0}, {n_1})",
@@ -303,8 +298,8 @@ def plot_spaghetti(merged, suffixes):
         ax.plot([0, 1], [row[f'gain{suffixes[0]}'], row[f'gain{suffixes[1]}']], 
                 marker='o', label=f"{row['name']} (N={n_2choice}, {n_4choice})", color=color_map[row['name']], linewidth=2, markersize=8, linestyle='--')
 
-    ax.plot([0, 1], [merged[f'gain{suffixes[0]}'].median(), merged[f'gain{suffixes[1]}'].median()], 
-            marker='o', label='Median', color='black', linewidth=2, markersize=8, linestyle='-')
+    ax.plot([0, 1], [merged[f'gain{suffixes[0]}'].median(), merged[f'gain{suffixes[1]}'].median()], marker='o', label='Median', color='black', linewidth=2, markersize=8, linestyle='-')
+    ax.plot([0, 1], [merged[f'gain{suffixes[0]}'].mean(), merged[f'gain{suffixes[1]}'].mean()], marker='o', label='Mean', color='green', linewidth=2, markersize=8, linestyle='-')
 
     ax.set_xticks([0, 1])
     ax.set_xticklabels(suffixes, fontsize=12)
@@ -312,5 +307,42 @@ def plot_spaghetti(merged, suffixes):
     ax.grid(axis='y', alpha=0.3)
 
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_correctness_grid(temp_df, value_field='is_correct_verdict'):
+
+    pivot_df = temp_df.pivot_table(
+        index='config_judge_model_verdicts',
+        columns='question_idx_debates',
+        values=value_field,
+        aggfunc='first'
+    )
+
+    pivot_df = pivot_df.astype(float)
+
+    from matplotlib.colors import ListedColormap
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    fig, ax = plt.subplots(figsize=(20, max(8, len(pivot_df) * 0.5)))
+
+    data = pivot_df.fillna(0.5).values.astype(float)
+
+    cmap = ListedColormap(['red', 'gray', 'green'])
+    im = ax.imshow(data, aspect='auto', cmap=cmap, vmin=0, vmax=1)
+
+    ax.set_yticks(range(len(pivot_df)))
+    ax.set_yticklabels(pivot_df.index)
+    ax.set_xticks(range(len(pivot_df.columns)))
+    ax.set_xticklabels(pivot_df.columns, rotation=90, fontsize=8)
+    ax.set_xticks([x - 0.5 for x in range(len(pivot_df.columns) + 1)], minor=True)
+    ax.set_yticks([y - 0.5 for y in range(len(pivot_df) + 1)], minor=True)
+    ax.grid(which='minor', color='black', linestyle='-', linewidth=0.5)
+    ax.set_xlabel('Question Index')
+    ax.set_ylabel('Model')
+    ax.set_title('Correctness Grid: Green=Correct, Red=Wrong, Gray=Missing')
+
     plt.tight_layout()
     plt.show()

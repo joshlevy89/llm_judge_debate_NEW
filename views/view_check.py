@@ -5,17 +5,16 @@ Shows the question, options, and leak analysis for each checked argument.
 import argparse
 import json
 from pathlib import Path
+import pandas as pd
 
 def load_check_data(run_id, record_id):
     check_path = Path('results') / 'debate_checks' / f'{run_id}.jsonl'
     if not check_path.exists():
         return None
-    
-    for line in open(check_path):
-        data = json.loads(line)
-        if data['record_id'] == record_id:
-            return data
-    return None
+    check_df = pd.read_json(check_path, lines=True)
+    check_df = check_df.drop_duplicates(['run_id', 'record_id'], keep='last')
+    match = check_df[check_df['record_id'] == record_id].iloc[0].to_dict()
+    return match
 
 def display_check(check_data):
     if not check_data.get('success', True):
