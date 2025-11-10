@@ -92,7 +92,8 @@ def process_qa_question(q_data, prompt_template_str, api_key, config, run_id, ru
     )
     
     raw_model_response = response['content']
-    parsed_model_response = parse_answer(raw_model_response)
+    lenient_parsing = config.get('lenient_parsing', True)
+    parsed_model_response = parse_answer(raw_model_response, lenient=lenient_parsing)
     
     return {
         'run_id': run_id,

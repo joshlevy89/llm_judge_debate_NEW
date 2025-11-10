@@ -7,6 +7,8 @@ def get_project_root():
 
 def extract_parsed_answer(df, type):
     if type == 'verdicts':
+        if 'judge_verdict' not in df.columns:
+            return None
         return df['judge_verdict'].apply(lambda x: x.get('parsed', {}).get('answer') if pd.notna(x) and isinstance(x, dict) else None)
     elif type == 'qa':
         return df['parsed_model_response'].apply(lambda x: x.get('answer') if pd.notna(x) else None)

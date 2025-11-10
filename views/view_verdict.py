@@ -7,12 +7,13 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
 from views.view_debate import display_debate, load_debate_data
 
 def load_verdict_data(verdict_run_id, record_id):
-    verdict_path = Path('results') / 'verdicts' / f'{verdict_run_id}.jsonl'
+    verdict_path = project_root / 'results' / 'verdicts' / f'{verdict_run_id}.jsonl'
     for line in open(verdict_path):
         data = json.loads(line)
         if data['record_id'] == record_id:

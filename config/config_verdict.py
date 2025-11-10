@@ -15,10 +15,10 @@
 # JUDGE_MODEL = "meta-llama/llama-4-maverick"
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
 # JUDGE_MODEL = "google/gemma-3-12b-it"
-# JUDGE_MODEL = "google/gemma-3-27b-it"
+JUDGE_MODEL = "google/gemma-3-27b-it"
 
 
-JUDGE_MODEL = "deepseek/deepseek-r1-distill-llama-70b"
+# JUDGE_MODEL = "deepseek/deepseek-r1-distill-llama-70b"
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
 # JUDGE_MODEL = "deepseek/deepseek-chat"
 # JUDGE_MODEL = "deepseek/deepseek-r1-0528-qwen3-8b"

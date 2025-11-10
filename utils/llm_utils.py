@@ -149,28 +149,23 @@ def parse_answer(response_text, lenient=True):
     }
     
     if lenient:
-        final_answer_match = re.search(r'<BEGIN FINAL ANSWER>(.*)', response_text, re.DOTALL | re.IGNORECASE)
-        if not final_answer_match:
-            return parsed
-        final_answer_text = final_answer_match.group(1)
-        if '</END FINAL ANSWER>' in final_answer_text.upper():
-            final_answer_text = re.split(r'</?END FINAL ANSWER>', final_answer_text, flags=re.IGNORECASE)[0]
+        search_text = response_text
     else:
         final_answer_match = re.search(r'<BEGIN FINAL ANSWER>(.*?)</?END FINAL ANSWER>', response_text, re.DOTALL | re.IGNORECASE)
         if not final_answer_match:
             return parsed
-        final_answer_text = final_answer_match.group(1)
-    parsed['is_valid'] = True
+        search_text = final_answer_match.group(1)
     
-    answer_match = re.search(r'Answer:\s*(\d+)', final_answer_text, re.IGNORECASE)
+    answer_match = re.search(r'Answer:\s*(\d+)', search_text, re.IGNORECASE)
     if answer_match:
         parsed['answer'] = int(answer_match.group(1))
+        parsed['is_valid'] = True
     
-    confidence_match = re.search(r'Confidence:\s*(\d+)(?:\.\d+)?%?', final_answer_text, re.IGNORECASE)
+    confidence_match = re.search(r'Confidence:\s*(\d+)(?:\.\d+)?%?', search_text, re.IGNORECASE)
     if confidence_match:
         parsed['confidence'] = int(confidence_match.group(1))
     
-    reasoning_match = re.search(r'Reasoning:\s*(.+?)(?=\n\s*$|\Z)', final_answer_text, re.IGNORECASE | re.DOTALL)
+    reasoning_match = re.search(r'Reasoning:\s*(.+?)(?=\n\s*$|\Z)', search_text, re.IGNORECASE | re.DOTALL)
     if reasoning_match:
         parsed['reasoning'] = reasoning_match.group(1).strip()
     

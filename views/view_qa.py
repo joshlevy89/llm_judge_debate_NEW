@@ -2,9 +2,12 @@
 Prints the QA results for a given run_id and/or record_id.
 Also prints the raw model response and the parsed model response.
 """
+import sys
 import argparse
-import json
 from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
+from analysis.analysis_utils import prepare_df
 
 def main():
     parser = argparse.ArgumentParser(description='View QA results')
@@ -12,46 +15,51 @@ def main():
     parser.add_argument('record_id')
     args = parser.parse_args()
     
-    path = Path('results') / 'qa' / 'qa_results.jsonl'
+    df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False)
     
-    for line in open(path):
-        data = json.loads(line)
-        if args.run_id and data.get('run_id') != args.run_id:
-            continue
-        if args.record_id and data.get('record_id') != args.record_id:
-            continue
-        
-        if not data.get('success', True):
-            print(f"{'='*80}")
-            print(f"ERROR: QA failed")
-            print(f"{'='*80}")
-            print(f"Run ID: {data.get('run_id')}")
-            print(f"Record ID: {data.get('record_id')}")
-            print(f"Question Idx: {data.get('question_idx')}")
-            print(f"Error message: {data.get('error_message', 'Unknown error')}")
-            if args.record_id:
-                break
-            continue
-        
+    if args.run_id:
+        df = df[df['run_id_qa'] == args.run_id]
+    if args.record_id:
+        df = df[df['record_id_qa'] == args.record_id]
+    
+    if len(df) != 1:
+        print(f"Error: Expected exactly 1 record, found {len(df)}")
+        if not df.empty:
+            print("\nMatching records:")
+            for _, row in df.iterrows():
+                print(f"  Run ID: {row.get('run_id_qa')}, Record ID: {row.get('record_id_qa')}, Question Idx: {row.get('question_idx_qa')}")
+        return
+    
+    row = df.iloc[0]
+    
+    if not row.get('success_qa', True):
         print(f"{'='*80}")
-        print(f"Run: {data['run_id']} | Record: {data['record_id']} | Question Idx: {data['question_idx']}")
-        print(f"{'='*80}\nQuestion\n{'='*80}")
-        print(f"{data['question']}\n")
-        print(f"Options: {data['options']}")
-        print(f"{'='*80}\nRaw Model Response\n{'='*80}")
-        print(f"{data['raw_model_response']}")
-        print(f"{'='*80}\nParsed Model Response\n{'='*80}")
-        parsed_response = data['parsed_model_response']
-        print(f"Answer: {parsed_response['answer']}")
-        print(f"Confidence: {parsed_response['confidence']}")
-        print(f"Reasoning: {parsed_response['reasoning']}")
-        print(f"{'='*80}\nOutput\n{'='*80}")
-        print(f"Correct Answer: {data['correct_idx']}")
-        print(f"Model Answer: {parsed_response['answer']}")
-        print(f"Correct: {parsed_response['answer'] == data['correct_idx']}")
-
-        if args.record_id:
-            break
+        print(f"ERROR: QA failed")
+        print(f"{'='*80}")
+        print(f"Run ID: {row.get('run_id_qa')}")
+        print(f"Record ID: {row.get('record_id_qa')}")
+        print(f"Question Idx: {row.get('question_idx_qa')}")
+        print(f"Error message: {row.get('error_message_qa', 'Unknown error')}")
+        return
+    
+    print(f"{'='*80}")
+    print(f"Run: {row['run_id_qa']} | Record: {row['record_id_qa']} | Question Idx: {row['question_idx_qa']}")
+    print(f"{'='*80}\nQuestion\n{'='*80}")
+    print(f"{row['question_qa']}\n")
+    print(f"Options: {row['options_qa']}")
+    print(f"{'='*80}\nRaw Model Response\n{'='*80}")
+    print(f"{row['raw_model_response_qa']}")
+    print(f"{'='*80}\nParsed Model Response\n{'='*80}")
+    parsed_response = row['parsed_model_response_qa']
+    if parsed_response and isinstance(parsed_response, dict):
+        print(f"Answer: {parsed_response.get('answer')}")
+        print(f"Confidence: {parsed_response.get('confidence')}")
+        print(f"Reasoning: {parsed_response.get('reasoning')}")
+    print(f"{'='*80}\nOutput\n{'='*80}")
+    print(f"Correct Answer: {row['correct_idx_qa']}")
+    if parsed_response and isinstance(parsed_response, dict):
+        print(f"Model Answer: {parsed_response.get('answer')}")
+        print(f"Correct: {parsed_response.get('answer') == row['correct_idx_qa']}")
 
 if __name__ == '__main__':
     main()

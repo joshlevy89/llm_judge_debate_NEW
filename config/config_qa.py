@@ -14,7 +14,8 @@ DATASET_SPLIT = "train"
 # MODEL_NAME = "qwen/qwen3-8b"
 # MODEL_NAME = "qwen/qwen3-235b-a22b"
 
-MODEL_NAME = "deepseek/deepseek-v3.1-terminus"
+# MODEL_NAME = "deepseek/deepseek-v3.1-terminus"
+MODEL_NAME = "deepseek/deepseek-r1-distill-llama-70b"
 
 TEMPERATURE = 0.0
 
@@ -23,6 +24,7 @@ RANDOM_SEED = 42
 NUM_CHOICES = 4
 
 RERUN = False  # will rerun a question/choice set even if it already exists
+LENIENT_PARSING = True
 
 SPECIFIC_QUESTION_IDXS = None # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]
 
