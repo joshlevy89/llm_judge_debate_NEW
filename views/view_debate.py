@@ -13,12 +13,18 @@ from utils.debate_utils import format_debate_history
 
 def display_debate(debate_data, hide_private=False):
     if not debate_data.get('success', True):
+        print(debate_data.keys())
         print(f"{'='*80}")
         print(f"ERROR: Debate failed")
         print(f"{'='*80}")
         print(f"Run ID: {debate_data.get('run_id')}")
         print(f"Record ID: {debate_data.get('record_id')}")
-        print(f"Error message: {debate_data.get('error_message', 'Unknown error')}")
+        print(debate_data.keys())
+        # Find the turn with the error
+        for turn in debate_data['debate_history']:
+            if not turn['success']:
+                print(f"\n\nRaw Response: \n{turn['raw_response']}")
+        print(f"\n\nError message: \n{debate_data.get('error_message', 'Unknown error')}")
         return False
     
     if hide_private:
@@ -37,7 +43,7 @@ def display_debate(debate_data, hide_private=False):
     return True
 
 def load_debate_data(run_id, record_id):
-    debate_path = Path('results') / 'debates' / f'{run_id}.jsonl'
+    debate_path = project_root / 'results' / 'debates' / f'{run_id}.jsonl'
     for line in open(debate_path):
         data = json.loads(line)
         if data['record_id'] == record_id:

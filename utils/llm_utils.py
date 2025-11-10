@@ -110,20 +110,30 @@ def call_openrouter(prompt, model_name, api_key, temperature=0.0, reasoning_effo
                 raise
             raise Exception(str(e))
 
-def log_progress(status_type, count, total, run_id, record_id, api_key, start_usage, error=None, is_correct=None):
+# def log_progress(status_type, count, total, run_id, record_id, api_key, start_usage, error=None, is_correct=None):
+#     key_info = get_openrouter_key_info(api_key)
+#     current_usage = key_info.get('data', {}).get('usage', 0) if key_info else 0
+#     cost = current_usage - start_usage if current_usage else 0
+    
+#     if status_type == "completed":
+#         extra = f" - Correct: {is_correct}" if is_correct is not None else ""
+#         print(f"Completed {count}/{total} - Run ID: {run_id} - Record ID: {record_id}{extra} - Cost: ${cost:.6f}")
+#     else:
+#         error_msg = str(error)[:100] if error else "Unknown error"
+#         print(f"Failed {count}/{total} - Run ID: {run_id} - Record ID: {record_id} - Error: {error_msg} - Cost: ${cost:.6f}")
+    
+#     return cost
+
+
+def log_progress(status_message, count, total, run_id, record_id, api_key, start_usage, error=None, is_correct=None):
     key_info = get_openrouter_key_info(api_key)
     current_usage = key_info.get('data', {}).get('usage', 0) if key_info else 0
     cost = current_usage - start_usage if current_usage else 0
     
-    if status_type == "completed":
-        extra = f" - Correct: {is_correct}" if is_correct is not None else ""
-        print(f"Completed {count}/{total} - Run ID: {run_id} - Record ID: {record_id}{extra} - Cost: ${cost:.6f}")
-    else:
-        error_msg = str(error)[:100] if error else "Unknown error"
-        print(f"Failed {count}/{total} - Run ID: {run_id} - Record ID: {record_id} - Error: {error_msg} - Cost: ${cost:.6f}")
+    extra = f" - Correct: {is_correct}" if is_correct is not None else ""
+    error_msg = f" - Error: {str(error)[:100] if error else None}"
+    print(f"{status_message} {count}/{total} - Run ID: {run_id} - Record ID: {record_id} - Cost: ${cost:.6f}{extra}{error_msg}")
     
-    return cost
-
 def get_openrouter_key_info(api_key):
     if not api_key:
         return None
@@ -171,18 +181,3 @@ def parse_answer(response_text, lenient=True):
     
     return parsed
 
-def parse_debater_response(response_text, private_scratchpad):
-    public_match = re.search(r'<BEGIN PUBLIC ARGUMENT>(.*?)</?END PUBLIC ARGUMENT>', response_text, re.DOTALL | re.IGNORECASE)
-    
-    if not public_match:
-        return None, "Missing <BEGIN PUBLIC ARGUMENT> or </END PUBLIC ARGUMENT> tags"
-    
-    parsed = {'public_argument': public_match.group(1).strip()}
-    
-    if private_scratchpad:
-        private_match = re.search(r'<BEGIN PRIVATE REASONING>(.*?)</?END PRIVATE REASONING>', response_text, re.DOTALL | re.IGNORECASE)
-        if not private_match:
-            return None, "Missing <BEGIN PRIVATE REASONING> or </END PRIVATE REASONING> tags"
-        parsed['private_reasoning'] = private_match.group(1).strip()
-    
-    return parsed, None

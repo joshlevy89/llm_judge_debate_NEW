@@ -1,6 +1,7 @@
 import os
 import re
 import json
+from pandas.core.strings.accessor import NoNewAttributesMixin
 import yaml
 import random
 import string
@@ -18,11 +19,12 @@ from config.config_debate import (
     DEBATER_REASONING_EFFORT, DEBATER_REASONING_MAX_TOKENS,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES, NUM_TURNS,
     PRIVATE_SCRATCHPAD, MAX_THREADS, MAX_OUTPUT_TOKENS,
-    PUBLIC_ARGUMENT_WORD_LIMIT, PRIVATE_REASONING_WORD_LIMIT
+    PUBLIC_ARGUMENT_WORD_LIMIT, PRIVATE_REASONING_WORD_LIMIT,
+    LENIENT_PARSING_ARGUMENT
 )
-from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_debater_response, log_progress
+from utils.llm_utils import call_openrouter, get_openrouter_key_info, log_progress
 from utils.dataset_utils import select_questions_and_options, format_options
-from utils.debate_utils import format_debate_history
+from utils.debate_utils import format_debate_history ,parse_debater_response
 from utils.shared_utils import extract_config, generate_run_id
 
 def setup_output_path(run_id):
@@ -60,7 +62,7 @@ def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, d
     )
 
 def run_debate_turn(turn_num, debater_assignments, question, history, debater_template, private_reasoning_prompt, api_key, run_id, record_id):
-    turn_responses = []
+    ply_responses = []
     
     for debater_idx, answer in enumerate(debater_assignments):
         prompt = get_debater_prompt(debater_idx, answer, debater_assignments, question, history, debater_template, private_reasoning_prompt)
@@ -80,33 +82,36 @@ def run_debate_turn(turn_num, debater_assignments, question, history, debater_te
         )
         
         response_text = response['content']
-        parsed_response, parse_error = parse_debater_response(response_text, PRIVATE_SCRATCHPAD)
-        
-        if parse_error:
-            raise Exception(f"{context} Parsing Error: {parse_error}")
+        parsed_response, parse_error = parse_debater_response(response_text, PRIVATE_SCRATCHPAD, LENIENT_PARSING_ARGUMENT)
 
-        turn_responses.append({
+        ply_response = {
             'turn': turn_num,
             'debater_idx': debater_idx,
             'raw_response': response_text,
             'internal_model_reasoning': response.get('reasoning'),
             'internal_model_reasoning_details': response.get('reasoning_details'),
-            'parsed_response': parsed_response,
             'token_usage': token_usage
-        })
+        }
+        ply_response['success'] = True
+        ply_response['error_message'] = None
+
+        if parse_error:
+            ply_response['success'] = False
+            ply_response['error_message'] = parse_error
+            ply_response['parsed_response'] = None
+            ply_responses.append(ply_response)
+            return ply_responses, False
+        else:
+            ply_response['parsed_response'] = parsed_response
+        ply_responses.append(ply_response)
     
-    return turn_responses
+    return ply_responses, True
 
 def process_question(q_data, debater_template, private_reasoning_prompt, debater_template_str, api_key, config, run_id, run_datetime):
     record_id = generate_run_id()
     debater_assignments = q_data['options']
-    debate_history = []
     
-    for turn in range(NUM_TURNS):
-        turn_responses = run_debate_turn(turn, debater_assignments, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
-        debate_history.extend(turn_responses)
-    
-    return {
+    question_result = {
         'run_id': run_id,
         'record_id': record_id,
         'datetime': run_datetime,
@@ -116,10 +121,31 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
         'question': q_data['question'],
         'options': q_data['options'],
         'correct_idx': q_data['correct_idx'],
-        'success': True,
-        'error_message': None,
-        'debate_history': debate_history
+
     }
+
+    debate_history = []
+    question_success = True
+    error_message = None
+    try:
+        for turn in range(NUM_TURNS):
+            ply_responses, turn_success = run_debate_turn(turn, debater_assignments, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
+            debate_history.extend(ply_responses)
+            if turn_success is False:  # Don't bother continuing with the other turns
+                question_success = False
+                error_message = ply_responses[-1]['error_message'] if turn_success is False else None # Get the last error message
+                break
+    except:
+        question_success = False
+        error_message = traceback.format_exc()
+
+    question_result['success'] = question_success
+    question_result['error_message'] = error_message
+    question_result['debate_history'] = debate_history
+    
+    return question_result
+
+
 
 def main():
     load_dotenv()
@@ -157,29 +183,14 @@ def main():
         
         with open(results_path, 'w') as f:
             for future in as_completed(futures):
-                q_data = futures[future]
-                try:
-                    result = future.result()
-                    completed += 1
+                result = future.result()
+                if result['success']:
                     log_progress("completed", completed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage)
-                except Exception as e:
+                    completed += 1
+                else:
+                    log_progress("failed", failed, len(questions_data), result['run_id'], result['record_id'], api_key, start_usage, error=result['error_message'])
                     failed += 1
-                    error_trace = traceback.format_exc()
-                    error_record_id = generate_run_id()
-                    result = {
-                        'success': False,
-                        'error_message': error_trace,
-                        'run_id': run_id,
-                        'record_id': error_record_id,
-                        'datetime': run_datetime,
-                        'config': config,
-                        'question_idx': q_data['original_idx'],
-                        'question': q_data['question'],
-                        'options': q_data['options'],
-                        'correct_idx': q_data['correct_idx']
-                    }
-                    log_progress("failed", failed, len(questions_data), run_id, error_record_id, api_key, start_usage, error=error_trace)
-                
+
                 f.write(json.dumps(result) + '\n')
                 f.flush()
     
@@ -188,6 +199,7 @@ def main():
     print(f"\nRun ID: {run_id}")
     print(f"Duration: {duration:.1f}s")
     print(f"Results: total {len(questions_data)}, success {completed}, error {failed}")
+    print(f"Model: {DEBATER_MODEL}")
     
     key_info_end = get_openrouter_key_info(api_key)
     end_usage = key_info_end.get('data', {}).get('usage', 0)

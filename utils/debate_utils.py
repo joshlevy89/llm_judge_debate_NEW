@@ -1,3 +1,5 @@
+import re
+
 def format_debate_history(history, show_private=False):
     if not history:
         return ""
@@ -17,3 +19,24 @@ def format_debate_history(history, show_private=False):
     
     return text
 
+
+def parse_debater_response(response_text, private_scratchpad, lenient_argument_parsing=False):
+    public_match = re.search(r'<BEGIN PUBLIC ARGUMENT>(.*?)</?END PUBLIC ARGUMENT>', response_text, re.DOTALL | re.IGNORECASE)
+    
+    if not public_match:
+        return None, "Missing <BEGIN PUBLIC ARGUMENT> or </END PUBLIC ARGUMENT> tags"
+    
+    parsed = {'public_argument': public_match.group(1).strip()}
+    
+    if private_scratchpad:
+        if lenient_argument_parsing:
+            parts = response_text.split(public_match.group(0), 1)
+            private_reasoning = parts[0].strip() if parts[0] else ""
+            parsed['private_reasoning'] = private_reasoning
+        else:
+            private_match = re.search(r'<BEGIN PRIVATE REASONING>(.*?)</?END PRIVATE REASONING>', response_text, re.DOTALL | re.IGNORECASE)
+            if not private_match:
+                return None, "Missing <BEGIN PRIVATE REASONING> or </END PRIVATE REASONING> tags"
+            parsed['private_reasoning'] = private_match.group(1).strip()
+    
+    return parsed, None
