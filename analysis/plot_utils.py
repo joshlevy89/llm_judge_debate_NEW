@@ -12,7 +12,7 @@ from statsmodels.stats.proportion import proportions_ztest
 import numpy as np
 
 
-def plot_accuracy_bars(results_df, ax=None, color_map=None):
+def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
     if ax is None:
         fig, ax = plt.subplots(figsize=(20, 6))
     
@@ -48,7 +48,7 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None):
         z_stat, p_value = test_gain_significance(judge_qa_correct, n_total, verdict_correct, n_total)
 
         # Add significance bracket if p < 0.05
-        if p_value < 0.05:
+        if p_value < 0.05 and show_sig:
             # Get bar positions and heights
             b2_x = b2.get_x() + b2.get_width()/2
             b3_x = b3.get_x() + b3.get_width()/2
@@ -96,8 +96,8 @@ def test_gain_significance(judge_correct, judge_total, verdict_correct, verdict_
     return z_stat, p_value
 
 
-def plot_accuracy_bars_single(results_df, ax=None):
-    ax, plt = plot_accuracy_bars(results_df, ax=ax)
+def plot_accuracy_bars_single(results_df, ax=None, show_sig=False):
+    ax, plt = plot_accuracy_bars(results_df, ax=ax, show_sig=show_sig)
     ax.set_xticklabels(results_df['name'], rotation=0, ha='center')
     ax.figure.set_size_inches(5, 3)
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
@@ -225,7 +225,7 @@ def plot_delta_over_delta(merged, suffixes,xfield: Literal['gap_delta', 'judge_d
     #         transform=ax.transAxes, fontsize=11, verticalalignment='top',
     #         bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
-    ax.text(0.75, 0.95, f'$R^2$={r**2:.3f}\nslope={slope:.3f}\np={p:.3f}', 
+    ax.text(0.05, 0.95, f'$R^2$={r**2:.3f}\nslope={slope:.3f}\np={p:.3f}', 
             transform=ax.transAxes, fontsize=11, verticalalignment='top',
             bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
@@ -362,7 +362,7 @@ def plot_spaghetti(merged, suffixes):
 
     ax.set_xticks([0, 1])
     ax.set_xticklabels(suffixes, fontsize=12)
-    ax.set_ylabel('Verdict - Judge QA', fontsize=12)
+    ax.set_ylabel('Gain', fontsize=12)
     ax.grid(axis='y', alpha=0.3)
 
     ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=9)

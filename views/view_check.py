@@ -12,7 +12,6 @@ project_root = Path(__file__).parent.parent
 def load_check_data(run_id, record_id):
     check_path = project_root / 'results' / 'debate_checks' / f'{run_id}.jsonl'
     check_df = pd.read_json(check_path, lines=True)
-    print(check_df.columns)
     check_df = check_df.drop_duplicates(['run_id', 'record_id'], keep='last')
     match = check_df[check_df['record_id'] == record_id].iloc[0].to_dict()
     return match
@@ -74,7 +73,6 @@ def main():
     args = parser.parse_args()
     
     check_data = load_check_data(args.run_id, args.record_id)
-    print(check_data)
     if not check_data:
         print(f"Record {args.record_id} not found in check run {args.run_id}")
         return

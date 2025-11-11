@@ -13,13 +13,11 @@ from utils.debate_utils import format_debate_history
 
 def display_debate(debate_data, hide_private=False):
     if not debate_data.get('success', True):
-        print(debate_data.keys())
         print(f"{'='*80}")
         print(f"ERROR: Debate failed")
         print(f"{'='*80}")
         print(f"Run ID: {debate_data.get('run_id')}")
         print(f"Record ID: {debate_data.get('record_id')}")
-        print(debate_data.keys())
         # Find the turn with the error
         for turn in debate_data['debate_history']:
             if not turn['success']:
