@@ -8,7 +8,8 @@ from typing import Literal
 from scipy import stats
 from scipy import stats
 from sklearn.linear_model import LinearRegression
-
+from statsmodels.stats.proportion import proportions_ztest
+import numpy as np
 
 
 def plot_accuracy_bars(results_df, ax=None, color_map=None):
@@ -27,23 +28,80 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None):
         ratio2 = round(results_df.iloc[i]['judge_qa_acc'], 2)
         ratio3 = round(results_df.iloc[i]['verdict_acc'], 2)
         
+        n_total = results_df.iloc[i]['n_total']
+        judge_qa_correct = results_df.iloc[i]['judge_qa_n_correct']
+        debater_qa_correct = results_df.iloc[i]['debater_qa_n_correct']
+        verdict_correct = results_df.iloc[i]['verdict_n_correct']
+
+
         ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 0.02, 
-                f"{ratio1}\n{results_df.iloc[i]['debater_qa_n_correct']:.0f}/{results_df.iloc[i]['n_total']}", 
+                f"{ratio1}\n{debater_qa_correct:.0f}/{n_total}", 
                 ha='center', va='bottom', fontsize=9)
         ax.text(b2.get_x() + b2.get_width()/2, b2.get_height() + 0.02, 
-                f"{ratio2}\n{results_df.iloc[i]['judge_qa_n_correct']:.0f}/{results_df.iloc[i]['n_total']}", 
+                f"{ratio2}\n{judge_qa_correct:.0f}/{n_total}", 
                 ha='center', va='bottom', fontsize=9)
         ax.text(b3.get_x() + b3.get_width()/2, b3.get_height() + 0.02, 
-                f"{ratio3}\n{results_df.iloc[i]['verdict_n_correct']:.0f}/{results_df.iloc[i]['n_total']}", 
+                f"{ratio3}\n{verdict_correct:.0f}/{n_total}", 
                 ha='center', va='bottom', fontsize=9)
 
+        # Test significance of gain (judge QA vs verdict)
+        z_stat, p_value = test_gain_significance(judge_qa_correct, n_total, verdict_correct, n_total)
+
+        # Add significance bracket if p < 0.05
+        if p_value < 0.05:
+            # Get bar positions and heights
+            b2_x = b2.get_x() + b2.get_width()/2
+            b3_x = b3.get_x() + b3.get_width()/2
+            max_height = max(b2.get_height(), b3.get_height())
+
+            # Draw horizontal line connecting the bars
+            bracket_y = max_height + 0.30  # Position above the taller bar and text labels
+            ax.plot([b2_x, b3_x], [bracket_y, bracket_y], 'k-', linewidth=1.5)
+
+            # Add vertical ticks at ends
+            ax.plot([b2_x, b2_x], [max_height + 0.20, bracket_y], 'k-', linewidth=1.5)
+            ax.plot([b3_x, b3_x], [max_height + 0.20, bracket_y], 'k-', linewidth=1.5)
+
+            # Add p-value text
+            if p_value < 0.001:
+                sig_text = '***'
+            elif p_value < 0.01:
+                sig_text = '**'
+            elif p_value < 0.05:
+                sig_text = '*'
+            else:
+                sig_text = f'p={p_value:.3f}'
+
+            ax.text((b2_x + b3_x)/2, bracket_y + 0.01, sig_text,
+                   ha='center', va='bottom', fontsize=10, fontweight='bold')
+
     ax.set_ylabel('Accuracy')
-    ax.set_ylim(0, 1.05)
+    # Adjust ylim to accommodate significance brackets
+    current_ylim = ax.get_ylim()
+    ax.set_ylim(0, max(current_ylim[1], 1.25))  # Ensure space for brackets above text
     ax.legend()
     ax.grid(axis='y', alpha=0.3)
     ax.set_xticks(x)
-    ax.set_xticklabels(results_df['name'], rotation=45, ha='right')
-    return ax
+    return ax, plt
+
+
+def test_gain_significance(judge_correct, judge_total, verdict_correct, verdict_total, alternative='two-sided'):
+    """
+    Test if the gain (verdict_acc - judge_qa_acc) is statistically significant.
+    """
+    successes = np.array([verdict_correct, judge_correct])
+    totals = np.array([verdict_total, judge_total])
+    z_stat, p_value = proportions_ztest(successes, totals, alternative=alternative)
+
+    return z_stat, p_value
+
+
+def plot_accuracy_bars_single(results_df, ax=None):
+    ax, plt = plot_accuracy_bars(results_df, ax=ax)
+    ax.set_xticklabels(results_df['name'], rotation=0, ha='center')
+    ax.figure.set_size_inches(5, 3)
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    return ax, plt
 
 
 def plot_verdict_difference(results_df, ax=None, type='gain'):
@@ -73,7 +131,8 @@ def plot_results_by_name(results_df, field='config_judge_model_verdicts'):
         sorted_names, _ = sort_and_color_by_model_family(results_df['name'].unique())
         results_df = results_df.set_index('name').loc[sorted_names].reset_index()
     fig, ax = plt.subplots(3, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [3, 1, 1]}, sharex=True)
-    plot_accuracy_bars(results_df, ax=ax[0])
+    ax_acc, _ = plot_accuracy_bars(results_df, ax=ax[0])
+    ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right')
     ax_gain, _ = plot_verdict_difference(results_df, ax=ax[1])
     ax_gap, _ = plot_verdict_difference(results_df, ax=ax[2], type='gap')
     plt.tight_layout()
