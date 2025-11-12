@@ -6,7 +6,8 @@
 # DEBATER_MODEL = "google/gemini-2.5-pro" # too expensive - by the way it's thinking by default.
 # DEBATER_MODEL = "anthropic/claude-sonnet-4.5" # it's decent. not too expensive, can get the tags right with my updated prompt. using private scratchpad. but it leaked 2/5. could be viable though.
 # DEBATER_MODEL = "openai/o3"
-DEBATER_MODEL = "openai/gpt-oss-120b"
+# DEBATER_MODEL = "openai/gpt-oss-120b"
+DEBATER_MODEL = "openai/gpt-4o-mini" 
 
 
 DATASET_NAME = "Idavidrein/gpqa"
@@ -19,12 +20,15 @@ DATASET_SPLIT = "train"
 
 DEBATER_TEMPERATURE = 0.3
 
-MAX_OUTPUT_TOKENS = 125000
+# MAX_OUTPUT_TOKENS = 125000
+# DEBATER_REASONING_EFFORT = 'high'
+# DEBATER_REASONING_MAX_TOKENS = None
 
-DEBATER_REASONING_EFFORT = 'high'
+MAX_OUTPUT_TOKENS = 5000
+DEBATER_REASONING_EFFORT = None
 DEBATER_REASONING_MAX_TOKENS = None
 
-PRIVATE_SCRATCHPAD = False
+PRIVATE_SCRATCHPAD = True
 
 # PUBLIC_ARGUMENT_WORD_LIMIT = 100
 # PRIVATE_REASONING_WORD_LIMIT = 150
