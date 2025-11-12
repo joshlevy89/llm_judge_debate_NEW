@@ -1,9 +1,18 @@
 import pandas as pd
 import glob
+import json
 from pathlib import Path
 
 def get_project_root():
     return Path(__file__).parent.parent
+
+def matches_filters(data, filters):
+    for key, filter_val in filters.items():
+        data_val = data.get(key, {}) if isinstance(filter_val, dict) else data.get(key)
+        matches = all(data_val.get(k) == v for k, v in filter_val.items()) if isinstance(filter_val, dict) else data_val == filter_val
+        if not matches:
+            return False
+    return True
 
 def extract_parsed_answer(df, type):
     if type == 'verdicts':
@@ -15,12 +24,24 @@ def extract_parsed_answer(df, type):
     return None
 
 
-def load_all_records_into_df(type, filter_errors=True, filter_nulls=True):
+def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_filters=None):
     results_dir = get_project_root() / 'results'
     files = glob.glob(str(results_dir / type / '*.jsonl'))
     dfs = []
     for file in files:
-        df = pd.read_json(file, lines=True)
+        if type == 'qa' and qa_filters is not None:
+            records = []
+            for line in open(file):
+                data = json.loads(line)
+                if matches_filters(data, qa_filters):
+                    records.append(data)
+            if not records:
+                continue
+            
+            df = pd.DataFrame(records)
+        else:
+            df = pd.read_json(file, lines=True)
+
         if df.shape[0] == 0:
             continue
 
@@ -55,12 +76,12 @@ def load_all_records_into_df(type, filter_errors=True, filter_nulls=True):
     return pd.concat(aligned_dfs, ignore_index=True)
 
 
-def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_nulls=True):
+def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_nulls=True, qa_filters=None):
     if isinstance(types, str):
         types = [types]
     
     if 'qa' in types:
-        qa_df = load_all_records_into_df('qa', filter_errors=filter_errors, filter_nulls=filter_nulls)
+        qa_df = load_all_records_into_df('qa', filter_errors=filter_errors, filter_nulls=filter_nulls, qa_filters=qa_filters)
         # Keep only most recent QA record for each (question, options, model) triplet
         if 'datetime_qa' in qa_df.columns:
             qa_df = qa_df.sort_values('datetime_qa', ascending=False)

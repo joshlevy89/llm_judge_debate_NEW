@@ -40,18 +40,51 @@ def display_verdict(verdict_data, debate_data):
 
 def find_and_display_qa(row):
     row['options_str'] = str(row['options'])
-    qa_df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False)
-    # question_idx, dataset, choice options
-    # ['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge']
-    qa_judge_row = qa_df[(qa_df['question_qa'] == row['question']) & (qa_df['options_str_qa'] == row['options_str']) & (qa_df['config_model_name_qa'] == row['config']['judge_model'])].iloc[0]
+    qa_filters = {
+        'question': row['question'],
+        'options': row['options'],
+        'config': {'model_name': row['config']['judge_model']}
+    }
+    qa_df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False, qa_filters=qa_filters)
+    qa_judge_row = qa_df.iloc[0]
     # qa_debater_row = qa_df[(qa_df['question_qa_judge'] == row['question_qa_debater']) & (qa_df['options_str_qa_judge'] == row['options_str_qa_debater']) & (qa_df['config_model_name_qa_judge'] == row['config_debater_model_debates'])].iloc[0]
     
-    print('\n')
     print('='*80)
     print('Direct Judge QA')
     print('='*80)
     display_qa(qa_judge_row, display_question=False)
     # display_qa(qa_debater_row)
+
+
+def display_full_verdict(verdict_run_id, record_id, hide_private=False, view_qa=False):
+    verdict_data = load_verdict_data(verdict_run_id, record_id)
+    if not verdict_data:
+        print(f"Record {record_id} not found in verdict run {verdict_run_id}")
+        return False
+    
+    if not verdict_data.get('success', True):
+        print(f"{'='*80}")
+        print(f"ERROR: Verdict failed")
+        print(f"{'='*80}")
+        print(f"Verdict Run ID: {verdict_run_id}")
+        print(f"Record ID: {record_id}")
+        print(f"Error message: {verdict_data.get('error_message', 'Unknown error')}")
+        return False
+    
+    debate_data = load_debate_data(verdict_data['debate_run_id'], record_id)
+    if not debate_data:
+        print(f"Record {record_id} not found in debate run {verdict_data['debate_run_id']}")
+        return False
+    
+    success = display_debate(debate_data, hide_private=hide_private)
+    if not success:
+        return False
+    
+    display_verdict(verdict_data, debate_data)    
+    if view_qa:
+        find_and_display_qa(verdict_data)
+    
+    return True
 
 
 def main():
@@ -62,33 +95,9 @@ def main():
     parser.add_argument('--view-qa', action='store_true', help='View the associated judge QA')
     args = parser.parse_args()
     
-    verdict_data = load_verdict_data(args.verdict_run_id, args.record_id)
-    if not verdict_data:
-        print(f"Record {args.record_id} not found in verdict run {args.verdict_run_id}")
-        return
-    
-    if not verdict_data.get('success', True):
-        print(f"{'='*80}")
-        print(f"ERROR: Verdict failed")
-        print(f"{'='*80}")
-        print(f"Verdict Run ID: {args.verdict_run_id}")
-        print(f"Record ID: {args.record_id}")
-        print(f"Error message: {verdict_data.get('error_message', 'Unknown error')}")
-        return
-    
-    debate_data = load_debate_data(verdict_data['debate_run_id'], args.record_id)
-    if not debate_data:
-        print(f"Record {args.record_id} not found in debate run {verdict_data['debate_run_id']}")
-        return
-    
-    success = display_debate(debate_data, hide_private=args.hide_private)
-    if not success:
-        return
-    
-    print()
-    display_verdict(verdict_data, debate_data)
-
-    find_and_display_qa(verdict_data)
+    display_full_verdict(args.verdict_run_id, args.record_id, 
+                        hide_private=args.hide_private, 
+                        view_qa=args.view_qa)
 
 if __name__ == '__main__':
     main()
