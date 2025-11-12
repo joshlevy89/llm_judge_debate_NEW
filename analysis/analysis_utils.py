@@ -98,26 +98,27 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
     valid_debates = debate_df[debate_df['record_id_debates'].notna()]
     verdict_and_debate_df = valid_verdicts.merge(valid_debates, left_on=['record_id_verdicts'], right_on=['record_id_debates'], how='left')
 
-    judge_qa_df = qa_df.copy()
-    judge_qa_df.columns = [col + '_judge' for col in qa_df.columns]
+    if 'qa' in types:
+        judge_qa_df = qa_df.copy()
+        judge_qa_df.columns = [col + '_judge' for col in qa_df.columns]
 
-    debater_qa_df = qa_df.copy()
-    debater_qa_df.columns = [col + '_debater' for col in qa_df.columns]
+        debater_qa_df = qa_df.copy()
+        debater_qa_df.columns = [col + '_debater' for col in qa_df.columns]
 
-    all_df = verdict_and_debate_df.merge(
-        judge_qa_df[['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge', 'parsed_answer_qa_judge', 'is_correct_qa_judge', 'success_qa_judge']], 
-        left_on=['question_verdicts', 'options_str_verdicts', 'config_judge_model_verdicts'], 
-        right_on=['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge'],
-        how='left'
-    )
+        all_df = verdict_and_debate_df.merge(
+            judge_qa_df[['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge', 'parsed_answer_qa_judge', 'is_correct_qa_judge', 'success_qa_judge']], 
+            left_on=['question_verdicts', 'options_str_verdicts', 'config_judge_model_verdicts'], 
+            right_on=['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge'],
+            how='left')
 
-    all_df = all_df.merge(
-        debater_qa_df[['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'is_correct_qa_debater', 'success_qa_debater']], 
-        left_on=['question_verdicts', 'options_str_verdicts', 'config_debater_model_debates'], 
-        right_on=['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater'],
-        how='left',
-        suffixes=('', '_debater')
-    )
+        all_df = all_df.merge(
+            debater_qa_df[['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'is_correct_qa_debater', 'success_qa_debater']], 
+            left_on=['question_verdicts', 'options_str_verdicts', 'config_debater_model_debates'], 
+            right_on=['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater'],
+            how='left',
+            suffixes=('', '_debater'))
+    else:
+        all_df = verdict_and_debate_df
 
     # Filter to only valid records if requested (default for analysis)
     # Note: success can be NaN after left joins if matching records weren't found,

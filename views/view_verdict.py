@@ -11,6 +11,8 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from views.view_debate import display_debate, load_debate_data
+from views.view_qa import display_qa
+from analysis.analysis_utils import prepare_df
 
 def load_verdict_data(verdict_run_id, record_id):
     verdict_path = project_root / 'results' / 'verdicts' / f'{verdict_run_id}.jsonl'
@@ -21,25 +23,43 @@ def load_verdict_data(verdict_run_id, record_id):
     return None
 
 def display_verdict(verdict_data, debate_data):
-    print(f"{'='*80}\nJudge (Verdict Run: {verdict_data['verdict_run_id']} | Question Idx: {debate_data['question_idx']})\n{'='*80}")
+    print(f"{'='*80}\nJudge Verdict (Verdict Run: {verdict_data['verdict_run_id']} | Question Idx: {debate_data['question_idx']})\n{'='*80}")
     if verdict_data['judge_verdict'].get('internal_model_reasoning') is not None:
         print(f"[BEGIN INTERNAL REASONING]\n{verdict_data['judge_verdict']['internal_model_reasoning']}\n[END INTERNAL REASONING]\n")
     print(f"[BEGIN RAW RESPONSE]\n{verdict_data['judge_verdict']['raw_response']}\n[END RAW RESPONSE]")
-    print(f"{'='*80}\nJudge Parsed Response\n{'='*80}")
+    print(f"{'-'*80}\nJudge Parsed Response\n{'-'*80}")
     parsed_response = verdict_data['judge_verdict']['parsed']
     print(f"Answer: {parsed_response['answer']}")
     print(f"Confidence: {parsed_response['confidence']}")
     print(f"Reasoning: {parsed_response['reasoning']}")
-    print(f"{'='*80}\nOutput\n{'='*80}")
+    print(f"{'-'*80}\nOutput\n{'-'*80}")
     print(f"Correct Answer: {verdict_data['correct_idx']}")
     print(f"Judge Verdict: {parsed_response['answer']}")
     print(f"Correct: {parsed_response['answer'] == verdict_data['correct_idx']}")
+
+
+def find_and_display_qa(row):
+    row['options_str'] = str(row['options'])
+    qa_df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False)
+    # question_idx, dataset, choice options
+    # ['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge']
+    qa_judge_row = qa_df[(qa_df['question_qa'] == row['question']) & (qa_df['options_str_qa'] == row['options_str']) & (qa_df['config_model_name_qa'] == row['config']['judge_model'])].iloc[0]
+    # qa_debater_row = qa_df[(qa_df['question_qa_judge'] == row['question_qa_debater']) & (qa_df['options_str_qa_judge'] == row['options_str_qa_debater']) & (qa_df['config_model_name_qa_judge'] == row['config_debater_model_debates'])].iloc[0]
+    
+    print('\n')
+    print('='*80)
+    print('Direct Judge QA')
+    print('='*80)
+    display_qa(qa_judge_row, display_question=False)
+    # display_qa(qa_debater_row)
+
 
 def main():
     parser = argparse.ArgumentParser(description='View verdict results')
     parser.add_argument('verdict_run_id')
     parser.add_argument('record_id')
     parser.add_argument('--hide-private', action='store_true', help='Hide private reasoning')
+    parser.add_argument('--view-qa', action='store_true', help='View the associated judge QA')
     args = parser.parse_args()
     
     verdict_data = load_verdict_data(args.verdict_run_id, args.record_id)
@@ -67,6 +87,8 @@ def main():
     
     print()
     display_verdict(verdict_data, debate_data)
+
+    find_and_display_qa(verdict_data)
 
 if __name__ == '__main__':
     main()
