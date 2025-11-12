@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 import config.config_qa as config_qa
 from config.config_qa import (
     DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
-    MODEL_NAME, TEMPERATURE,
+    MODEL_NAME, TEMPERATURE, MAX_TOKENS,
+    REASONING_EFFORT, REASONING_MAX_TOKENS,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
     SPECIFIC_QUESTION_IDXS, MAX_THREADS, RERUN
 )
@@ -55,6 +56,9 @@ def main():
         question_idxs=question_idxs,
         model_name=MODEL_NAME,
         temperature=TEMPERATURE,
+        max_tokens=MAX_TOKENS,
+        reasoning_effort=REASONING_EFFORT,
+        reasoning_max_tokens=REASONING_MAX_TOKENS,
         dataset_config=dataset_config,
         num_choices=NUM_CHOICES,
         api_key=api_key,

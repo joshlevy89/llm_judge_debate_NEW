@@ -15,7 +15,9 @@
 # JUDGE_MODEL = "meta-llama/llama-4-maverick"
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
 # JUDGE_MODEL = "google/gemma-3-12b-it"
-JUDGE_MODEL = "google/gemma-3-27b-it"
+# JUDGE_MODEL = "google/gemma-3-27b-it"
+JUDGE_MODEL = "anthropic/claude-3.5-haiku"
+
 
 
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-llama-70b"
@@ -32,7 +34,9 @@ JUDGE_MODEL = "google/gemma-3-27b-it"
 
 # DEBATE_RUN_ID = "17zguxe" # 2 choice gpqa
 # DEBATE_RUN_ID = "q6wpwb7" # 4 choice gpqa
-DEBATE_RUN_ID = "z1qae3w" # 4 choice gpqa - deepseek/deepseek-v3.1-terminus as debater
+# DEBATE_RUN_ID = "z1qae3w" # 4 choice gpqa - deepseek/deepseek-v3.1-terminus as debater
+# DEBATE_RUN_ID = "7q0xvsw"  # 4 choice gpqa - o3 (low)
+DEBATE_RUN_ID = "7i24jh4"  # 4 choice gpqa 
 
 JUDGE_TEMPERATURE = 0.0
 JUDGE_REASONING_EFFORT = None

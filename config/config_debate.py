@@ -5,8 +5,8 @@
 # DEBATER_MODEL = "google/gemini-2.5-flash" # it leaks too much - it does help to turn up debater temperature but it still leaks too much
 # DEBATER_MODEL = "google/gemini-2.5-pro" # too expensive - by the way it's thinking by default.
 # DEBATER_MODEL = "anthropic/claude-sonnet-4.5" # it's decent. not too expensive, can get the tags right with my updated prompt. using private scratchpad. but it leaked 2/5. could be viable though.
-DEBATER_MODEL = "openai/o3"
-
+# DEBATER_MODEL = "openai/o3"
+DEBATER_MODEL = "openai/gpt-oss-120b"
 
 
 DATASET_NAME = "Idavidrein/gpqa"
@@ -19,9 +19,9 @@ DATASET_SPLIT = "train"
 
 DEBATER_TEMPERATURE = 0.3
 
-MAX_OUTPUT_TOKENS = 65536
+MAX_OUTPUT_TOKENS = 125000
 
-DEBATER_REASONING_EFFORT = 'low'
+DEBATER_REASONING_EFFORT = 'high'
 DEBATER_REASONING_MAX_TOKENS = None
 
 PRIVATE_SCRATCHPAD = False
@@ -34,10 +34,9 @@ PRIVATE_REASONING_WORD_LIMIT = 1000
 
 LENIENT_PARSING_ARGUMENT = False
 
-NUM_QUESTIONS = 5
+NUM_QUESTIONS = 198
 RANDOM_SEED = 42
 NUM_CHOICES = 4
 NUM_TURNS = 1
 
 MAX_THREADS = 5000
-

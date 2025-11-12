@@ -75,17 +75,20 @@ def filter_existing_questions(question_idxs, questions_data, model_name, num_cho
     
     return missing_idxs
 
-def process_qa_question(q_data, prompt_template_str, api_key, config, run_id, run_datetime, model_name, temperature, num_choices):
+def process_qa_question(q_data, prompt_template_str, api_key, config, run_id, run_datetime, model_name, temperature, max_tokens, reasoning_effort, reasoning_max_tokens, num_choices):
     from utils.shared_utils import generate_run_id
     
     record_id = generate_run_id()
     prompt = format_qa_prompt(q_data['question'], q_data['options'], num_choices)
     
     response, token_usage = call_openrouter(
-        prompt, 
-        model_name, 
-        api_key, 
+        prompt,
+        model_name,
+        api_key,
         temperature,
+        max_tokens=max_tokens,
+        reasoning_effort=reasoning_effort,
+        reasoning_max_tokens=reasoning_max_tokens,
         run_id=run_id,
         record_id=record_id,
         context="QA"
@@ -115,7 +118,7 @@ def process_qa_question(q_data, prompt_template_str, api_key, config, run_id, ru
         'token_usage': token_usage
     }
 
-def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config, num_choices, api_key, max_threads, run_id=None, qa_results_path=None, random_seed=None):
+def run_qa_for_questions(question_idxs, model_name, temperature, max_tokens, reasoning_effort, reasoning_max_tokens, dataset_config, num_choices, api_key, max_threads, run_id=None, qa_results_path=None, random_seed=None):
     if run_id is None:
         run_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
     
@@ -136,7 +139,7 @@ def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config,
     )
     
     prompt_template, _ = load_qa_prompts()
-    config = {**dataset_config, 'model_name': model_name, 'temperature': temperature, 'num_choices': num_choices, 'random_seed': random_seed}
+    config = {**dataset_config, 'model_name': model_name, 'temperature': temperature, 'max_tokens': max_tokens, 'reasoning_effort': reasoning_effort, 'reasoning_max_tokens': reasoning_max_tokens, 'num_choices': num_choices, 'random_seed': random_seed}
     
     key_info_start = get_openrouter_key_info(api_key)
     start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
@@ -146,7 +149,7 @@ def run_qa_for_questions(question_idxs, model_name, temperature, dataset_config,
     
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         futures = {
-            executor.submit(process_qa_question, q_data, prompt_template, api_key, config, run_id, run_datetime, model_name, temperature, num_choices): q_data
+            executor.submit(process_qa_question, q_data, prompt_template, api_key, config, run_id, run_datetime, model_name, temperature, max_tokens, reasoning_effort, reasoning_max_tokens, num_choices): q_data
             for q_data in questions_data
         }
         

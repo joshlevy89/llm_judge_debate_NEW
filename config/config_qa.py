@@ -17,15 +17,21 @@ DATASET_SPLIT = "train"
 # MODEL_NAME = "deepseek/deepseek-v3.1-terminus"
 # MODEL_NAME = "deepseek/deepseek-r1-distill-llama-70b"
 
-MODEL_NAME = "openai/o3"
+# MODEL_NAME = "openai/o3"
+MODEL_NAME = "openai/gpt-oss-120b"
 
 TEMPERATURE = 0.0
+
+MAX_TOKENS = 125000
+
+REASONING_EFFORT = 'high'
+REASONING_MAX_TOKENS = None
 
 NUM_QUESTIONS = 198
 RANDOM_SEED = 42 
 NUM_CHOICES = 4
 
-RERUN = True  # will rerun a question/choice set even if it already exists
+RERUN = False  # will rerun a question/choice set even if it already exists
 LENIENT_PARSING = False
 
 SPECIFIC_QUESTION_IDXS = None # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]
