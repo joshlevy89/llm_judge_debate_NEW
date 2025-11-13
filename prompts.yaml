@@ -32,6 +32,7 @@ response_format_prompt: |
 
   Your response MUST contain both the <BEGIN FINAL ANSWER> and </END FINAL ANSWER> tags.
   Be very careful not to omit the </END FINAL ANSWER> tag.
+  Note: your answer must be the INDEX of the correct answer, not the answer itself. We use 0-indexing for the options list.
 
 debater_prompt_template: |
   You are Debater {role} in a debate. A judge is evaluating your arguments.

@@ -91,6 +91,7 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
             qa_df = qa_df[((qa_df['success_qa'] == True) | (qa_df['success_qa'].isna()))]
         if filter_nulls:
             qa_df = qa_df[qa_df['parsed_answer_qa'].notnull()]
+
         if types == ['qa']:
             return qa_df
 
@@ -153,6 +154,9 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
         all_df = all_df[all_df['parsed_answer_verdicts'].notnull()]
 
     all_df['is_correct_verdict'] = all_df['parsed_answer_verdicts'] == all_df['correct_idx_verdicts']
+    # Get rid of any answers that are longer than the options list
+    all_df['parsed_answer_verdicts'] = all_df['parsed_answer_verdicts'].astype(int)
+    all_df = all_df[all_df['parsed_answer_verdicts'] < all_df['config_num_choices_debates']]
 
     return all_df
 
