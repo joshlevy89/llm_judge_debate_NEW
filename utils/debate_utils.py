@@ -85,7 +85,12 @@ def run_debate_turn(turn_num, debater_assignments, debater_idx, question, histor
 
     return turn_response
 
-def process_question(q_data, debater_template, private_reasoning_prompt, debater_template_str, api_key, config, run_id, run_datetime):
+
+def get_llm_action():
+    return 'next', None
+
+
+def process_question(q_data, debater_template, private_reasoning_prompt, debater_template_str, interactive_judge, api_key, config, run_id, run_datetime):
     record_id = generate_run_id()
     debater_assignments = q_data['options']
     
@@ -108,13 +113,31 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
     start_debate_time = time.time()
     try:
         if DEBATE_MODE == 'sequential':
-            cur_debater_idx = 0
+            cur_debater_idx = -1
             for turn in range(NUM_TURNS):
+                if interactive_judge is not None:
+                    action, new_debater_idx = get_llm_action()
+                    debate_history.append({
+                        'persona': 'judge',
+                        'action': action,
+                        'is_human': True
+                    })
+                    if action == 'end':
+                        break
+                    if new_debater_idx is not None:
+                        cur_debater_idx = new_debater_idx
+                    else:
+                        cur_debater_idx += 1
+                        cur_debater_idx = cur_debater_idx % len(debater_assignments)
+                else:
+                    cur_debater_idx += 1
+                    cur_debater_idx = cur_debater_idx % len(debater_assignments)
+
                 turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
                 debate_history.append(turn_response)
-                cur_debater_idx += 1
-                cur_debater_idx = cur_debater_idx % len(debater_assignments) # cycle back
         elif DEBATE_MODE == 'simultaneous':
+            if interactive_judge:
+                raise Exception('Interactive mode not supported in simultaneous mode')
             # In simultaneous mode, a turn means all debaters go
             for turn in range(NUM_TURNS):
                 turn_responses = []

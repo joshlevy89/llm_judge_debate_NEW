@@ -54,7 +54,7 @@ def main():
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, debater_template, private_reasoning_prompt, debater_template, api_key, config, run_id, run_datetime): q_data
+            executor.submit(process_question, q_data, debater_template, private_reasoning_prompt, debater_template, INTERACTIVE_JUDGE, api_key, config, run_id, run_datetime): q_data
             for i, q_data in enumerate(questions_data)
         }
         
