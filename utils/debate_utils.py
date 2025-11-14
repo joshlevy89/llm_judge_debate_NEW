@@ -1,4 +1,125 @@
 import re
+import yaml
+from config.config_debate import *
+from utils.llm_utils import call_openrouter
+
+def load_prompts():
+    with open('prompts.yaml', 'r') as f:
+        prompts = yaml.safe_load(f)
+    return prompts['debater_prompt_template'], prompts['private_reasoning_prompt']
+
+def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, debater_template, private_reasoning_prompt):
+    opponents_text = "\nYour opponents are arguing for:\n"
+    for i, ans in enumerate(all_answers):
+        if i != debater_idx:
+            opponents_text += f"- Debater {i}: {ans}\n"
+    
+    public_debate_history_text = format_debate_history(history, show_private=False) if history else "\nThis is the first turn of the debate."
+    
+    private_reasoning_text = private_reasoning_prompt.format(
+        public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
+        private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
+    ) if PRIVATE_SCRATCHPAD else ""
+    
+    return debater_template.format(
+        role=debater_idx,
+        question=question,
+        my_answer=my_answer,
+        opponents_arguing_for_text=opponents_text,
+        public_debate_history_text=public_debate_history_text,
+        private_reasoning_prompt=private_reasoning_text,
+        public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
+        private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
+    )
+
+def run_debate_turn(turn_num, debater_assignments, debater_idx, question, history, debater_template, private_reasoning_prompt, api_key, run_id, record_id):
+    prompt = get_debater_prompt(debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_template, private_reasoning_prompt)
+    context = f"Debater {debater_idx} Turn {turn_num}"
+    
+    response, token_usage = call_openrouter(
+        prompt, 
+        DEBATER_MODEL, 
+        api_key, 
+        DEBATER_TEMPERATURE,
+        reasoning_effort=DEBATER_REASONING_EFFORT,
+        reasoning_max_tokens=DEBATER_REASONING_MAX_TOKENS,
+        max_tokens=MAX_OUTPUT_TOKENS,
+        run_id=run_id,
+        record_id=record_id,
+        context=context
+    )
+    
+    response_text = response['content']
+    parsed_response, parse_error = parse_debater_response(response_text, PRIVATE_SCRATCHPAD, LENIENT_PARSING_ARGUMENT)
+    turn_response = {
+        'turn': turn_num,
+        'persona': 'debater',
+        'debater_idx': debater_idx,
+        'raw_response': response_text,
+        'internal_model_reasoning': response.get('reasoning'),
+        'internal_model_reasoning_details': response.get('reasoning_details'),
+        'token_usage': token_usage
+    }
+    turn_response['success'] = True
+    turn_response['error_message'] = None
+
+    if parse_error:
+        turn_response['success'] = False
+        turn_response['error_message'] = parse_error
+        turn_response['parsed_response'] = None
+        return turn_response
+    else:
+        turn_response['parsed_response'] = parsed_response
+
+    return turn_response
+
+def process_question(q_data, debater_template, private_reasoning_prompt, debater_template_str, api_key, config, run_id, run_datetime):
+    record_id = generate_run_id()
+    debater_assignments = q_data['options']
+    
+    question_result = {
+        'run_id': run_id,
+        'record_id': record_id,
+        'datetime': run_datetime,
+        'config': config,
+        'prompt_template': {'debater_prompt_template': debater_template_str, 'private_reasoning_template': private_reasoning_prompt if PRIVATE_SCRATCHPAD else None},
+        'question_idx': q_data['original_idx'],
+        'question': q_data['question'],
+        'options': q_data['options'],
+        'correct_idx': q_data['correct_idx'],
+
+    }
+
+    debate_history = []
+    question_success = True
+    error_message = None
+    try:
+        if DEBATE_MODE == 'sequential':
+            cur_debater_idx = 0
+            for turn in range(NUM_TURNS):
+                turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
+                debate_history.extend(turn_response)
+                cur_debater_idx += 1
+                cur_debater_idx = cur_debater_idx % len(debater_assignments) # cycle back
+        elif DEBATE_MODE == 'simultaneous':
+            # In simultaneous mode, a turn means all debaters go
+            for turn in range(NUM_TURNS):
+                turn_responses = []
+                for debater_idx in range(len(debater_assignments)):
+                    turn_response = run_debate_turn(turn, debater_assignments, debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
+                    turn_responses.append(turn_responses)
+                debate_history.extend(turn_responses)
+    except:
+        question_success = False
+        error_message = traceback.format_exc()
+
+    question_result['success'] = question_success
+    question_result['error_message'] = error_message
+    question_result['debate_history'] = debate_history
+    
+    return question_result
+
+
 
 def format_debate_history(history, show_private=False):
     if not history:
@@ -6,16 +127,24 @@ def format_debate_history(history, show_private=False):
     
     text = ""
     for entry in history:
-        text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn {entry['turn']})\n{'-'*80}\n"
-        
-        if show_private and entry.get('internal_model_reasoning') is not None:
-            text += f"[BEGIN INTERNAL REASONING]\n{entry['internal_model_reasoning']}\n[END INTERNAL REASONING]\n\n"
-        
-        if show_private and 'parsed_response' in entry and 'private_reasoning' in entry['parsed_response']:
-            text += f"[BEGIN PRIVATE SCRATCHPAD REASONING]\n{entry['parsed_response']['private_reasoning']}\n[END PRIVATE SCRATCHPAD REASONING]\n\n"
-        
-        if 'parsed_response' in entry and 'public_argument' in entry['parsed_response']:
-            text += f"[BEGIN PUBLIC ARGUMENT]\n{entry['parsed_response']['public_argument']}\n[END PUBLIC ARGUMENT]\n"
+
+    
+        if entry['persona'] == 'debater':
+            text += f"{'-'*80}\nDebater {entry['debater_idx']}\n{'-'*80}\n"
+            
+            if show_private and entry.get('internal_model_reasoning') is not None:
+                text += f"[BEGIN INTERNAL REASONING]\n{entry['internal_model_reasoning']}\n[END INTERNAL REASONING]\n\n"
+            
+            if show_private and 'parsed_response' in entry and 'private_reasoning' in entry['parsed_response']:
+                text += f"[BEGIN PRIVATE SCRATCHPAD REASONING]\n{entry['parsed_response']['private_reasoning']}\n[END PRIVATE SCRATCHPAD REASONING]\n\n"
+            
+            if 'parsed_response' in entry and 'public_argument' in entry['parsed_response']:
+                text += f"[BEGIN PUBLIC ARGUMENT]\n{entry['parsed_response']['public_argument']}\n[END PUBLIC ARGUMENT]\n"
+        elif entry['persona'] == 'judge':
+            text += f"{'-'*80}\nJudge\n{'-'*80}\n"
+            text += f"{entry['action']}\n"
+        else:
+            raise Exception('Unrecognized persona: ' + entry['persona'])
     
     return text
 
