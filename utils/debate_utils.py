@@ -86,8 +86,27 @@ def run_debate_turn(turn_num, debater_assignments, debater_idx, question, histor
     return turn_response
 
 
-def get_llm_action():
-    return 'next', None
+def get_llm_action(debate_history, interactive_judge, api_key):
+    interactive_judge_prompt = get_interactive_judge_prompt(debate_history)
+    response, token_usage = call_openrouter(
+            interactive_judge_prompt, 
+            interactive_judge, 
+            api_key, 
+            INTERACTIVE_JUDGE_TEMPERATURE,
+            reasoning_effort=INTERACTIVE_JUDGE_REASONING_EFFORT,
+            reasoning_max_tokens=INTERACTIVE_JUDGE_REASONING_MAX_TOKENS,
+            max_tokens=INTERACTIVE_JUDGE_MAX_OUTPUT_TOKENS,
+        )
+    response_text = response['content']
+    action, new_debater_idx = parse_interactive_judge_action(response_text)
+
+    action_response = {
+        'persona': 'judge',
+        'action': action,
+        'is_human': True
+    }
+
+    return action, new_debater_idx, action_response
 
 
 def process_question(q_data, debater_template, private_reasoning_prompt, debater_template_str, interactive_judge, api_key, config, run_id, run_datetime):
@@ -116,12 +135,8 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
             cur_debater_idx = -1
             for turn in range(NUM_TURNS):
                 if interactive_judge is not None:
-                    action, new_debater_idx = get_llm_action()
-                    debate_history.append({
-                        'persona': 'judge',
-                        'action': action,
-                        'is_human': True
-                    })
+                    action, new_debater_idx, action_response = get_llm_action(debate_history, interactive_judge, api_key)
+                    debate_history.append(action_response)
                     if action == 'end':
                         break
                     if new_debater_idx is not None:
