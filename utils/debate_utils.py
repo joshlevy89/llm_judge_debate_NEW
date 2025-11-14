@@ -4,6 +4,7 @@ from config.config_debate import *
 from utils.llm_utils import call_openrouter
 import time
 from utils.shared_utils import generate_run_id
+import traceback
 
 def load_prompts():
     with open('prompts.yaml', 'r') as f:
@@ -56,8 +57,7 @@ def run_debate_turn(turn_num, debater_assignments, debater_idx, question, histor
             context=context
         )
         response_text = response['content']
-    response_time = time.time() - start_time
-    
+    response_time = time.time() - start_time    
 
     parsed_response, parse_error = parse_debater_response(response_text, PRIVATE_SCRATCHPAD, LENIENT_PARSING_ARGUMENT)
     turn_response = {
@@ -73,6 +73,7 @@ def run_debate_turn(turn_num, debater_assignments, debater_idx, question, histor
     turn_response['success'] = True
     turn_response['error_message'] = None
 
+    print(f"Completed the response in {response_time} with status {turn_response['success']}")
 
     if parse_error:
         turn_response['success'] = False

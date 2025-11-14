@@ -405,3 +405,38 @@ def plot_correctness_grid(temp_df, value_field='is_correct_verdict'):
 
     plt.tight_layout()
     plt.show()
+
+
+def cdf(data, labels=None, ax=None, xlim_percentiles=None, xlim_ranges=None, xlim_window_from_median=None):
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+    if not labels:
+        labels = [str(i) for i in range(len(data))]
+
+    for idx, d in enumerate(data):
+        d = np.sort(d.dropna().copy())
+        ax.plot(d, np.arange(1, len(d) + 1) / len(d), label=f"{labels[idx]} (n={len(d)})")
+        # plot dash line at .5 on y axis
+        ax.axhline(y=0.5, color='gray', linestyle='--')
+
+        
+    # d1 = np.sort(d1.dropna().copy())
+    # d2 = np.sort(d2.dropna().copy())
+    # ax.plot(d1, np.arange(1, len(d1) + 1) / len(d1), label=f'Success (n={len(d1)})')
+    # ax.plot(d2, np.arange(1, len(d2) + 1) / len(d2), label=f'Failure (n={len(d2)})')
+    ax.set_ylabel('Empirical CDF')
+    ax.grid(True, alpha=0.3)
+    
+    if xlim_percentiles:
+        combined = np.concatenate(data)
+        x1, x2 = np.percentile(combined, xlim_percentiles[0]), np.percentile(combined, xlim_percentiles[1])
+        ax.set_xlim(x1, x2)
+    elif xlim_ranges:
+        ax.set_xlim(xlim_ranges[0], xlim_ranges[1])
+    elif xlim_window_from_median:
+        combined = np.concatenate(data)
+        combined_median = np.percentile(combined, 50)
+        ax.set_xlim(combined_median + xlim_window_from_median[0], combined_median + xlim_window_from_median[1])
+    
+    return ax

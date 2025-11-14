@@ -6,7 +6,6 @@ import yaml
 import random
 import string
 import time
-import traceback
 from datetime import datetime
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed

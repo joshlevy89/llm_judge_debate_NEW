@@ -25,6 +25,12 @@ from utils.debate_utils import *
 from utils.shared_utils import extract_config, generate_run_id
 import os
 
+def format_latex(text):
+    text = str(text)
+    text = text.replace('\\\\', '\\')
+    text = text.replace('$', '')
+    return unicodeit.replace(text)
+
 def setup_output_path():
     output_dir = Path('results') / 'human'
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -84,15 +90,14 @@ def main():
 
         # DISPLAY THE QUESTION
         print('='*80)
-        print(unicodeit.replace(q_data['question']))
-        print(q_data['options'])
+        print(format_latex(q_data['question']))
+        for idx, opt in enumerate(q_data['options']):
+            print(f"{idx}: {format_latex(opt)}")
 
         # RUN DEBATE
         start_debate_time = time.time()
         debater_assignments = q_data['options']
         cur_debater_idx = -1
-
-        
 
         for turn in range(NUM_TURNS):
 
@@ -117,7 +122,7 @@ def main():
                 
                 print(f"{'='*80}\nDebater {turn_response['debater_idx']} (Turn {turn_response['turn']})\n{'='*80}\n")
                 if turn_response['success']:
-                    print(turn_response['parsed_response']['public_argument'])
+                    print(format_latex(turn_response['parsed_response']['public_argument']))
                     debate_history.append(turn_response)                
                     break
                 else:
