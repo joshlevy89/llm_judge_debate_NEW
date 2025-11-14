@@ -1,5 +1,6 @@
 from utils.debate_utils import *
 import argparse
+import time
 
 def __main__():
     import os
@@ -16,27 +17,18 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from dotenv import load_dotenv
+import unicodeit
 import config.config_debate as config_debate
-from config.config_debate import (
-    DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
-    DEBATER_MODEL, DEBATER_TEMPERATURE,
-    DEBATER_REASONING_EFFORT, DEBATER_REASONING_MAX_TOKENS,
-    NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES, NUM_TURNS,
-    PRIVATE_SCRATCHPAD, MAX_THREADS, MAX_OUTPUT_TOKENS,
-    PUBLIC_ARGUMENT_WORD_LIMIT, PRIVATE_REASONING_WORD_LIMIT,
-    LENIENT_PARSING_ARGUMENT
-)
-from utils.llm_utils import call_openrouter, get_openrouter_key_info, log_progress
+from config.config_debate import *
 from utils.dataset_utils import select_questions_and_options, format_options
 from utils.debate_utils import *
 from utils.shared_utils import extract_config, generate_run_id
 import os
 
-
-def setup_output_path(run_id):
+def setup_output_path():
     output_dir = Path('results') / 'human'
     output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir / f'{run_id}.jsonl'
+    return output_dir / f'human_results.jsonl'
 
 def main():
     # Add  
@@ -51,7 +43,7 @@ def main():
     
     run_id = generate_run_id()
     run_datetime = datetime.now().isoformat()
-    results_path = setup_output_path(run_id)
+    results_path = setup_output_path()
     config = extract_config(config_debate)
     
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
@@ -61,30 +53,31 @@ def main():
     
     for i, q_data in enumerate(questions_data):
         
-    
         record_id = generate_run_id()
         debate_history = []
 
         # DISPLAY THE QUESTION
         print('='*80)
-        print(q_data['question'])
+        print(unicodeit.replace(q_data['question']))
         print(q_data['options'])
 
         # RUN DEBATE
+        start_debate_time = time.time()
         debater_assignments = q_data['options']
         cur_debater_idx = 0
         for turn in range(NUM_TURNS):
-            turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
-            debate_history.append(turn_response)
-            cur_debater_idx += 1
-            cur_debater_idx = cur_debater_idx % len(debater_assignments) # cycle back
+            turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
             
             print(f"{'='*80}\nDebater {turn_response['debater_idx']} (Turn {turn_response['turn']})\n{'='*80}\n")
             if turn_response['success']:
                 print(turn_response['parsed_response']['public_argument'])
+                debate_history.append(turn_response)
+                cur_debater_idx += 1
+                cur_debater_idx = cur_debater_idx % len(debater_assignments) # cycle back
             else:
+                # re-run the turn
                 print('ERROR ' * 80)
-                print(turn_response)
+                continue
             
             # Get the next action from the human
             while True:
@@ -103,7 +96,7 @@ def main():
                     parts = message.split(':', 1)
                     try:
                         cur_debater_idx = int(parts[0].strip())
-                        action = parts[1].strip()
+                        action = message
                         break
                     except ValueError:
                         print("Invalid format. Use: <debater_idx>: <message>")
@@ -118,13 +111,46 @@ def main():
             
             if action == 'end':
                 break
+        
+        debate_duration = time.time() - start_debate_time
 
-        # Potentially, at some point, add ability to input the verdict and do proper saving of the transcript
         print("="*80)
-        print("Final Answer (index): ")
+
+        print("Verdict (index): ")
         verdict = input("> ").strip()
-        print(f'Verdict: {verdict}')
+        
+        print("Confidence (0-100): ")
+        confidence = input("> ").strip()
+
+        print("Reasoning: ")
+        reasoning = input("> ").strip()
+
         print(f"Correct Idx {q_data['correct_idx']}")
+
+        question_result = {
+            'run_id': run_id,
+            'record_id': record_id,
+            'datetime': run_datetime,
+            'config': config,
+            'prompt_template': {'debater_prompt_template': debater_template, 'private_reasoning_template': private_reasoning_prompt if PRIVATE_SCRATCHPAD else None},
+            'question_idx': q_data['original_idx'],
+            'question': q_data['question'],
+            'options': q_data['options'],
+            'correct_idx': q_data['correct_idx']
+            }
+
+        question_result['debate_duration'] = debate_duration
+        question_result['success'] = 'success'
+        question_result['error_message'] = None
+        question_result['debate_history'] = debate_history
+        question_result['verdict'] = verdict
+        question_result['confidence'] = confidence
+        question_result['reasoning'] = reasoning
+
+        # Save the data 
+        with open(results_path, 'a') as f:
+            f.write(json.dumps(question_result) + '\n')
+            f.flush()
 
 
 if __name__ == "__main__":

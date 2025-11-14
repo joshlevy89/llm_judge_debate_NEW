@@ -2,6 +2,7 @@ import re
 import yaml
 from config.config_debate import *
 from utils.llm_utils import call_openrouter
+import time
 
 def load_prompts():
     with open('prompts.yaml', 'r') as f:
@@ -32,24 +33,31 @@ def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, d
         private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
     )
 
-def run_debate_turn(turn_num, debater_assignments, debater_idx, question, history, debater_template, private_reasoning_prompt, api_key, run_id, record_id):
+def run_debate_turn(turn_num, debater_assignments, debater_idx, question, history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=False):
     prompt = get_debater_prompt(debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_template, private_reasoning_prompt)
     context = f"Debater {debater_idx} Turn {turn_num}"
     
-    response, token_usage = call_openrouter(
-        prompt, 
-        DEBATER_MODEL, 
-        api_key, 
-        DEBATER_TEMPERATURE,
-        reasoning_effort=DEBATER_REASONING_EFFORT,
-        reasoning_max_tokens=DEBATER_REASONING_MAX_TOKENS,
-        max_tokens=MAX_OUTPUT_TOKENS,
-        run_id=run_id,
-        record_id=record_id,
-        context=context
-    )
+    start_time = time.time()
+    if mock:
+        response, token_usage = {}, None
+        response_text = '<BEGIN PUBLIC ARGUMENT>lorem ipsum</END PUBLIC ARGUMENT>'
+    else:
+        response, token_usage = call_openrouter(
+            prompt, 
+            DEBATER_MODEL, 
+            api_key, 
+            DEBATER_TEMPERATURE,
+            reasoning_effort=DEBATER_REASONING_EFFORT,
+            reasoning_max_tokens=DEBATER_REASONING_MAX_TOKENS,
+            max_tokens=MAX_OUTPUT_TOKENS,
+            run_id=run_id,
+            record_id=record_id,
+            context=context
+        )
+        response_text = response['content']
+    response_time = time.time() - start_time
     
-    response_text = response['content']
+
     parsed_response, parse_error = parse_debater_response(response_text, PRIVATE_SCRATCHPAD, LENIENT_PARSING_ARGUMENT)
     turn_response = {
         'turn': turn_num,
@@ -58,10 +66,12 @@ def run_debate_turn(turn_num, debater_assignments, debater_idx, question, histor
         'raw_response': response_text,
         'internal_model_reasoning': response.get('reasoning'),
         'internal_model_reasoning_details': response.get('reasoning_details'),
-        'token_usage': token_usage
+        'token_usage': token_usage,
+        'response_time': response_time
     }
     turn_response['success'] = True
     turn_response['error_message'] = None
+
 
     if parse_error:
         turn_response['success'] = False
