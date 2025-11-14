@@ -2,6 +2,7 @@ import re
 import yaml
 from config.config_debate import *
 from utils.llm_utils import call_openrouter
+from utils.dataset_utils import format_options
 import time
 from utils.shared_utils import generate_run_id
 import traceback
@@ -9,7 +10,7 @@ import traceback
 def load_prompts():
     with open('prompts.yaml', 'r') as f:
         prompts = yaml.safe_load(f)
-    return prompts['debater_prompt_template'], prompts['private_reasoning_prompt']
+    return prompts['debater_prompt_template'], prompts['private_reasoning_prompt'], prompts['action_prompt_template']
 
 def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, debater_template, private_reasoning_prompt):
     opponents_text = "\nYour opponents are arguing for:\n"
@@ -86,8 +87,33 @@ def run_debate_turn(turn_num, debater_assignments, debater_idx, question, histor
     return turn_response
 
 
-def get_llm_action(debate_history, interactive_judge, api_key):
-    interactive_judge_prompt = get_interactive_judge_prompt(debate_history)
+def get_interactive_judge_prompt(debate_history, question, options, action_template):
+    debate_history_text = format_debate_history(debate_history, show_private=False)
+    options_text = format_options(options)
+    return action_template.format(question=question, options_text=options_text, debate_history_text=debate_history_text)
+
+def parse_interactive_judge_action(response_text):
+    action_match = re.search(r'<BEGIN ACTION>.*?\s*(.+?)(?:</?END ACTION>|\n|$)', response_text, re.DOTALL | re.IGNORECASE)
+    
+    if not action_match:
+        return 'next', None
+    
+    action_str = action_match.group(1).strip()
+    
+    if action_str == 'end':
+        return 'end', None
+    elif action_str == 'next':
+        return 'next', None
+    elif ':' in action_str:
+        parts = action_str.split(':', 1)
+        if parts[0].strip().isdigit():
+            debater_idx = int(parts[0].strip())
+            return action_str, debater_idx
+    
+    return 'next', None
+
+def get_llm_action(debate_history, question, options, interactive_judge, api_key, action_template):
+    interactive_judge_prompt = get_interactive_judge_prompt(debate_history, question, options, action_template)
     response, token_usage = call_openrouter(
             interactive_judge_prompt, 
             interactive_judge, 
@@ -109,7 +135,7 @@ def get_llm_action(debate_history, interactive_judge, api_key):
     return action, new_debater_idx, action_response
 
 
-def process_question(q_data, debater_template, private_reasoning_prompt, debater_template_str, interactive_judge, api_key, config, run_id, run_datetime):
+def process_question(q_data, debater_template, private_reasoning_prompt, action_template, interactive_judge, api_key, config, run_id, run_datetime):
     record_id = generate_run_id()
     debater_assignments = q_data['options']
     
@@ -118,7 +144,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
         'record_id': record_id,
         'datetime': run_datetime,
         'config': config,
-        'prompt_template': {'debater_prompt_template': debater_template_str, 'private_reasoning_template': private_reasoning_prompt if PRIVATE_SCRATCHPAD else None},
+        'prompt_template': {'debater_prompt_template': debater_template, 'private_reasoning_template': private_reasoning_prompt if PRIVATE_SCRATCHPAD else None},
         'question_idx': q_data['original_idx'],
         'question': q_data['question'],
         'options': q_data['options'],
@@ -135,7 +161,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
             cur_debater_idx = -1
             for turn in range(NUM_TURNS):
                 if interactive_judge is not None:
-                    action, new_debater_idx, action_response = get_llm_action(debate_history, interactive_judge, api_key)
+                    action, new_debater_idx, action_response = get_llm_action(debate_history, q_data['question'], q_data['options'], interactive_judge, api_key, action_template)
                     debate_history.append(action_response)
                     if action == 'end':
                         break

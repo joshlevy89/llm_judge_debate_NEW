@@ -42,7 +42,7 @@ def main():
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
     
-    debater_template, private_reasoning_prompt = load_prompts()
+    debater_template, private_reasoning_prompt, action_template = load_prompts()
     
     key_info_start = get_openrouter_key_info(api_key)
     start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0
@@ -54,7 +54,7 @@ def main():
     
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         futures = {
-            executor.submit(process_question, q_data, debater_template, private_reasoning_prompt, debater_template, INTERACTIVE_JUDGE, api_key, config, run_id, run_datetime): q_data
+            executor.submit(process_question, q_data, debater_template, private_reasoning_prompt, action_template, INTERACTIVE_JUDGE, api_key, config, run_id, run_datetime): q_data
             for i, q_data in enumerate(questions_data)
         }
         
