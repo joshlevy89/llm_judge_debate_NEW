@@ -73,7 +73,7 @@ def run_debate_turn(turn_num, debater_assignments, debater_idx, question, histor
     turn_response['success'] = True
     turn_response['error_message'] = None
 
-    print(f"Completed the response in {response_time} with status {turn_response['success']}")
+    # print(f"Completed the response in {response_time} with status {turn_response['success']}")
 
     if parse_error:
         turn_response['success'] = False

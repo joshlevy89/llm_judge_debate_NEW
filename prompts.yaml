@@ -6,9 +6,25 @@ qa_prompt_template: |
 
   {response_format_prompt}
 
+# judge_prompt_template: |
+#   Given the question and debate history, which of the N debaters do you think is correct?
+#   Think critically about what you know as well as which debater makes the most sense.
+  
+#   Question: {question}
+#   {options_text}
+
+#   Debate: {public_debate_history_text}
+
+#   {response_format_prompt}
+
+
 judge_prompt_template: |
   Given the question and debate history, which of the N debaters do you think is correct?
-  Think critically about what you know as well as which debater makes the most sense.
+  Only one of the N debaters is correct. 
+  Focus less on what you think you already know and more so on the arguments presented by the debaters.
+  It is critical that you do a thorough analysis of their arguments. 
+  You should be searching for contradictions in a debater's arguments, unlikely interpretations of the question, failures to concretely justify certain assumptions (especially when challenged).
+  It is also a bad sign if the debater is being vague or constantly changing their line of argumentation.
   
   Question: {question}
   {options_text}

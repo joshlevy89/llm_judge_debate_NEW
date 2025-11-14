@@ -18,8 +18,6 @@ JUDGE_MODEL = "openai/gpt-4o-mini"
 # JUDGE_MODEL = "google/gemma-3-27b-it"
 # JUDGE_MODEL = "anthropic/claude-3.5-haiku"
 
-
-
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-llama-70b"
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
 # JUDGE_MODEL = "deepseek/deepseek-chat"
@@ -37,7 +35,8 @@ JUDGE_MODEL = "openai/gpt-4o-mini"
 # DEBATE_RUN_ID = "z1qae3w" # 4 choice gpqa - deepseek/deepseek-v3.1-terminus as debater
 # DEBATE_RUN_ID = "7q0xvsw"  # 4 choice gpqa - o3 (low)
 # DEBATE_RUN_ID = "7i24jh4"  # 4 choice gpqa - gpt oss 120b (high)
-DEBATE_RUN_ID = "1v72vdi"  # 4 choice gpqa - gpt-4o-mini as judge (control)
+# DEBATE_RUN_ID = "1v72vdi"  # 4 choice gpqa - gpt-4o-mini as judge (control)
+DEBATE_RUN_ID = "zye2tmr" # sequential run with 10 turns and two debaters
 
 JUDGE_TEMPERATURE = 0.0
 JUDGE_REASONING_EFFORT = None
