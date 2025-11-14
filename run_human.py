@@ -30,6 +30,32 @@ def setup_output_path():
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir / f'human_results.jsonl'
 
+def get_human_action():
+    # Get the next action from the human
+    while True:
+        print("="*80)
+        print("Actions: 'next', 'end', or '<debater_idx>: <message>'")
+        print("="*80)
+        message = input("> ").strip()
+        
+        if message == 'end':
+            action, new_debater_idx = message, None
+            break
+        elif message == 'next':
+            action, new_debater_idx = message, None
+            break
+        elif ':' in message:
+            parts = message.split(':', 1)
+            try:
+                action, new_debater_idx = message, int(parts[0].strip())
+                break
+            except ValueError:
+                print("Invalid format. Use: <debater_idx>: <message>")
+        else:
+            print("Invalid action.")
+    return action, new_debater_idx
+
+
 def main():
     # Add  
     parser = argparse.ArgumentParser()
@@ -64,53 +90,43 @@ def main():
         # RUN DEBATE
         start_debate_time = time.time()
         debater_assignments = q_data['options']
-        cur_debater_idx = 0
-        for turn in range(NUM_TURNS):
-            turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
-            
-            print(f"{'='*80}\nDebater {turn_response['debater_idx']} (Turn {turn_response['turn']})\n{'='*80}\n")
-            if turn_response['success']:
-                print(turn_response['parsed_response']['public_argument'])
-                debate_history.append(turn_response)
-                cur_debater_idx += 1
-                cur_debater_idx = cur_debater_idx % len(debater_assignments) # cycle back
-            else:
-                # re-run the turn
-                print('ERROR ' * 80)
-                continue
-            
-            # Get the next action from the human
-            while True:
-                print("="*80)
-                print("Actions: 'next', 'end', or '<debater_idx>: <message>'")
-                print("="*80)
-                message = input("> ").strip()
-                
-                if message == 'end':
-                    action = message
-                    break
-                elif message == 'next':
-                    action = message
-                    break
-                elif ':' in message:
-                    parts = message.split(':', 1)
-                    try:
-                        cur_debater_idx = int(parts[0].strip())
-                        action = message
-                        break
-                    except ValueError:
-                        print("Invalid format. Use: <debater_idx>: <message>")
-                else:
-                    print("Invalid action.")
+        cur_debater_idx = -1
 
+        
+
+        for turn in range(NUM_TURNS):
+
+            # get human action 
+            action, new_debater_idx = get_human_action()
             debate_history.append({
                 'persona': 'judge',
                 'action': action,
                 'is_human': True
             })
-            
             if action == 'end':
                 break
+            if new_debater_idx is not None:
+                cur_debater_idx = new_debater_idx
+            else:
+                cur_debater_idx += 1
+                cur_debater_idx = cur_debater_idx % len(debater_assignments) # cycle back
+
+            # run a turn of debate
+            while True:
+                turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
+                
+                print(f"{'='*80}\nDebater {turn_response['debater_idx']} (Turn {turn_response['turn']})\n{'='*80}\n")
+                if turn_response['success']:
+                    print(turn_response['parsed_response']['public_argument'])
+                    debate_history.append(turn_response)                
+                    break
+                else:
+                    # re-run the turn
+                    print('ERROR ' * 80)
+                    print('RE-RUNNING TURN APPENDING TO DEBATE_HISTORY')
+                    continue
+            
+
         
         debate_duration = time.time() - start_debate_time
 

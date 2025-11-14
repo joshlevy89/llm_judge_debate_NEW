@@ -3,6 +3,7 @@ import yaml
 from config.config_debate import *
 from utils.llm_utils import call_openrouter
 import time
+from utils.shared_utils import generate_run_id
 
 def load_prompts():
     with open('prompts.yaml', 'r') as f:
@@ -103,12 +104,13 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
     debate_history = []
     question_success = True
     error_message = None
+    start_debate_time = time.time()
     try:
         if DEBATE_MODE == 'sequential':
             cur_debater_idx = 0
             for turn in range(NUM_TURNS):
                 turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
-                debate_history.extend(turn_response)
+                debate_history.append(turn_response)
                 cur_debater_idx += 1
                 cur_debater_idx = cur_debater_idx % len(debater_assignments) # cycle back
         elif DEBATE_MODE == 'simultaneous':
@@ -126,6 +128,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, debater
     question_result['success'] = question_success
     question_result['error_message'] = error_message
     question_result['debate_history'] = debate_history
+    question_result['debate_duration'] = time.time() - start_debate_time
     
     return question_result
 
