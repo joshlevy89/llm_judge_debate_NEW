@@ -20,9 +20,9 @@ def display_debate(debate_data, hide_private=False):
         print(f"Record ID: {debate_data.get('record_id')}")
         # Find the turn with the error
         for turn in debate_data['debate_history']:
-            if not turn['success']:
+            if 'success' not in turn or not turn['success']:
                 print(f"\n\nRaw Response: \n{turn['raw_response']}")
-        print(f"\n\nError message: \n{debate_data.get('error_message', 'Unknown error')}")
+        print(f"\n\nTHE ERROR ASSOCIATED WITH THIS RECORD IS: \n{debate_data.get('error_message', 'Unknown error')}")
         return False
     
     if hide_private:

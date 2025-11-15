@@ -134,6 +134,7 @@ def get_llm_action(debate_history, question, options, interactive_judge, api_key
     action, new_debater_idx = parse_interactive_judge_action(response_text)
 
     action_response = {
+        'success': True,
         'persona': 'judge',
         'action': action,
         'is_human': False,
