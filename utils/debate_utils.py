@@ -112,24 +112,36 @@ def parse_interactive_judge_action(response_text):
     
     return 'next', None
 
-def get_llm_action(debate_history, question, options, interactive_judge, api_key, action_template):
+def get_llm_action(debate_history, question, options, interactive_judge, api_key, action_template, mock=False):
     interactive_judge_prompt = get_interactive_judge_prompt(debate_history, question, options, action_template)
-    response, token_usage = call_openrouter(
-            interactive_judge_prompt, 
-            interactive_judge, 
-            api_key, 
-            INTERACTIVE_JUDGE_TEMPERATURE,
-            reasoning_effort=INTERACTIVE_JUDGE_REASONING_EFFORT,
-            reasoning_max_tokens=INTERACTIVE_JUDGE_REASONING_MAX_TOKENS,
-            max_tokens=INTERACTIVE_JUDGE_MAX_OUTPUT_TOKENS,
-        )
-    response_text = response['content']
+
+    start_time = time.time()
+    if mock:
+        response, token_usage = {}, None
+        response_text = '<BEGIN ACTION>0: can you clarify what you mean by that?</END ACTION>'
+        # response_text = '<BEGIN ACTION>end</END ACTION>'
+    else:
+        response, token_usage = call_openrouter(
+                interactive_judge_prompt, 
+                interactive_judge, 
+                api_key, 
+                INTERACTIVE_JUDGE_TEMPERATURE,
+                reasoning_effort=INTERACTIVE_JUDGE_REASONING_EFFORT,
+                reasoning_max_tokens=INTERACTIVE_JUDGE_REASONING_MAX_TOKENS,
+                max_tokens=INTERACTIVE_JUDGE_MAX_OUTPUT_TOKENS)
+        response_text = response['content']
+    response_time = time.time() - start_time
     action, new_debater_idx = parse_interactive_judge_action(response_text)
 
     action_response = {
         'persona': 'judge',
         'action': action,
-        'is_human': True
+        'is_human': False,
+        'raw_response': response_text,
+        'internal_model_reasoning': response.get('reasoning'),
+        'internal_model_reasoning_details': response.get('reasoning_details'),
+        'token_usage': token_usage,
+        'response_time': response_time
     }
 
     return action, new_debater_idx, action_response
@@ -161,7 +173,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, action_
             cur_debater_idx = -1
             for turn in range(NUM_TURNS):
                 if interactive_judge is not None:
-                    action, new_debater_idx, action_response = get_llm_action(debate_history, q_data['question'], q_data['options'], interactive_judge, api_key, action_template)
+                    action, new_debater_idx, action_response = get_llm_action(debate_history, q_data['question'], q_data['options'], interactive_judge, api_key, action_template, mock=MOCK_INTERACTIVE_JUDGE_RESPONSE)
                     debate_history.append(action_response)
                     if action == 'end':
                         break
@@ -174,7 +186,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, action_
                     cur_debater_idx += 1
                     cur_debater_idx = cur_debater_idx % len(debater_assignments)
 
-                turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
+                turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
                 debate_history.append(turn_response)
         elif DEBATE_MODE == 'simultaneous':
             if interactive_judge:
@@ -183,7 +195,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, action_
             for turn in range(NUM_TURNS):
                 turn_responses = []
                 for debater_idx in range(len(debater_assignments)):
-                    turn_response = run_debate_turn(turn, debater_assignments, debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id)
+                    turn_response = run_debate_turn(turn, debater_assignments, debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
                     turn_responses.append(turn_responses)
                 debate_history.extend(turn_responses)
     except:

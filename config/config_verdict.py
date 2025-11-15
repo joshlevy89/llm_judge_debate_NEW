@@ -36,7 +36,8 @@ JUDGE_MODEL = "openai/gpt-4o-mini"
 # DEBATE_RUN_ID = "7q0xvsw"  # 4 choice gpqa - o3 (low)
 # DEBATE_RUN_ID = "7i24jh4"  # 4 choice gpqa - gpt oss 120b (high)
 # DEBATE_RUN_ID = "1v72vdi"  # 4 choice gpqa - gpt-4o-mini as judge (control)
-DEBATE_RUN_ID = "zye2tmr" # sequential run with 10 turns and two debaters
+# DEBATE_RUN_ID = "zye2tmr" # sequential run with 10 turns and two debaters
+DEBATE_RUN_ID = "rdf775j" # sequential run with 10 turns, two debaters, an interactive judge that can do next, end, or ask open ended questions (tends to use this option)
 
 JUDGE_TEMPERATURE = 0.0
 JUDGE_REASONING_EFFORT = None
