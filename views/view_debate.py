@@ -41,7 +41,10 @@ def display_debate(debate_data, hide_private=False):
     return True
 
 def load_debate_data(run_id, record_id):
-    debate_path = project_root / 'results' / 'debates' / f'{run_id}.jsonl'
+    if run_id == 'human':
+        debate_path = project_root / 'results' / 'human' / f'human_results.jsonl'
+    else:
+        debate_path = project_root / 'results' / 'debates' / f'{run_id}.jsonl'
     for line in open(debate_path):
         data = json.loads(line)
         if data['record_id'] == record_id:
