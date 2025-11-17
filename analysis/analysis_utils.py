@@ -57,7 +57,7 @@ def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_fil
         
         if filter_errors and 'success' in df.columns:
             # Keep records that succeeded OR where success is NaN (legacy records before this field existed)
-            df = df[(df['success'] == True) | (df['success'].isna())]
+            df = df[(df['success'] == True) | (df['success'].isna()) | (df['success'] == 'success')]
         
         if filter_nulls and 'parsed_answer' in df.columns:
             df = df[df['parsed_answer'].notna()]
@@ -96,12 +96,15 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
             return qa_df
 
 
-    if 'debates' in types or 'verdicts' in types:
-        debate_df = load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
-        debate_df = debate_df.drop(columns=['config_judge_model_debates']) # this field shouldn't exist
-        if types == ['debates']:
+    if 'debates' in types or 'verdicts' in types or 'human' in types:
+        if 'human' in types:
+            debate_df = load_all_records_into_df('human', filter_errors=filter_errors, filter_nulls=filter_nulls)
+            debate_df.columns = [name.replace('_human', '_debates') if '_human' in name else name for name in debate_df.columns]
+        else:
+            debate_df = load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
+            debate_df = debate_df.drop(columns=['config_judge_model_debates']) # this field shouldn't exist
+        if types == ['debates'] or types == ['human']:
             return debate_df
-        
 
     verdict_df = load_all_records_into_df('verdicts', filter_errors=filter_errors, filter_nulls=filter_nulls)
     
@@ -147,8 +150,8 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
     # or for legacy data that predates the success field
     if filter_errors:
         all_df = all_df[
-            ((all_df['success_verdicts'] == True) | (all_df['success_verdicts'].isna())) & 
-            ((all_df['success_debates'] == True) | (all_df['success_debates'].isna())) 
+            ((all_df['success_verdicts'] == True) | (all_df['success_verdicts'].isna()) | (all_df['success_verdicts'] == 'success')) & 
+            ((all_df['success_debates'] == True) | (all_df['success_debates'].isna()) | (all_df['success_debates'] == 'success') ) 
         ]
     if filter_nulls:
         all_df = all_df[all_df['parsed_answer_verdicts'].notnull()]
