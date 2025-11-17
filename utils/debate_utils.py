@@ -7,10 +7,6 @@ import time
 from utils.shared_utils import generate_run_id
 import traceback
 
-def load_prompts():
-    with open('prompts.yaml', 'r') as f:
-        prompts = yaml.safe_load(f)
-    return prompts['debater_prompt_template'], prompts['private_reasoning_prompt'], prompts['action_prompt_template']
 
 def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, debater_template, private_reasoning_prompt):
     opponents_text = "\nYour opponents are arguing for:\n"

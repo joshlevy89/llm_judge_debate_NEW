@@ -16,7 +16,7 @@ from config.config_debate import *
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, log_progress
 from utils.dataset_utils import select_questions_and_options, format_options
 from utils.debate_utils import *
-from utils.shared_utils import extract_config, generate_run_id
+from utils.shared_utils import extract_config, generate_run_id, load_prompts
 
 
 def setup_output_path(run_id):

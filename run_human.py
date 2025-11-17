@@ -22,7 +22,7 @@ import config.config_debate as config_debate
 from config.config_debate import *
 from utils.dataset_utils import select_questions_and_options, format_options
 from utils.debate_utils import *
-from utils.shared_utils import extract_config, generate_run_id
+from utils.shared_utils import extract_config, generate_run_id, load_prompts
 import os
 
 def format_latex(text):
@@ -81,7 +81,7 @@ def main():
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     questions_data = select_questions_and_options(DATASET_NAME, dataset, 1, NUM_CHOICES, None, [args.question_idx])
     
-    debater_template, private_reasoning_prompt = load_prompts()
+    debater_template, private_reasoning_prompt, _ = load_prompts()
     
     for i, q_data in enumerate(questions_data):
         
@@ -118,21 +118,24 @@ def main():
 
             # run a turn of debate
             while True:
+                start_turn_time = time.time()
                 turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
                 
                 print(f"{'='*80}\nDebater {turn_response['debater_idx']} (Turn {turn_response['turn']})\n{'='*80}\n")
                 if turn_response['success']:
+                    turn_duration = time.time() - start_turn_time
+                    if turn_duration < 40:
+                        # This is to mask which debater is responding (as the incorrect debater usuallly takes longer)
+                        time.sleep(40 - turn_duration)
                     print(format_latex(turn_response['parsed_response']['public_argument']))
                     debate_history.append(turn_response)                
                     break
                 else:
                     # re-run the turn
-                    print('ERROR ' * 80)
-                    print('RE-RUNNING TURN APPENDING TO DEBATE_HISTORY')
+                    # print('ERROR ' * 80)
+                    # print('RE-RUNNING TURN APPENDING TO DEBATE_HISTORY')
                     continue
-            
 
-        
         debate_duration = time.time() - start_debate_time
 
         print("="*80)

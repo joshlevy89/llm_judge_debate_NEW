@@ -1,5 +1,6 @@
 import random
 import string
+import yaml
 
 def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
@@ -21,3 +22,8 @@ def extract_config(config_module):
             config[key.lower()] = value
     return config
 
+
+def load_prompts():
+    with open('prompts.yaml', 'r') as f:
+        prompts = yaml.safe_load(f)
+    return prompts['debater_prompt_template'], prompts['private_reasoning_prompt'], prompts['action_prompt_template']

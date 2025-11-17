@@ -68,7 +68,7 @@ def display_full_verdict(verdict_run_id, record_id, hide_private=False, view_qa=
         print(f"{'='*80}")
         print(f"Verdict Run ID: {verdict_run_id}")
         print(f"Record ID: {record_id}")
-        print(f"Error message: {verdict_data.get('error_message', 'Unknown error')}")
+        print(f"\nThe error that occurred during the run:\n\n{verdict_data.get('error_message', 'Unknown error')}")
         return False
     
     debate_data = load_debate_data(verdict_data['debate_run_id'], record_id)
