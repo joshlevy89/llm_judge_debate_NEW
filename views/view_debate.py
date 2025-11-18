@@ -11,7 +11,7 @@ sys.path.insert(0, str(project_root))
 
 from utils.debate_utils import format_debate_history
 
-def display_debate(debate_data, hide_private=False):
+def display_debate(debate_data, hide_private=False, upto_turns=None):
     if not debate_data.get('success', True):
         print(f"{'='*80}")
         print(f"ERROR: Debate failed")
@@ -29,7 +29,7 @@ def display_debate(debate_data, hide_private=False):
         show_private = False
     else:
         show_private = debate_data['config'].get('private_scratchpad', False)
-    debate_text = format_debate_history(debate_data['debate_history'], show_private=show_private)
+    debate_text = format_debate_history(debate_data['debate_history'], show_private=show_private, upto_turns=upto_turns)
     
     print(f"{'='*80}")
     print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']} | Question Idx: {debate_data['question_idx']} | Correct Idx: {debate_data['correct_idx']}")

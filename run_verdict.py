@@ -16,7 +16,7 @@ import config.config_verdict as config_verdict
 from config.config_verdict import (
     DEBATE_RUN_ID, JUDGE_MODEL, JUDGE_TEMPERATURE,
     JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
-    SKIP_QA, RERUN, SUBSET_N, SPECIFIC_RECORD_IDS, MAX_THREADS
+    SKIP_QA, RERUN, SUBSET_N, SPECIFIC_RECORD_IDS, MAX_THREADS, UPTO_TURNS
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
@@ -145,7 +145,7 @@ def check_and_run_missing_qa(debate_records, api_key):
                 print(f"All questions already have QA results for {model_name}. Skipping QA...")
 
 def process_debate_record(debate_record, judge_template, response_format_prompt, judge_template_str, api_key, config, verdict_run_id, run_datetime):
-    public_debate_history_text = format_debate_history(debate_record['debate_history'], show_private=False)
+    public_debate_history_text = format_debate_history(debate_record['debate_history'], show_private=False, upto_turns=UPTO_TURNS)
     
     judge_verdict = run_judge(
         debate_record['question'],

@@ -25,6 +25,8 @@ from utils.debate_utils import *
 from utils.shared_utils import extract_config, generate_run_id, load_prompts
 import os
 
+RESPONSE_DURATION_MASKING = None
+
 def format_latex(text):
     text = str(text)
     text = text.replace('\\\\', '\\')
@@ -124,9 +126,9 @@ def main():
                 print(f"{'='*80}\nDebater {turn_response['debater_idx']} (Turn {turn_response['turn']})\n{'='*80}\n")
                 if turn_response['success']:
                     turn_duration = time.time() - start_turn_time
-                    if turn_duration < 40:
+                    if RESPONSE_DURATION_MASKING is not None and turn_duration < RESPONSE_DURATION_MASKING:
                         # This is to mask which debater is responding (as the incorrect debater usuallly takes longer)
-                        time.sleep(40 - turn_duration)
+                        time.sleep(RESPONSE_DURATION_MASKING - turn_duration)
                     print(format_latex(turn_response['parsed_response']['public_argument']))
                     debate_history.append(turn_response)                
                     break

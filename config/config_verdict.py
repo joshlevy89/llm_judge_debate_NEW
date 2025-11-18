@@ -49,6 +49,8 @@ SKIP_QA = False
 RERUN = False
 
 SUBSET_N = None # Only run the verdict for the first N debates
-SPECIFIC_RECORD_IDS = None#['wi4kbip'] # List of specific record_ids to run the verdict for
+SPECIFIC_RECORD_IDS = ['ezrn67r'] # List of specific record_ids to run the verdict for
+UPTO_TURNS = 10
+
 
 MAX_THREADS = 200  

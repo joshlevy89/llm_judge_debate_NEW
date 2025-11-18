@@ -76,7 +76,8 @@ def display_full_verdict(verdict_run_id, record_id, hide_private=False, view_qa=
         print(f"Record {record_id} not found in debate run {verdict_data['debate_run_id']}")
         return False
     
-    success = display_debate(debate_data, hide_private=hide_private)
+    upto_turns = verdict_data['config'].get('upto_turns')
+    success = display_debate(debate_data, hide_private=hide_private, upto_turns=upto_turns)
     if not success:
         return False
     

@@ -208,15 +208,17 @@ def process_question(q_data, debater_template, private_reasoning_prompt, action_
 
 
 
-def format_debate_history(history, show_private=False):
+def format_debate_history(history, show_private=False, upto_turns=None):
     if not history:
         return ""
     
     text = ""
+    num_debater_turns = 0
     for entry in history:
-
     
         if entry['persona'] == 'debater':
+            if upto_turns is not None and num_debater_turns >= upto_turns:
+                break
             text += f"{'-'*80}\nDebater {entry['debater_idx']}\n{'-'*80}\n"
             
             if show_private and entry.get('internal_model_reasoning') is not None:
@@ -227,6 +229,8 @@ def format_debate_history(history, show_private=False):
             
             if 'parsed_response' in entry and 'public_argument' in entry['parsed_response']:
                 text += f"[BEGIN PUBLIC ARGUMENT]\n{entry['parsed_response']['public_argument']}\n[END PUBLIC ARGUMENT]\n"
+
+            num_debater_turns += 1
         elif entry['persona'] == 'judge':
             text += f"{'-'*80}\nJudge\n{'-'*80}\n"
             text += f"{entry['action']}\n"
