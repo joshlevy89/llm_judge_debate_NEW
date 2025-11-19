@@ -108,8 +108,15 @@ def check_and_run_missing_qa(debate_records, api_key):
         num_choices = len(records[0]['options'])
         
         print(f"\nProcessing dataset: {dataset_key[0]}/{dataset_key[1]} ({len(records)} records)")
+
+        if JUDGE_MODEL == debater_model:
+            tups = [(JUDGE_MODEL, JUDGE_TEMPERATURE)]
+            print("Since judge and debater model are the same, only running QA for missing idxs once")
+        else:
+            tups = [(JUDGE_MODEL, JUDGE_TEMPERATURE), (debater_model, debater_temperature)]
+
         
-        for model_name, temperature in [(JUDGE_MODEL, JUDGE_TEMPERATURE), (debater_model, debater_temperature)]:
+        for model_name, temperature in tups:
             missing_question_idxs = []
             
             for record in records:

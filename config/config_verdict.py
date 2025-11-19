@@ -1,4 +1,5 @@
 JUDGE_MODEL = "openai/gpt-4o-mini"
+# JUDGE_MODEL = "x-ai/grok-4-fast"
 # JUDGE_MODEL = "openai/gpt-3.5-turbo"
 # JUDGE_MODEL = "qwen/qwen-2.5-7b-instruct"
 # JUDGE_MODEL = "qwen/qwen-2.5-72b-instruct"
@@ -37,8 +38,8 @@ JUDGE_MODEL = "openai/gpt-4o-mini"
 # DEBATE_RUN_ID = "7i24jh4"  # 4 choice gpqa - gpt oss 120b (high)
 # DEBATE_RUN_ID = "1v72vdi"  # 4 choice gpqa - gpt-4o-mini as judge (control)
 # DEBATE_RUN_ID = "zye2tmr" # sequential run with 10 turns and two debaters
-# DEBATE_RUN_ID = "rdf775j" # sequential run with 10 turns, two debaters, an interactive judge that can do next, end, or ask open ended questions (tends to use this option)
-DEBATE_RUN_ID = "human"
+DEBATE_RUN_ID = "rdf775j" # sequential run with 10 turns, two debaters, an interactive judge that can do next, end, or ask open ended questions (tends to use this option)
+# DEBATE_RUN_ID = "human"
 
 JUDGE_TEMPERATURE = 0.0
 JUDGE_REASONING_EFFORT = None
@@ -49,8 +50,8 @@ SKIP_QA = False
 RERUN = False
 
 SUBSET_N = None # Only run the verdict for the first N debates
-SPECIFIC_RECORD_IDS = ['ezrn67r'] # List of specific record_ids to run the verdict for
-UPTO_TURNS = 10
+SPECIFIC_RECORD_IDS = None # ['ezrn67r'] # List of specific record_ids to run the verdict for
+UPTO_TURNS = None
 
 
 MAX_THREADS = 200  

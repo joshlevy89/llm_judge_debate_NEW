@@ -3,6 +3,7 @@ Prints the debate history for a given run_id and record_id.
 """
 import argparse
 import json
+import random
 import sys
 from pathlib import Path
 
@@ -34,31 +35,28 @@ def display_debate(debate_data, hide_private=False, upto_turns=None):
     print(f"{'='*80}")
     print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']} | Question Idx: {debate_data['question_idx']} | Correct Idx: {debate_data['correct_idx']}")
     print(f"{'='*80}\nQuestion\n{'='*80}")
-    print(f"{debate_data['question']}\n")
+    print(f"Question: {debate_data['question']}\n")
     print(f"Options: {debate_data['options']}")
     print(f"{'='*80}\nDebate\n{'='*80}")
     print(f"{debate_text}")
     return True
 
-def load_debate_data(run_id, record_id):
-    if run_id == 'human':
-        debate_path = project_root / 'results' / 'human' / f'human_results.jsonl'
-    else:
-        debate_path = project_root / 'results' / 'debates' / f'{run_id}.jsonl'
-    for line in open(debate_path):
-        data = json.loads(line)
-        if data['record_id'] == record_id:
-            return data
-    return None
+def load_debate_data(run_id, record_id=None, random_id=False):
+    debate_path = project_root / 'results' / ('human/human_results.jsonl' if run_id == 'human' else f'debates/{run_id}.jsonl')
+    records = [json.loads(line) for line in open(debate_path)]
+    if random_id:
+        return random.choice(records) if records else None
+    return next((r for r in records if r['record_id'] == record_id), None)
 
 def main():
     parser = argparse.ArgumentParser(description='View debate results')
     parser.add_argument('run_id')
-    parser.add_argument('record_id')
+    parser.add_argument('record_id', nargs='?', help='Optional record ID to view specific record')
     parser.add_argument('--hide-private', action='store_true', help='Hide private reasoning')
+    parser.add_argument('--random_id', action='store_true', help='Pick a random record from the file')
     args = parser.parse_args()
     
-    debate_data = load_debate_data(args.run_id, args.record_id)
+    debate_data = load_debate_data(args.run_id, record_id=args.record_id, random_id=args.random_id)
     if not debate_data:
         print(f"Record {args.record_id} not found in debate run {args.run_id}")
         return

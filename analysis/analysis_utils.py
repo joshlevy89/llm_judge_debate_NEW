@@ -51,9 +51,17 @@ def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_fil
 
         df['options_str'] = df['options'].apply(str)
 
-        parsed_answer = extract_parsed_answer(df, type)
-        if parsed_answer is not None:
-            df['parsed_answer'] = parsed_answer
+        if type == 'verdicts':
+            if 'judge_verdict' not in df.columns:
+                df['parsed_answer'] = None
+                df['parsed_confidence'] = None
+                df['parsed_reasoning'] = None
+            else:
+                df['parsed_answer'] = df['judge_verdict'].apply(lambda x: x.get('parsed', {}).get('answer') if pd.notna(x) and isinstance(x, dict) else None)
+                df['parsed_confidence'] = df['judge_verdict'].apply(lambda x: x.get('parsed', {}).get('confidence') if pd.notna(x) and isinstance(x, dict) else None)
+                df['parsed_reasoning'] = df['judge_verdict'].apply(lambda x: x.get('parsed', {}).get('reasoning') if pd.notna(x) and isinstance(x, dict) else None)
+        elif type == 'qa':
+            df['parsed_answer'] = df['parsed_model_response'].apply(lambda x: x.get('answer') if pd.notna(x) else None)
         
         if filter_errors and 'success' in df.columns:
             # Keep records that succeeded OR where success is NaN (legacy records before this field existed)

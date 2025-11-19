@@ -134,8 +134,8 @@ def main():
                     break
                 else:
                     # re-run the turn
-                    # print('ERROR ' * 80)
-                    # print('RE-RUNNING TURN APPENDING TO DEBATE_HISTORY')
+                    print('ERROR ' * 80)
+                    print('RE-RUNNING TURN AND NOT APPENDING TO DEBATE_HISTORY')
                     continue
 
         debate_duration = time.time() - start_debate_time

@@ -38,6 +38,7 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
         "messages": [{"role": "user", "content": prompt}],
         "temperature": temperature,
         "seed": 42,
+        "order": ["fireworks"]
     }
     
     if max_tokens:
@@ -50,6 +51,8 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
         if reasoning_max_tokens:
             reasoning_config["max_tokens"] = reasoning_max_tokens
         data["reasoning"] = reasoning_config
+
+    # print(data)
     
     req = RequestWithTimeout()
     thread = Thread(target=req.make_request, args=(url, headers, data))
@@ -63,8 +66,11 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
     if req.exception:
         raise req.exception
     
+    # print(req.result.json())
+
     if req.result is None:
         raise Exception("Request returned no result")
+
     
     if req.result.status_code != 200:
         try:
