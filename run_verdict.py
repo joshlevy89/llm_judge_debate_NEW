@@ -198,7 +198,7 @@ def main():
     print(f"Judge Model: {JUDGE_MODEL}")
     
     if DEBATE_RUN_ID == 'human':
-        debate_path = Path('results') / 'human' / f'human_results.jsonl'
+        debate_path = Path('results') / 'human' / f'human_interactive_debate.jsonl'
     else:
         debate_path = Path('results') / 'debates' / f'{DEBATE_RUN_ID}.jsonl'
     if not debate_path.exists():

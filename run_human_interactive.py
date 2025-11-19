@@ -17,26 +17,19 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from dotenv import load_dotenv
-import unicodeit
 import config.config_debate as config_debate
 from config.config_debate import *
 from utils.dataset_utils import select_questions_and_options, format_options
 from utils.debate_utils import *
-from utils.shared_utils import extract_config, generate_run_id, load_prompts
+from utils.shared_utils import extract_config, generate_run_id, load_prompts, format_latex
 import os
 
 RESPONSE_DURATION_MASKING = None
 
-def format_latex(text):
-    text = str(text)
-    text = text.replace('\\\\', '\\')
-    text = text.replace('$', '')
-    return unicodeit.replace(text)
-
 def setup_output_path():
     output_dir = Path('results') / 'human'
     output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir / f'human_results.jsonl'
+    return output_dir / f'human_interactive_debate.jsonl'
 
 def get_human_action():
     # Get the next action from the human

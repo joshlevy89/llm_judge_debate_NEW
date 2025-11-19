@@ -1,6 +1,7 @@
 import random
 import string
 import yaml
+import unicodeit
 
 def generate_run_id():
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=7))
@@ -27,3 +28,13 @@ def load_prompts():
     with open('prompts.yaml', 'r') as f:
         prompts = yaml.safe_load(f)
     return prompts['debater_prompt_template'], prompts['private_reasoning_prompt'], prompts['action_prompt_template']
+
+
+def format_latex(text):
+    import re
+    text = str(text)
+    text = text.replace('\\\\', '\\')
+    text = text.replace('$', '')
+    text = re.sub(r'\\[()\[\]]', '', text)
+    text = re.sub(r'\\begin\{pmatrix\}(.*?)\\end\{pmatrix\}', r'[\1]', text, flags=re.DOTALL)
+    return unicodeit.replace(text)

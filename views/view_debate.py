@@ -6,13 +6,14 @@ import json
 import random
 import sys
 from pathlib import Path
+from utils.shared_utils import format_latex
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from utils.debate_utils import format_debate_history
 
-def display_debate(debate_data, hide_private=False, upto_turns=None):
+def display_debate(debate_data, hide_private=False, upto_turns=None, do_latex_formatting=False):
     if not debate_data.get('success', True):
         print(f"{'='*80}")
         print(f"ERROR: Debate failed")
@@ -30,19 +31,23 @@ def display_debate(debate_data, hide_private=False, upto_turns=None):
         show_private = False
     else:
         show_private = debate_data['config'].get('private_scratchpad', False)
-    debate_text = format_debate_history(debate_data['debate_history'], show_private=show_private, upto_turns=upto_turns)
+    debate_text = format_debate_history(debate_data['debate_history'], show_private=show_private, upto_turns=upto_turns, do_latex_formatting=do_latex_formatting)
     
     print(f"{'='*80}")
-    print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']} | Question Idx: {debate_data['question_idx']} | Correct Idx: {debate_data['correct_idx']}")
-    print(f"{'='*80}\nQuestion\n{'='*80}")
-    print(f"Question: {debate_data['question']}\n")
-    print(f"Options: {debate_data['options']}")
+    # print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']} | Question Idx: {debate_data['question_idx']} | Correct Idx: {debate_data['correct_idx']}")
+    print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']} | Question Idx: {debate_data['question_idx']} | Dataset: {debate_data['config']['dataset_name']}")
+    # print(f"{'='*80}\nQuestion\n{'='*80}")
+    print(format_latex(debate_data['question']))
+    # for idx, opt in enumerate(debate_data['options']):
+        # print(f"{idx}: {format_latex(opt)}")
+    # print(f"Question: {debate_data['question']}\n")
+    print(f"\nOptions: {[format_latex(opt) for opt in debate_data['options']]}")
     print(f"{'='*80}\nDebate\n{'='*80}")
     print(f"{debate_text}")
     return True
 
 def load_debate_data(run_id, record_id=None, random_id=False):
-    debate_path = project_root / 'results' / ('human/human_results.jsonl' if run_id == 'human' else f'debates/{run_id}.jsonl')
+    debate_path = project_root / 'results' / ('human/human_interactive_debate.jsonl' if run_id == 'human' else f'debates/{run_id}.jsonl')
     records = [json.loads(line) for line in open(debate_path)]
     if random_id:
         return random.choice(records) if records else None

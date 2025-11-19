@@ -4,7 +4,7 @@ from config.config_debate import *
 from utils.llm_utils import call_openrouter
 from utils.dataset_utils import format_options
 import time
-from utils.shared_utils import generate_run_id
+from utils.shared_utils import generate_run_id, format_latex
 import traceback
 
 
@@ -208,7 +208,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, action_
 
 
 
-def format_debate_history(history, show_private=False, upto_turns=None):
+def format_debate_history(history, show_private=False, upto_turns=None, do_latex_formatting=False):
     if not history:
         return ""
     
@@ -236,6 +236,9 @@ def format_debate_history(history, show_private=False, upto_turns=None):
             text += f"{entry['action']}\n"
         else:
             raise Exception('Unrecognized persona: ' + entry['persona'])
+
+    if do_latex_formatting:
+        text = format_latex(text)
     
     return text
 
