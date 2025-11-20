@@ -1,0 +1,7 @@
+qa_prompt_template: |
+  Answer the following question. You must choose between the N options provided.
+
+  Question: {question}
+  Options: {options_text}
+
+  {response_format_prompt}

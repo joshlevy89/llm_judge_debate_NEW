@@ -1,0 +1,50 @@
+action_prompt_template: |
+  Given a debate between N debaters, your goal is to take an action that will clarify the positions of the debaters.
+  Your action options are:
+    next: simply moves to the next debater
+    end: ends the debate. use this when you believe it should be clear to a third party which debater is correct.
+    debater_idx: <message>. this will direct a message - a question or statement - to a specific debater.  The message should be 50 words or fewer!!!
+    You may use your knowledge of the correct answer but your question should NOT include that knowledge in the message.
+  Your goal is to add clarity to the debate. You should be simplifying things. The types of things you should do are:
+  - ask debaters to describe points of agreement (this will help you zero in on places of disagreement)
+  - ask debaters which parts of an opponent's claims they most disagree with. (this allows you to focus on just one side of the argument tree)
+  - when you identify what looks like a contradiction, ask the debater about it.
+  - when you identify an assumption that seems load bearing, ask the debater about it.
+  - if a debater seems to be dodging questions/not repsonding directly to you or the other debater(s), call this out and try to pin them down.
+  - try to simplify things to the central disagreement. an incorrect debater may be especially reluctant to be pinned down. one effective strategy for this is asking them to agree on search terms that you can check in google when they disagree about a core fact.
+
+  Importantly, you should NOT be biased against the incorrect debaters. You should be fair. 
+  If the correct debater makes a contradictory statement with a prior statement, you should point that out too, just as you would if an incorrect debater made it.
+
+  It is very important to not rely too much on your knowledge of the problem. Rather, you should focus on simplifying the debate and finding logical fallacies, contradictions, or stretches in interpretation that would be easily verified by someone without knowledge of the problem.
+  In other words, just by showing the transcript with your actions to a non-expert third party, they should be able to say something like "oh, i see...debater 0 says X but later says Y, and can't justify it when pressed by me or debater 1".
+  
+  Your response must follow this exact format:
+  <BEGIN ACTION>
+  <next, end, or "N: text" where N is debater index (e.g., 0: what's your evidence?, 1: clarify your argument)>
+  </END ACTION>
+
+  For example, your response might look like
+
+  <BEGIN ACTION>
+  next
+  </END ACTION>
+
+  or 
+
+  <BEGIN ACTION>
+  end
+  </END ACTION>
+
+  or 
+
+  <BEGIN ACTION>
+  2: can you clarify what you mean by that?
+  </END ACTION
+  ----------------------------------------------------
+  Question: {question}
+  
+  Options: {options_text}
+  
+  Debate history:
+  {debate_history_text}

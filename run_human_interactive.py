@@ -76,7 +76,7 @@ def main():
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     questions_data = select_questions_and_options(DATASET_NAME, dataset, 1, NUM_CHOICES, None, [args.question_idx])
     
-    debater_template, private_reasoning_prompt, _ = load_prompts()
+    debater_template, private_reasoning_prompt = load_prompts('debate')
     
     for i, q_data in enumerate(questions_data):
         

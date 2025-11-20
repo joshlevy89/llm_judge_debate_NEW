@@ -40,9 +40,10 @@ def main():
     print(f"Results: {results_path}")
     
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
-    questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED)
+    questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED, specific_idxs=SPECIFIC_IDXS)
     
-    debater_template, private_reasoning_prompt, action_template = load_prompts()
+    debater_template, private_reasoning_prompt = load_prompts('debate')
+    action_template = load_prompts('interactive')
     
     key_info_start = get_openrouter_key_info(api_key)
     start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0

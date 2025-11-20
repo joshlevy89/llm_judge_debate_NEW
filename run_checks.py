@@ -14,17 +14,12 @@ from dotenv import load_dotenv
 import config.config_check as config_check
 from config.config_check import MODEL_NAME, TEMPERATURE, MAX_THREADS, LEAK_TYPES
 from utils.llm_utils import call_openrouter, get_openrouter_key_info
-from utils.shared_utils import extract_config
+from utils.shared_utils import extract_config, load_prompts
 
 load_dotenv()
 
 def format_leak_types():
     return '\n'.join(f"- Type {k}: {v}" for k, v in LEAK_TYPES.items())
-
-def load_prompt():
-    with open('prompts.yaml', 'r') as f:
-        prompts = yaml.safe_load(f)
-    return prompts['check_prompt_template']
 
 def format_options(options):
     return '\n'.join(f"{i}. {opt}" for i, opt in enumerate(options))
@@ -208,7 +203,7 @@ def check_debate_for_leaks(run_id, api_key, record_ids=None, filter_turn=None, f
     print(f"Filtered out {num_debates_with_errors} debates with errors")
     print(f"Processing {len(record_items)} records with {MAX_THREADS} max threads")
     
-    prompt_template = load_prompt()
+    prompt_template = load_prompts('leak')
     
     key_info = get_openrouter_key_info(api_key)
     start_usage = key_info.get('data', {}).get('usage', 0) if key_info else 0

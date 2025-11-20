@@ -10,15 +10,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datasets import load_dataset
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.dataset_utils import select_questions_and_options, format_options
-from utils.shared_utils import generate_run_id
-
-def load_qa_prompts():
-    with open('prompts.yaml', 'r') as f:
-        prompts = yaml.safe_load(f)
-    return prompts['qa_prompt_template'], prompts['response_format_prompt']
+from utils.shared_utils import generate_run_id, load_prompts
 
 def format_qa_prompt(question, options, num_choices):
-    prompt_template, response_format_prompt = load_qa_prompts()
+    prompt_template = load_prompts('qa')
+    response_format_prompt = load_prompts('shared')
     options_text = format_options(options)
     number_choices = ', '.join(str(i) for i in range(num_choices))
     
@@ -138,7 +134,7 @@ def run_qa_for_questions(question_idxs, model_name, temperature, max_tokens, rea
         question_idxs
     )
     
-    prompt_template, _ = load_qa_prompts()
+    prompt_template = load_prompts('qa')
     config = {**dataset_config, 'model_name': model_name, 'temperature': temperature, 'max_tokens': max_tokens, 'reasoning_effort': reasoning_effort, 'reasoning_max_tokens': reasoning_max_tokens, 'num_choices': num_choices, 'random_seed': random_seed}
     
     key_info_start = get_openrouter_key_info(api_key)

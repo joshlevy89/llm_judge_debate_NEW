@@ -20,18 +20,13 @@ from config.config_verdict import (
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
-from utils.shared_utils import extract_config, generate_run_id
+from utils.shared_utils import extract_config, generate_run_id, load_prompts
 from utils.qa_utils import format_qa_prompt, get_existing_qa_keys, run_qa_for_questions, normalize_whitespace
 
 def setup_output_path(verdict_run_id):
     output_dir = Path('results') / 'verdicts'
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir / f'{verdict_run_id}.jsonl'
-
-def load_verdict_prompts():
-    with open('prompts.yaml', 'r') as f:
-        prompts = yaml.safe_load(f)
-    return prompts['judge_prompt_template'], prompts['response_format_prompt']
     
 def run_judge(question, options, public_debate_history_text, judge_template, response_format_prompt, api_key, verdict_run_id, record_id):
     options_text = ""
@@ -217,7 +212,8 @@ def main():
     
     check_and_run_missing_qa(debate_records, api_key)
     
-    judge_template, response_format_prompt = load_verdict_prompts()
+    judge_template = load_prompts('judge')
+    response_format_prompt = load_prompts('shared')
     
     key_info_start = get_openrouter_key_info(api_key)
     start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0

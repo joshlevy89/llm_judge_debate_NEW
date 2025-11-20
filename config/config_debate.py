@@ -1,12 +1,12 @@
 DEBATER_MODEL = "x-ai/grok-4-fast"
 
-# DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-# DATASET_SPLIT = "train"
+DATASET_NAME = "Idavidrein/gpqa"
+DATASET_SUBSET = "gpqa_diamond"
+DATASET_SPLIT = "train"
 
-DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-DATASET_SUBSET = None
-DATASET_SPLIT = "test"
+# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+# DATASET_SUBSET = None
+# DATASET_SPLIT = "test"
 
 DEBATER_TEMPERATURE = 0.3
 
@@ -21,10 +21,10 @@ PRIVATE_REASONING_WORD_LIMIT = 1000
 
 LENIENT_PARSING_ARGUMENT = False
 
-NUM_QUESTIONS = 5
+NUM_QUESTIONS = 1
 RANDOM_SEED = 42
 NUM_CHOICES = 2
-NUM_TURNS = 10
+NUM_TURNS = 4
 
 MAX_THREADS = 5000
 
@@ -44,6 +44,8 @@ INTERACTIVE_JUDGE_REASONING_MAX_TOKENS = None
 
 MOCK_DEBATE_RESPONSE = False
 MOCK_INTERACTIVE_JUDGE_RESPONSE = False
+
+SPECIFIC_IDXS = [183]
 
 ########################################################################################################################################################################
 # # HUMAN CONFIG 

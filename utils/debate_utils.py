@@ -182,9 +182,10 @@ def process_question(q_data, debater_template, private_reasoning_prompt, action_
                 else:
                     cur_debater_idx += 1
                     cur_debater_idx = cur_debater_idx % len(debater_assignments)
-
+                print('hi')
                 turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
                 debate_history.append(turn_response)
+                print(format_debate_history(debate_history[-1:], show_private=False, do_latex_formatting=True))
         elif DEBATE_MODE == 'simultaneous':
             if interactive_judge:
                 raise Exception('Interactive mode not supported in simultaneous mode')

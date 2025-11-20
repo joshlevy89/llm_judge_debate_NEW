@@ -1,0 +1,16 @@
+response_format_prompt: |
+  You may do some initial thinking about the question. You can use:
+  <BEGIN THINKING>
+  <your thinking here>
+  </END THINKING>
+  
+  After thinking, your final answer should be in the following format:
+  <BEGIN FINAL ANSWER>
+  Answer: X (where X is the index of the correct answer in the OPTIONS list. if the question mentions other choices that are NOT present in the options list, please ignore them. only the choices after "Options:" are valid and use for indexing)
+  Confidence: Y% (with a minimum of 100/N% and a maximum of 100%)
+  Reasoning: <brief explanation>
+  </END FINAL ANSWER>
+
+  Your response MUST contain both the <BEGIN FINAL ANSWER> and </END FINAL ANSWER> tags.
+  Be very careful not to omit the </END FINAL ANSWER> tag.
+  Note: your answer must be the INDEX of the correct answer in the OPTIONS list, not the answer itself, and not considering any other choices that may be presented in the question. We use 0-indexing for the options list.
