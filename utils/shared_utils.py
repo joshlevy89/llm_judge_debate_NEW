@@ -26,11 +26,11 @@ def extract_config(config_module):
 
 def load_prompts(prompt_type):
     if prompt_type == 'debate':
-        with open('prompts/debate_prompts.yaml', 'r') as f:
+        with open('prompts/debater_prompts.yaml', 'r') as f:
             prompts = yaml.safe_load(f)
         return prompts['debater_prompt_template'], prompts['private_reasoning_prompt']
     elif prompt_type == 'interactive':
-        with open('prompts/interactive.yaml', 'r') as f:
+        with open('prompts/interactive_prompts.yaml', 'r') as f:
             prompts = yaml.safe_load(f)
         return prompts['action_prompt_template']
     elif prompt_type == 'judge':
@@ -50,8 +50,6 @@ def load_prompts(prompt_type):
             prompts = yaml.safe_load(f)
         return prompts['check_prompt_template']
     
-
-
 
 def format_latex(text):
     import re
