@@ -27,7 +27,7 @@ def extract_parsed_answer(df, type):
 def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_filters=None):
     results_dir = get_project_root() / 'results'
     if type == 'human':
-        files = [str(results_dir) / type / 'human_interactive_debate.jsonl']
+        files = [str(results_dir / type / 'human_interactive_debate.jsonl')]
     else:
         files = glob.glob(str(results_dir / type / '*.jsonl'))
     dfs = []
