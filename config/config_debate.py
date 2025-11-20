@@ -1,4 +1,7 @@
-DEBATER_MODEL = "x-ai/grok-4-fast"
+# DEBATER_MODEL = "x-ai/grok-4-fast"
+# DEBATER_MODEL = "x-ai/grok-4-fast"
+DEBATER_MODEL = "google/gemini-3-pro-preview"
+
 
 DATASET_NAME = "Idavidrein/gpqa"
 DATASET_SUBSET = "gpqa_diamond"
@@ -10,9 +13,9 @@ DATASET_SPLIT = "train"
 
 DEBATER_TEMPERATURE = 0.3
 
-MAX_OUTPUT_TOKENS = 5000
+MAX_OUTPUT_TOKENS = 15000
 DEBATER_REASONING_EFFORT = None
-DEBATER_REASONING_MAX_TOKENS = None
+DEBATER_REASONING_MAX_TOKENS = 10000
 
 PRIVATE_SCRATCHPAD = False
 

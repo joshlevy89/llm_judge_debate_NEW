@@ -4,36 +4,45 @@ from config.config_debate import *
 from utils.llm_utils import call_openrouter
 from utils.dataset_utils import format_options
 import time
-from utils.shared_utils import generate_run_id, format_latex
+from utils.shared_utils import generate_run_id, format_latex, load_prompts
 import traceback
 
 
-def get_debater_prompt(debater_idx, my_answer, all_answers, question, history, debater_template, private_reasoning_prompt):
+def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, question, history, debater_prompts):
     opponents_text = "\nYour opponents are arguing for:\n"
     for i, ans in enumerate(all_answers):
         if i != debater_idx:
-            opponents_text += f"- Debater {i}: {ans}\n"
+            opponents_text += f"- Debater {i}: {ans} (associated with index {i})\n"
     
-    public_debate_history_text = format_debate_history(history, show_private=False) if history else "\nThis is the first turn of the debate."
+    public_debate_history_text = format_debate_history(history, show_private=False) if history else ""
     
-    private_reasoning_text = private_reasoning_prompt.format(
-        public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
-        private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
-    ) if PRIVATE_SCRATCHPAD else ""
+    # private_reasoning_text = private_reasoning_prompt.format(
+    #     public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
+    #     private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
+    # ) if PRIVATE_SCRATCHPAD else ""
+
+    if debater_idx == correct_idx:
+        debater_template = debater_prompts['correct_debater_prompt_template']
+    else:
+        debater_template = debater_prompts['incorrect_debater_prompt_template']
     
     return debater_template.format(
         role=debater_idx,
-        question=question,
-        my_answer=my_answer,
-        opponents_arguing_for_text=opponents_text,
-        public_debate_history_text=public_debate_history_text,
-        private_reasoning_prompt=private_reasoning_text,
-        public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
-        private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
+        shared_debater_body=debater_prompts['shared_debater_body'],
+        shared_debater_ending=debater_prompts['shared_debater_ending'].format(
+            question=question,
+            my_index=debater_idx,
+            my_answer=my_answer,
+            opponents_arguing_for_text=opponents_text,
+            public_debate_history_text=public_debate_history_text,
+        )
+        # private_reasoning_prompt=private_reasoning_text,
+        # public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
+        # private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
     )
 
-def run_debate_turn(turn_num, debater_assignments, debater_idx, question, history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=False):
-    prompt = get_debater_prompt(debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_template, private_reasoning_prompt)
+def run_debate_turn(turn_num, debater_assignments, correct_idx, debater_idx, question, history, debater_prompts, api_key, run_id, record_id, mock=False):
+    prompt = get_debater_prompt(correct_idx, debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_prompts)
     context = f"Debater {debater_idx} Turn {turn_num}"
     
     start_time = time.time()
@@ -144,16 +153,21 @@ def get_llm_action(debate_history, question, options, interactive_judge, api_key
     return action, new_debater_idx, action_response
 
 
-def process_question(q_data, debater_template, private_reasoning_prompt, action_template, interactive_judge, api_key, config, run_id, run_datetime):
+def process_question(q_data, interactive_judge, api_key, config, run_id, run_datetime):
     record_id = generate_run_id()
     debater_assignments = q_data['options']
     
+    # debater_template, private_reasoning_prompt = load_prompts('debate')
+    debater_prompts = load_prompts('debate')
+    action_template = load_prompts('interactive')
+
+
     question_result = {
         'run_id': run_id,
         'record_id': record_id,
         'datetime': run_datetime,
         'config': config,
-        'prompt_template': {'debater_prompt_template': debater_template, 'private_reasoning_template': private_reasoning_prompt if PRIVATE_SCRATCHPAD else None},
+        'prompt_template': debater_prompts,
         'question_idx': q_data['original_idx'],
         'question': q_data['question'],
         'options': q_data['options'],
@@ -182,8 +196,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, action_
                 else:
                     cur_debater_idx += 1
                     cur_debater_idx = cur_debater_idx % len(debater_assignments)
-                print('hi')
-                turn_response = run_debate_turn(turn, debater_assignments, cur_debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
+                turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], cur_debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
                 debate_history.append(turn_response)
                 print(format_debate_history(debate_history[-1:], show_private=False, do_latex_formatting=True))
         elif DEBATE_MODE == 'simultaneous':
@@ -193,7 +206,7 @@ def process_question(q_data, debater_template, private_reasoning_prompt, action_
             for turn in range(NUM_TURNS):
                 turn_responses = []
                 for debater_idx in range(len(debater_assignments)):
-                    turn_response = run_debate_turn(turn, debater_assignments, debater_idx, q_data['question'], debate_history, debater_template, private_reasoning_prompt, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
+                    turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
                     turn_responses.append(turn_responses)
                 debate_history.extend(turn_responses)
     except:

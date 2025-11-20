@@ -28,7 +28,8 @@ def load_prompts(prompt_type):
     if prompt_type == 'debate':
         with open('prompts/debater_prompts.yaml', 'r') as f:
             prompts = yaml.safe_load(f)
-        return prompts['debater_prompt_template'], prompts['private_reasoning_prompt']
+        # return prompts['debater_prompt_template'], prompts['private_reasoning_prompt']
+        return prompts
     elif prompt_type == 'interactive':
         with open('prompts/interactive_prompts.yaml', 'r') as f:
             prompts = yaml.safe_load(f)
