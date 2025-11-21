@@ -8,7 +8,7 @@ from utils.shared_utils import generate_run_id, format_latex, load_prompts
 import traceback
 
 
-def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, question, history, debater_prompts, closing_argument):
+def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, question, history, debater_prompts, closing_argument, num_turns):
     opponents_text = "\nYour opponents are arguing for:\n"
     for i, ans in enumerate(all_answers):
         if i != debater_idx:
@@ -37,7 +37,7 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
     return debater_template.format(
         role=debater_idx,
         debater_response_format=debater_prompts['debater_response_format'],
-        shared_debater_body=debater_prompts['shared_debater_body'],
+        shared_debater_body=debater_prompts['shared_debater_body'].format(num_turns),
         shared_debater_ending=debater_prompts['shared_debater_ending'].format(
             question=question,
             my_index=debater_idx,
@@ -52,8 +52,9 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
         # private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
     )
 
-def run_debate_turn(turn_num, debater_assignments, correct_idx, debater_idx, question, history, debater_prompts, api_key, run_id, record_id, mock=False, closing_argument=False):
-    prompt = get_debater_prompt(correct_idx, debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_prompts, closing_argument)
+def run_debate_turn(turn_num, debater_assignments, correct_idx, debater_idx, question, history, debater_prompts, api_key, run_id, record_id, num_turns, mock=False, closing_argument=False):
+    prompt = get_debater_prompt(correct_idx, debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_prompts, closing_argument, num_turns)
+    print(prompt)
     context = f"Debater {debater_idx} Turn {turn_num}"
     
     start_time = time.time()
@@ -207,7 +208,7 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
                 else:
                     cur_debater_idx += 1
                     cur_debater_idx = cur_debater_idx % len(debater_assignments)
-                turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], cur_debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
+                turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], cur_debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, NUM_TURNS, mock=MOCK_DEBATE_RESPONSE)
                 debate_history.append(turn_response)
                 print(format_debate_history(debate_history[-1:], show_private=False, do_latex_formatting=True))
         elif DEBATE_MODE == 'simultaneous':
@@ -217,7 +218,7 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
             for turn in range(NUM_TURNS):
                 turn_responses = []
                 for debater_idx in range(len(debater_assignments)):
-                    turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
+                    turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, NUM_TURNS, mock=MOCK_DEBATE_RESPONSE)
                     turn_responses.append(turn_responses)
                 debate_history.extend(turn_responses)
 
