@@ -61,7 +61,7 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
 
 def run_debate_turn(turn_num, debater_assignments, correct_idx, debater_idx, question, history, debater_prompts, api_key, run_id, record_id, num_turns, mock=False, closing_argument=False):
     prompt = get_debater_prompt(correct_idx, debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_prompts, closing_argument, num_turns)
-    print(prompt)
+    # print(prompt)
     context = f"Debater {debater_idx} Turn {turn_num}"
     
     start_time = time.time()
@@ -231,7 +231,7 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
 
         # closing arguments
         for debater_idx in range(len(debater_assignments)):
-            turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE, closing_argument=True)
+            turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, NUM_TURNS, mock=MOCK_DEBATE_RESPONSE, closing_argument=True)
             debate_history.append(turn_response)
             print(format_debate_history(debate_history[-1:], show_private=False, do_latex_formatting=True))
     except:
