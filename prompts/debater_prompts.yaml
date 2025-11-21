@@ -225,7 +225,6 @@ shared_debater_ending: |
   You are arguing that the answer is: {my_answer} (associated with index {my_index}).
   {opponents_arguing_for_text}
 
-  Here is the public debate so far:
   {public_debate_history_text}
 
   {debate_plus_my_private_thoughts}

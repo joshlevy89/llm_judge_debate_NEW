@@ -15,6 +15,11 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
             opponents_text += f"- Debater {i}: {ans} (associated with index {i})\n"
     
     public_debate_history_text = format_debate_history(history, show_private=False) if history else ""
+    if public_debate_history_text:
+        # include the intro message if there's some debate history
+        public_debate_history_text = 'Here is the public debate so far:\n' + public_debate_history_text
+    else:
+        public_debate_history_text = 'This is the beginning of the debate!'
     
     # private_reasoning_text = private_reasoning_prompt.format(
     #     public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
@@ -27,8 +32,10 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
         debater_template = debater_prompts['incorrect_debater_prompt_template']
 
     if PROVIDE_INTERNAL_REASONING_TO_SELF:
-        debate_plus_my_private_thoughts = "I am also providing the public debate along with your private reasoning on prior turns, in case it is of help. Naturally, the opponent(s) and judge do not see this.\n"
-        debate_plus_my_private_thoughts += format_debate_history(history, show_private=False, show_thoughts_of_debater_idx=debater_idx) if history else ""
+        debate_plus_my_private_thoughts = format_debate_history(history, show_private=False, show_thoughts_of_debater_idx=debater_idx) if history else ""
+        if '[BEGIN INTERNAL REASONING]' in debate_plus_my_private_thoughts or '[BEGIN PRIVATE SCRATCHPAD REASONING]' in debate_plus_my_private_thoughts:
+            # only add the intro message if there's actually some private thoughts to show.
+            debate_plus_my_private_thoughts = "I am also providing the public debate along with your private reasoning on prior turns, in case it is of help. Naturally, the opponent(s) and judge do not see this.\n" + debate_plus_my_private_thoughts
     else:
         debate_plus_my_private_thoughts = ""
 
