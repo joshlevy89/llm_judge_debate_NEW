@@ -8,7 +8,7 @@ from utils.shared_utils import generate_run_id, format_latex, load_prompts
 import traceback
 
 
-def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, question, history, debater_prompts):
+def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, question, history, debater_prompts, closing_argument):
     opponents_text = "\nYour opponents are arguing for:\n"
     for i, ans in enumerate(all_answers):
         if i != debater_idx:
@@ -25,9 +25,18 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
         debater_template = debater_prompts['correct_debater_prompt_template']
     else:
         debater_template = debater_prompts['incorrect_debater_prompt_template']
+
+    if PROVIDE_INTERNAL_REASONING_TO_SELF:
+        debate_plus_my_private_thoughts = "I am also providing the public debate along with your private reasoning on prior turns, in case it is of help. Naturally, the opponent(s) and judge do not see this.\n"
+        debate_plus_my_private_thoughts += format_debate_history(history, show_private=False, show_thoughts_of_debater_idx=debater_idx) if history else ""
+    else:
+        debate_plus_my_private_thoughts = ""
+
+    closing_argument_text = debater_prompts['closing_argument'] if closing_argument else ""
     
     return debater_template.format(
         role=debater_idx,
+        debater_response_format=debater_prompts['debater_response_format'],
         shared_debater_body=debater_prompts['shared_debater_body'],
         shared_debater_ending=debater_prompts['shared_debater_ending'].format(
             question=question,
@@ -35,14 +44,16 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
             my_answer=my_answer,
             opponents_arguing_for_text=opponents_text,
             public_debate_history_text=public_debate_history_text,
+            debate_plus_my_private_thoughts = debate_plus_my_private_thoughts,
+            closing_argument = closing_argument_text
         )
         # private_reasoning_prompt=private_reasoning_text,
         # public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
         # private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
     )
 
-def run_debate_turn(turn_num, debater_assignments, correct_idx, debater_idx, question, history, debater_prompts, api_key, run_id, record_id, mock=False):
-    prompt = get_debater_prompt(correct_idx, debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_prompts)
+def run_debate_turn(turn_num, debater_assignments, correct_idx, debater_idx, question, history, debater_prompts, api_key, run_id, record_id, mock=False, closing_argument=False):
+    prompt = get_debater_prompt(correct_idx, debater_idx, debater_assignments[debater_idx], debater_assignments, question, history, debater_prompts, closing_argument)
     context = f"Debater {debater_idx} Turn {turn_num}"
     
     start_time = time.time()
@@ -209,6 +220,12 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
                     turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE)
                     turn_responses.append(turn_responses)
                 debate_history.extend(turn_responses)
+
+        # closing arguments
+        for debater_idx in range(len(debater_assignments)):
+            turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, mock=MOCK_DEBATE_RESPONSE, closing_argument=True)
+            debate_history.append(turn_response)
+            print(format_debate_history(debate_history[-1:], show_private=False, do_latex_formatting=True))
     except:
         question_success = False
         error_message = traceback.format_exc()
@@ -222,7 +239,7 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
 
 
 
-def format_debate_history(history, show_private=False, upto_turns=None, do_latex_formatting=False):
+def format_debate_history(history, show_private=False, upto_turns=None, do_latex_formatting=False, show_thoughts_of_debater_idx=None):
     if not history:
         return ""
     
@@ -233,12 +250,12 @@ def format_debate_history(history, show_private=False, upto_turns=None, do_latex
         if entry['persona'] == 'debater':
             if upto_turns is not None and num_debater_turns >= upto_turns:
                 break
-            text += f"{'-'*80}\nDebater {entry['debater_idx']}\n{'-'*80}\n"
+            text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn: {num_debater_turns}) \n{'-'*80}\n"
             
-            if show_private and entry.get('internal_model_reasoning') is not None:
+            if (show_private or (show_thoughts_of_debater_idx is not None and show_thoughts_of_debater_idx==entry['debater_idx'])) and entry.get('internal_model_reasoning') is not None:
                 text += f"[BEGIN INTERNAL REASONING]\n{entry['internal_model_reasoning']}\n[END INTERNAL REASONING]\n\n"
             
-            if show_private and 'parsed_response' in entry and 'private_reasoning' in entry['parsed_response']:
+            if (show_private or (show_thoughts_of_debater_idx is not None and show_thoughts_of_debater_idx==entry['debater_idx'])) and 'parsed_response' in entry and 'private_reasoning' in entry['parsed_response']:
                 text += f"[BEGIN PRIVATE SCRATCHPAD REASONING]\n{entry['parsed_response']['private_reasoning']}\n[END PRIVATE SCRATCHPAD REASONING]\n\n"
             
             if 'parsed_response' in entry and 'public_argument' in entry['parsed_response']:
@@ -258,7 +275,8 @@ def format_debate_history(history, show_private=False, upto_turns=None, do_latex
 
 
 def parse_debater_response(response_text, private_scratchpad, lenient_argument_parsing=False):
-    public_match = re.search(r'<BEGIN PUBLIC ARGUMENT>(.*?)</?END PUBLIC ARGUMENT>', response_text, re.DOTALL | re.IGNORECASE)
+    # public_match = re.search(r'<BEGIN PUBLIC ARGUMENT>(.*?)</?END PUBLIC ARGUMENT>', response_text, re.DOTALL | re.IGNORECASE)
+    public_match = re.search(r'BEGIN PUBLIC ARGUMENT(.*?)END PUBLIC ARGUMENT', response_text, re.DOTALL | re.IGNORECASE)
     
     if not public_match:
         return None, "Missing <BEGIN PUBLIC ARGUMENT> or </END PUBLIC ARGUMENT> tags"
