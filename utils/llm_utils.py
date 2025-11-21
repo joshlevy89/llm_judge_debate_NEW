@@ -66,7 +66,7 @@ def _make_openrouter_request(prompt, model_name, api_key, temperature=0.0, max_t
     if req.exception:
         raise req.exception
     
-    print(req.result.json())
+    # print(req.result.json())
 
     if req.result is None:
         raise Exception("Request returned no result")
