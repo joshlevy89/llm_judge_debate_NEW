@@ -234,5 +234,7 @@ shared_debater_ending: |
 
 closing_argument: |
   __________________________________________________________________
-  This is your closing argument!  Good luck!
+  This is your closing argument!  
+  Please continue to use the <BEGIN PUBLIC ARGUMENT> and </END PUBLIC ARGUMENT> tags in your closing argument!
+  Good luck!
   __________________________________________________________________

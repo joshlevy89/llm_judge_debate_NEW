@@ -2,13 +2,13 @@
 DEBATER_MODEL = "google/gemini-3-pro-preview"
 
 
-# DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-# DATASET_SPLIT = "train"
+DATASET_NAME = "Idavidrein/gpqa"
+DATASET_SUBSET = "gpqa_diamond"
+DATASET_SPLIT = "train"
                 
-DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-DATASET_SUBSET = None
-DATASET_SPLIT = "test"
+# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+# DATASET_SUBSET = None
+# DATASET_SPLIT = "test"
 
 DEBATER_TEMPERATURE = 0.3
 
@@ -48,7 +48,65 @@ INTERACTIVE_JUDGE_REASONING_MAX_TOKENS = None
 MOCK_DEBATE_RESPONSE = False
 MOCK_INTERACTIVE_JUDGE_RESPONSE = False
 
-SPECIFIC_IDXS = [100] # [183]
+SPECIFIC_IDXS = [70] # [183]
+
+
+########################################################################################################################################################################
+# Config for running 10 samples to see how these prompts do and where the judge fails still
+
+# DEBATER_MODEL = "x-ai/grok-4-fast"
+DEBATER_MODEL = "google/gemini-3-pro-preview"
+
+
+# DATASET_NAME = "Idavidrein/gpqa"
+# DATASET_SUBSET = "gpqa_diamond"
+# DATASET_SPLIT = "train"
+                
+DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+DATASET_SUBSET = None
+DATASET_SPLIT = "test"
+
+DEBATER_TEMPERATURE = 0.3
+
+MAX_OUTPUT_TOKENS = 15000
+DEBATER_REASONING_EFFORT = 'low'
+DEBATER_REASONING_MAX_TOKENS = None
+PROVIDE_INTERNAL_REASONING_TO_SELF = True # When True, the debater will have access to its own past thought processes
+
+PRIVATE_SCRATCHPAD = False
+
+PUBLIC_ARGUMENT_WORD_LIMIT = 200
+PRIVATE_REASONING_WORD_LIMIT = 1000
+
+LENIENT_PARSING_ARGUMENT = False
+
+NUM_QUESTIONS = 10
+RANDOM_SEED = 42
+NUM_CHOICES = 2
+NUM_TURNS = 10
+
+MAX_THREADS = 5000
+
+DEBATE_MODE = "sequential"
+
+# INTERACTIVE_JUDGE = "x-ai/grok-4-fast"
+# INTERACTIVE_JUDGE_TEMPERATURE = 0.3
+# INTERACTIVE_JUDGE_MAX_OUTPUT_TOKENS = 500
+# INTERACTIVE_JUDGE_REASONING_EFFORT = None
+# INTERACTIVE_JUDGE_REASONING_MAX_TOKENS = None
+
+INTERACTIVE_JUDGE = None
+INTERACTIVE_JUDGE_TEMPERATURE = None
+INTERACTIVE_JUDGE_MAX_OUTPUT_TOKENS = None
+INTERACTIVE_JUDGE_REASONING_EFFORT = None
+INTERACTIVE_JUDGE_REASONING_MAX_TOKENS = None
+
+MOCK_DEBATE_RESPONSE = False
+MOCK_INTERACTIVE_JUDGE_RESPONSE = False
+
+SPECIFIC_IDXS = None # [70] # [183]
+
+
 
 ########################################################################################################################################################################
 # # HUMAN CONFIG 

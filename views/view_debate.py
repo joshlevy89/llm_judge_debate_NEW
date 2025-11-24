@@ -15,18 +15,18 @@ from views.shared_view_utils import find_and_display_qa
 from utils.debate_utils import format_debate_history
 
 def display_debate(debate_data, hide_private=False, upto_turns=None, do_latex_formatting=False, view_qa=False):
-    if not debate_data.get('success', True):
-        print(f"{'='*80}")
-        print(f"ERROR: Debate failed")
-        print(f"{'='*80}")
-        print(f"Run ID: {debate_data.get('run_id')}")
-        print(f"Record ID: {debate_data.get('record_id')}")
-        # Find the turn with the error
-        for turn in debate_data['debate_history']:
-            if 'success' not in turn or not turn['success']:
-                print(f"\n\nRaw Response: \n{turn['raw_response']}")
-        print(f"\n\nTHE ERROR ASSOCIATED WITH THIS RECORD IS: \n{debate_data.get('error_message', 'Unknown error')}")
-        return False
+    # if not debate_data.get('success', True):
+    #     print(f"{'='*80}")
+    #     print(f"ERROR: Debate failed")
+    #     print(f"{'='*80}")
+    #     print(f"Run ID: {debate_data.get('run_id')}")
+    #     print(f"Record ID: {debate_data.get('record_id')}")
+    #     # Find the turn with the error
+    #     for turn in debate_data['debate_history']:
+    #         if 'success' not in turn or not turn['success']:
+    #             print(f"\n\nRaw Response: \n{turn['raw_response']}")
+    #     print(f"\n\nTHE ERROR ASSOCIATED WITH THIS RECORD IS: \n{debate_data.get('error_message', 'Unknown error')}")
+    #     return False
     
     if hide_private:
         show_private = False

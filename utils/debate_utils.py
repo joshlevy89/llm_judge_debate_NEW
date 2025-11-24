@@ -230,10 +230,12 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
                 debate_history.extend(turn_responses)
 
         # closing arguments
+        turn += 1
         for debater_idx in range(len(debater_assignments)):
             turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, NUM_TURNS, mock=MOCK_DEBATE_RESPONSE, closing_argument=True)
             debate_history.append(turn_response)
             print(format_debate_history(debate_history[-1:], show_private=False, do_latex_formatting=True))
+            turn += 1
     except:
         question_success = False
         error_message = traceback.format_exc()
@@ -253,9 +255,16 @@ def format_debate_history(history, show_private=False, upto_turns=None, do_latex
     
     text = ""
     num_debater_turns = 0
+    # print(history)
     for entry in history:
-    
-        if entry['persona'] == 'debater':
+        if 'success' not in entry or not entry['success']:
+            if entry['persona'] == 'debater':
+                text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn: {num_debater_turns}) \n{'-'*80}"
+            elif entry['persona'] == 'judge':
+                text += f"{'-'*80}\nJudge\n{'-'*80}"
+            text += f"\n\nRaw Response: \n{entry['raw_response']}"
+            text += f"\n\nTHE ERROR ASSOCIATED WITH THIS RECORD IS: \n{entry.get('error_message', 'Unknown error')}"
+        elif entry['persona'] == 'debater':
             if upto_turns is not None and num_debater_turns >= upto_turns:
                 break
             text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn: {num_debater_turns}) \n{'-'*80}\n"
