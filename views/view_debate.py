@@ -9,12 +9,12 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 from utils.shared_utils import format_latex
-
+from views.shared_view_utils import find_and_display_qa
 
 
 from utils.debate_utils import format_debate_history
 
-def display_debate(debate_data, hide_private=False, upto_turns=None, do_latex_formatting=False):
+def display_debate(debate_data, hide_private=False, upto_turns=None, do_latex_formatting=False, view_qa=False):
     if not debate_data.get('success', True):
         print(f"{'='*80}")
         print(f"ERROR: Debate failed")
@@ -42,6 +42,8 @@ def display_debate(debate_data, hide_private=False, upto_turns=None, do_latex_fo
     print(f"\nOptions: {[format_latex(opt) for opt in debate_data['options']]}")
     print(f"{'='*80}\nDebate\n{'='*80}")
     print(f"{debate_text}")
+    if view_qa:
+        find_and_display_qa(debate_data)
     return True
 
 def load_debate_data(run_id, record_id=None, random_id=False):
@@ -57,6 +59,7 @@ def main():
     parser.add_argument('record_id', nargs='?', help='Optional record ID to view specific record')
     parser.add_argument('--hide-private', action='store_true', help='Hide private reasoning')
     parser.add_argument('--random_id', action='store_true', help='Pick a random record from the file')
+    parser.add_argument('--view-qa', action='store_true', help='View the associated judge QA')
     args = parser.parse_args()
     
     debate_data = load_debate_data(args.run_id, record_id=args.record_id, random_id=args.random_id)
@@ -64,7 +67,7 @@ def main():
         print(f"Record {args.record_id} not found in debate run {args.run_id}")
         return
     
-    display_debate(debate_data, hide_private=args.hide_private)
+    display_debate(debate_data, hide_private=args.hide_private, view_qa=args.view_qa)
 
 if __name__ == '__main__':
     main()

@@ -2,13 +2,13 @@
 DEBATER_MODEL = "google/gemini-3-pro-preview"
 
 
-DATASET_NAME = "Idavidrein/gpqa"
-DATASET_SUBSET = "gpqa_diamond"
-DATASET_SPLIT = "train"
-
-# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-# DATASET_SUBSET = None
-# DATASET_SPLIT = "test"
+# DATASET_NAME = "Idavidrein/gpqa"
+# DATASET_SUBSET = "gpqa_diamond"
+# DATASET_SPLIT = "train"
+                
+DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+DATASET_SUBSET = None
+DATASET_SPLIT = "test"
 
 DEBATER_TEMPERATURE = 0.3
 
@@ -48,7 +48,7 @@ INTERACTIVE_JUDGE_REASONING_MAX_TOKENS = None
 MOCK_DEBATE_RESPONSE = False
 MOCK_INTERACTIVE_JUDGE_RESPONSE = False
 
-SPECIFIC_IDXS = [183]
+SPECIFIC_IDXS = [100] # [183]
 
 ########################################################################################################################################################################
 # # HUMAN CONFIG 

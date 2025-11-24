@@ -97,6 +97,8 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
         if 'datetime_qa' in qa_df.columns:
             qa_df = qa_df.sort_values('datetime_qa', ascending=False)
         qa_df = qa_df.drop_duplicates(subset=['question_qa', 'options_str_qa', 'config_model_name_qa'], keep='first')
+        if qa_df.empty and qa_filters is not None:
+            raise Exception(f'There are no QA records with the provided filter: {qa_filters}')
         qa_df['is_correct_qa'] = qa_df['parsed_answer_qa'] == qa_df['correct_idx_qa']
         if filter_errors:
             qa_df = qa_df[((qa_df['success_qa'] == True) | (qa_df['success_qa'].isna()))]

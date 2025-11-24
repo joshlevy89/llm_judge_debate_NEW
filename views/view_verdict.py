@@ -11,8 +11,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from views.view_debate import display_debate, load_debate_data
-from views.view_qa import display_qa
-from analysis.analysis_utils import prepare_df
+from views.shared_view_utils import find_and_display_qa
 
 def load_verdict_data(verdict_run_id, record_id):
     verdict_path = project_root / 'results' / 'verdicts' / f'{verdict_run_id}.jsonl'
@@ -36,24 +35,6 @@ def display_verdict(verdict_data, debate_data):
     print(f"Correct Answer: {verdict_data['correct_idx']}")
     print(f"Judge Verdict: {parsed_response['answer']}")
     print(f"Correct: {parsed_response['answer'] == verdict_data['correct_idx']}")
-
-
-def find_and_display_qa(row):
-    row['options_str'] = str(row['options'])
-    qa_filters = {
-        'question': row['question'],
-        'options': row['options'],
-        'config': {'model_name': row['config']['judge_model']}
-    }
-    qa_df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False, qa_filters=qa_filters)
-    qa_judge_row = qa_df.iloc[0]
-    # qa_debater_row = qa_df[(qa_df['question_qa_judge'] == row['question_qa_debater']) & (qa_df['options_str_qa_judge'] == row['options_str_qa_debater']) & (qa_df['config_model_name_qa_judge'] == row['config_debater_model_debates'])].iloc[0]
-    
-    print('='*80)
-    print('Direct Judge QA')
-    print('='*80)
-    display_qa(qa_judge_row, display_question=False)
-    # display_qa(qa_debater_row)
 
 
 def display_full_verdict(verdict_run_id, record_id, hide_private=False, view_qa=False):
