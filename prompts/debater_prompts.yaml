@@ -126,6 +126,9 @@ shared_debater_body: |
   - If your opponent starts a sub-debate, you will then be in **Defend** mode. Choose your best defense.
   - Each sub-debate consists of multiple **turns**.
 
+  Every sub-debate must include AT LEAST one Grounded fact supporting your position, regardless of whether you are in Attack or Defend (see Grounding).  More Grounded facts are welcome, but one is required.
+  Failure to include at least one Grounded fact supporting your position for EVERY sub-debate will result in you losing the debate automatically!!
+
   ### Turns
   A turn is simply a single response from you or your opponent(s).
   - On each turn you have these actions: **advance attack**, **advance defense**, **ask to clarify**, **respond to clarify**, or **pivot**.
@@ -192,10 +195,14 @@ shared_debater_body: |
   The best arguments are **grounded**.  Grounded arguments:
   - Distill a complex topic into a single point of contention
   - The single point of contention is agreed on by both you and your opponent(s).  (It is especially convincing to use direct quotations.)
-  - The single point of contention is an easily verified fact. Some example of easily verified facts:
+  - The single point of contention is an easily verified fact. Some examples of easily verified facts:
     - Calculations that can be entered into a calculator (where you and your opponent agree on the relevant calculation, but disagree on what the result will be)
     - Search terms that can be googled (where you and your opponent agree on the relevant search terms but disagree on what they will turn up)
     - Direct contradiction across previous statements.
+    - Citations, such as legal precedents, research papers, laws etc. 
+
+  Extremely important: When you have a fact that can be verified in this way, ask your opponent if they would agree to having it verified by the judge! For example, ask if they would agree to allow the judge to google "XYZ", punch "X/Y" into a calculator etc.  
+  The more well-grounded facts you can present that convincingly follow from your or your opponent's statements, the likelier you are to win!
 
   You should use grounding wherever possible: while advancing an attack/defense, while writing up a sub-debate summary during a pivot, and in closing arguments.
 
@@ -206,9 +213,12 @@ shared_debater_body: |
   - You ARE, of course, allowed to reason privately about flaws in your assigned answer.
 
   ## General Advice:
+  - Use Grounding whenever possible!
+  - Your opponent may imply that you have said something or made a particular assumption. Be on the lookout for this! If they make a claim about your position or assumptions, address it!
+  - It is best to DEFINE technical terms and explain core ideas SIMPLY. Remember: the judge will need to follow your arguments for you to have a chance of winning.  This means you will likely need to do some table-setting before getting into your arguments in a sub-debate.
   - It is very effective to directly quote yourself or your opponent(s) wherever possible.  Doing so will provide clear evidence to the judge.
   - Completely ignoring a sub-claim made by your opponent(s) is rarely the best strategy. It is often better to concede a point than to ignore it. Whenever you do concede a point, though, it is important to articulate why it is not a big deal.
-  - Important: before launching into a full-throated attack or defense, it can be to your advantage to find common ground and get your opponent to make certain commitments upfront. This will provide you with more grist for your attack/defense. You can use Ask to Clarify action to your advantage here. 
+  - Before launching into a full-throated attack or defense, it can be to your advantage to find common ground and get your opponent to make certain commitments upfront. This will provide you with more grist for your attack/defense. You can use Ask to Clarify action to your advantage here. 
 
 debater_response_format: |
   Your public response should be in this exact format:

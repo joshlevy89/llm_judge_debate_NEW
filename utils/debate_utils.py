@@ -259,11 +259,12 @@ def format_debate_history(history, show_private=False, upto_turns=None, do_latex
     for entry in history:
         if 'success' not in entry or not entry['success']:
             if entry['persona'] == 'debater':
-                text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn: {num_debater_turns}) \n{'-'*80}"
+                text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn: {num_debater_turns}) \n{'-'*80}\n"
+                num_debater_turns += 1
             elif entry['persona'] == 'judge':
                 text += f"{'-'*80}\nJudge\n{'-'*80}"
-            text += f"\n\nRaw Response: \n{entry['raw_response']}"
-            text += f"\n\nTHE ERROR ASSOCIATED WITH THIS RECORD IS: \n{entry.get('error_message', 'Unknown error')}"
+            text += f"\RAW RESPONSE: \n{entry['raw_response']}"
+            text += f"\n\nTHE ERROR ASSOCIATED WITH THIS RECORD IS: \n{entry.get('error_message', 'Unknown error')}\n"
         elif entry['persona'] == 'debater':
             if upto_turns is not None and num_debater_turns >= upto_turns:
                 break

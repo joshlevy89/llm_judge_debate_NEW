@@ -65,6 +65,7 @@ def display_full_verdict(verdict_run_id, record_id, hide_private=False, view_qa=
     display_verdict(verdict_data, debate_data)    
     if view_qa:
         find_and_display_qa(verdict_data)
+        find_and_display_qa(debate_data)
     
     return True
 
