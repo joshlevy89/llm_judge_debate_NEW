@@ -40,11 +40,16 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
         debate_plus_my_private_thoughts = ""
 
     closing_argument_text = debater_prompts['closing_argument'] if closing_argument else ""
+
+    if len(all_answers) > 2:
+        multiple_opponents_comment = debater_prompts['multiple_opponents_comment']
+    else:
+        multiple_opponents_comment = ""
     
     return debater_template.format(
         role=debater_idx,
         debater_response_format=debater_prompts['debater_response_format'],
-        shared_debater_body=debater_prompts['shared_debater_body'].format(num_turns=num_turns),
+        shared_debater_body=debater_prompts['shared_debater_body'].format(num_turns=num_turns, multiple_opponents_comment=multiple_opponents_comment),
         shared_debater_ending=debater_prompts['shared_debater_ending'].format(
             question=question,
             my_index=debater_idx,
