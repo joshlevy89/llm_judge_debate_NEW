@@ -35,6 +35,7 @@ def display_verdict(verdict_data, debate_data):
     print(f"Correct Answer: {verdict_data['correct_idx']}")
     print(f"Judge Verdict: {parsed_response['answer']}")
     print(f"Correct: {parsed_response['answer'] == verdict_data['correct_idx']}")
+    print()
 
 
 def display_full_verdict(verdict_run_id, record_id, hide_private=False, view_qa=False):

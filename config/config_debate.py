@@ -1,88 +1,34 @@
-# # DEBATER_MODEL = "x-ai/grok-4-fast"
+DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "google/gemini-3-pro-preview"
+# DEBATER_MODEL = "openai/gpt-4o-mini"
+# DEBATER_MODEL = "openai/o3"
+# DEBATER_MODEL = "openai/gpt-oss-120b"
 
-
-# DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-# DATASET_SPLIT = "train"
+DATASET_NAME = "Idavidrein/gpqa"
+DATASET_SUBSET = "gpqa_diamond"
+DATASET_SPLIT = "train"
                 
-# # DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-# # DATASET_SUBSET = None
-# # DATASET_SPLIT = "test"
-
-# DEBATER_TEMPERATURE = 0.3
-
-# MAX_OUTPUT_TOKENS = 15000
-# DEBATER_REASONING_EFFORT = 'low'
-# DEBATER_REASONING_MAX_TOKENS = None
-# PROVIDE_INTERNAL_REASONING_TO_SELF = True # When True, the debater will have access to its own past thought processes
-
-# PRIVATE_SCRATCHPAD = False
-
-# PUBLIC_ARGUMENT_WORD_LIMIT = 200
-# PRIVATE_REASONING_WORD_LIMIT = 1000
-
-# LENIENT_PARSING_ARGUMENT = False
-
-# NUM_QUESTIONS = 1
-# RANDOM_SEED = 42
-# NUM_CHOICES = 2
-# NUM_TURNS = 10
-
-# MAX_THREADS = 5000
-
-# DEBATE_MODE = "sequential"
-
-# # INTERACTIVE_JUDGE = "x-ai/grok-4-fast"
-# # INTERACTIVE_JUDGE_TEMPERATURE = 0.3
-# # INTERACTIVE_JUDGE_MAX_OUTPUT_TOKENS = 500
-# # INTERACTIVE_JUDGE_REASONING_EFFORT = None
-# # INTERACTIVE_JUDGE_REASONING_MAX_TOKENS = None
-
-# INTERACTIVE_JUDGE = None
-# INTERACTIVE_JUDGE_TEMPERATURE = None
-# INTERACTIVE_JUDGE_MAX_OUTPUT_TOKENS = None
-# INTERACTIVE_JUDGE_REASONING_EFFORT = None
-# INTERACTIVE_JUDGE_REASONING_MAX_TOKENS = None
-
-# MOCK_DEBATE_RESPONSE = False
-# MOCK_INTERACTIVE_JUDGE_RESPONSE = False
-
-# SPECIFIC_IDXS = [70] # [183]
-
-
-########################################################################################################################################################################
-# Config for running 10 samples to see how these prompts do and where the judge fails still
-
-# DEBATER_MODEL = "x-ai/grok-4-fast"
-DEBATER_MODEL = "google/gemini-3-pro-preview"
-
-
-# DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-# DATASET_SPLIT = "train"
-                
-DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-DATASET_SUBSET = None
-DATASET_SPLIT = "test"
+# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+# DATASET_SUBSET = None
+# DATASET_SPLIT = "test"
 
 DEBATER_TEMPERATURE = 0.3
 
 MAX_OUTPUT_TOKENS = 15000
-DEBATER_REASONING_EFFORT = 'low'
+DEBATER_REASONING_EFFORT = None # 'high' # None # 'low'
 DEBATER_REASONING_MAX_TOKENS = None
 PROVIDE_INTERNAL_REASONING_TO_SELF = True # When True, the debater will have access to its own past thought processes
 
 PRIVATE_SCRATCHPAD = False
 
-PUBLIC_ARGUMENT_WORD_LIMIT = 200
-PRIVATE_REASONING_WORD_LIMIT = 1000
+PUBLIC_ARGUMENT_WORD_LIMIT = None
+PRIVATE_REASONING_WORD_LIMIT = None
 
 LENIENT_PARSING_ARGUMENT = False
 
-NUM_QUESTIONS = 1
+NUM_QUESTIONS = 198
 RANDOM_SEED = 42
-NUM_CHOICES = 2
+NUM_CHOICES = 4
 NUM_TURNS = 10
 
 MAX_THREADS = 5000
@@ -104,9 +50,10 @@ INTERACTIVE_JUDGE_REASONING_MAX_TOKENS = None
 MOCK_DEBATE_RESPONSE = False
 MOCK_INTERACTIVE_JUDGE_RESPONSE = False
 
-# SPECIFIC_IDXS = [1535, 1320, 1193, 1040, 1200, 1869, 1638, 1127, 1496, 1330] # None # [70] # [183]
-SPECIFIC_IDXS = [1127]
-
+# SPECIFIC_IDXS = [32, 92, 125, 63, 136, 179, 123, 97, 9, 129]
+# SPECIFIC_IDXS = [176, 76, 118, 149, 56, 139, 3, 142, 21, 182, 22, 33, 192, 105, 110, 189, 68, 45, 75, 173]
+# SPECIFIC_IDXS = [125]
+SPECIFIC_IDXS = None
 
 
 ########################################################################################################################################################################
