@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import config.config_qa as config_qa
 from config.config_qa import (
-    DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT,
+    DATASET_NAME, DATASET_SUBSET, DATASET_SPLIT, DATASET_FILTERS,
     MODEL_NAME, TEMPERATURE, MAX_TOKENS,
     REASONING_EFFORT, REASONING_MAX_TOKENS,
     NUM_QUESTIONS, RANDOM_SEED, NUM_CHOICES,
@@ -26,6 +26,7 @@ def main():
     
     print(f"Results will be appended to: {results_path}")
     print(f"Loading dataset: {DATASET_NAME}/{DATASET_SUBSET}")
+    print(f"Using dataset filters {DATASET_FILTERS}")
     
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     
@@ -40,7 +41,7 @@ def main():
     
     if not RERUN:
         existing_qa = get_existing_qa_keys(results_path)
-        questions_data = select_questions_and_options(DATASET_NAME, dataset, len(question_idxs), NUM_CHOICES, None, question_idxs)
+        questions_data = select_questions_and_options(DATASET_NAME, dataset, len(question_idxs), NUM_CHOICES, None, question_idxs, DATASET_FILTERS)
         question_idxs = filter_existing_questions(question_idxs, questions_data, MODEL_NAME, NUM_CHOICES, existing_qa)
         
         if not question_idxs:

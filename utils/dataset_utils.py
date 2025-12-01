@@ -1,5 +1,7 @@
 import random
 
+from numpy._core.numeric import True_
+
 def parse_gpqa_item(item):
     question = item.get('Question')
     correct_answer = item.get('Correct Answer')
@@ -21,7 +23,16 @@ def parse_mmlu_pro_item(item):
     correct_answer = all_choices[answer_index] if answer_index is not None and answer_index < len(all_choices) else None
     return question, correct_answer, all_choices
 
-def select_questions_and_options(dataset_name, dataset, num_questions, num_choices, seed, specific_idxs=None):
+
+def parse_supergpqa_item(item):
+    question = item.get('question')
+    options = item.get('options', [])
+    correct_answer = item.get('answer')
+    all_choices = [opt.strip() for opt in options if opt]
+    return question, correct_answer, all_choices
+
+
+def select_questions_and_options(dataset_name, dataset, num_questions, num_choices, seed, specific_idxs=None, dataset_filters=None):
     if specific_idxs is not None:
         question_indices = specific_idxs
     else:
@@ -32,12 +43,25 @@ def select_questions_and_options(dataset_name, dataset, num_questions, num_choic
     results = []
     for idx in question_indices:
         item = dataset[idx]
-        
+        print(item)
+        pass_filter = True
+        if dataset_filters:
+            for key in dataset_filters:
+                if dataset_filters[key] != item[key]:
+                    pass_filter = False
+                    break
+        # print(pass_filter)
+        # raise Exception
+        if pass_filter == False:
+            continue
+                    
         # Parse dataset item based on dataset name
         if dataset_name == "Idavidrein/gpqa":
             question, correct_answer, all_choices = parse_gpqa_item(item)
         elif dataset_name == "TIGER-Lab/MMLU-Pro":
             question, correct_answer, all_choices = parse_mmlu_pro_item(item)
+        elif dataset_name == 'm-a-p/SuperGPQA':
+            question, correct_answer, all_choices = parse_supergpqa_item(item)
         else:
             raise ValueError(f"Unsupported dataset: {dataset_name}")
         
