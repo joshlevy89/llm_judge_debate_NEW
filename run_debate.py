@@ -40,7 +40,24 @@ def main():
     print(f"Results: {results_path}")
     
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
-    questions_data = select_questions_and_options(DATASET_NAME, dataset, NUM_QUESTIONS, NUM_CHOICES, RANDOM_SEED, specific_idxs=SPECIFIC_IDXS)
+    
+    dataset = dataset.add_column('_original_idx', range(len(dataset)))
+    
+    if DATASET_FILTERS:
+        dataset = dataset.filter(lambda x: all(x.get(k) == v for k, v in DATASET_FILTERS.items()))
+        print(f"Filtered dataset to {len(dataset)} questions")
+    
+    if SPECIFIC_IDXS is not None:
+        print(f"Using specific question indices (referring to original dataset): {SPECIFIC_IDXS}")
+        question_idxs = SPECIFIC_IDXS
+    else:
+        print(f"Selecting {NUM_QUESTIONS} questions with seed {RANDOM_SEED}")
+        rng = random.Random(RANDOM_SEED)
+        filtered_idxs = rng.sample(range(len(dataset)), min(NUM_QUESTIONS, len(dataset)))
+        question_idxs = [dataset[idx]['_original_idx'] for idx in filtered_idxs]
+    
+    unfiltered_dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
+    questions_data = select_questions_and_options(DATASET_NAME, unfiltered_dataset, len(question_idxs), NUM_CHOICES, None, specific_idxs=question_idxs)
     
     key_info_start = get_openrouter_key_info(api_key)
     start_usage = key_info_start.get('data', {}).get('usage', 0) if key_info_start else 0

@@ -32,7 +32,8 @@ def parse_supergpqa_item(item):
     return question, correct_answer, all_choices
 
 
-def select_questions_and_options(dataset_name, dataset, num_questions, num_choices, seed, specific_idxs=None, dataset_filters=None):
+def select_questions_and_options(dataset_name, dataset, num_questions, num_choices, seed, specific_idxs=None):
+
     if specific_idxs is not None:
         question_indices = specific_idxs
     else:
@@ -43,17 +44,6 @@ def select_questions_and_options(dataset_name, dataset, num_questions, num_choic
     results = []
     for idx in question_indices:
         item = dataset[idx]
-        print(item)
-        pass_filter = True
-        if dataset_filters:
-            for key in dataset_filters:
-                if dataset_filters[key] != item[key]:
-                    pass_filter = False
-                    break
-        # print(pass_filter)
-        # raise Exception
-        if pass_filter == False:
-            continue
                     
         # Parse dataset item based on dataset name
         if dataset_name == "Idavidrein/gpqa":

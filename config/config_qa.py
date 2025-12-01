@@ -17,6 +17,7 @@ DATASET_FILTERS = {
 
 # MODEL_NAME = "openai/gpt-4o-mini" 
 MODEL_NAME = "x-ai/grok-4-fast" 
+# MODEL_NAME = "x-ai/grok-4.1-fast:free"
 # MODEL_NAME = "openai/gpt-3.5-turbo"
 # MODEL_NAME = "qwen/qwen-2.5-7b-instruct" 
 # MODEL_NAME = "meta-llama/llama-3-8b-instruct"
@@ -31,17 +32,19 @@ MODEL_NAME = "x-ai/grok-4-fast"
 
 # MODEL_NAME = "google/gemini-3-pro-preview"
 
-TEMPERATURE = 0.0
+# MODEL_NAME = "meta-llama/llama-3.1-8b-instruct"
+
+TEMPERATURE = 0.5 # 1.0 # 0.0 # 0.5
 
 MAX_TOKENS = 15000
-REASONING_EFFORT = None # 'low'
+REASONING_EFFORT = 'low'
 REASONING_MAX_TOKENS = None
 
-NUM_QUESTIONS = 1
+NUM_QUESTIONS = 100
 RANDOM_SEED = 42 
 NUM_CHOICES = 2
 
-RERUN = False  # will rerun a question/choice set even if it already exists
+RERUN = True  # will rerun a question/choice set even if it already exists
 LENIENT_PARSING = False
 
 SPECIFIC_QUESTION_IDXS = None # [183] # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]

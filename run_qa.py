@@ -30,18 +30,26 @@ def main():
     
     dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
     
+    dataset = dataset.add_column('_original_idx', range(len(dataset)))
+    
+    if DATASET_FILTERS:
+        dataset = dataset.filter(lambda x: all(x.get(k) == v for k, v in DATASET_FILTERS.items()))
+        print(f"Filtered dataset to {len(dataset)} questions")
+
     if SPECIFIC_QUESTION_IDXS is not None:
-        print(f"Using specific question indices: {SPECIFIC_QUESTION_IDXS}")
+        print(f"Using specific question indices (referring to original dataset): {SPECIFIC_QUESTION_IDXS}")
         question_idxs = SPECIFIC_QUESTION_IDXS
     else:
         print(f"Selecting {NUM_QUESTIONS} questions with seed {RANDOM_SEED}")
         import random
         rng = random.Random(RANDOM_SEED)
-        question_idxs = rng.sample(range(len(dataset)), min(NUM_QUESTIONS, len(dataset)))
+        filtered_idxs = rng.sample(range(len(dataset)), min(NUM_QUESTIONS, len(dataset)))
+        question_idxs = [dataset[idx]['_original_idx'] for idx in filtered_idxs]
     
     if not RERUN:
+        unfiltered_dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
         existing_qa = get_existing_qa_keys(results_path)
-        questions_data = select_questions_and_options(DATASET_NAME, dataset, len(question_idxs), NUM_CHOICES, None, question_idxs, DATASET_FILTERS)
+        questions_data = select_questions_and_options(DATASET_NAME, unfiltered_dataset, len(question_idxs), NUM_CHOICES, None, question_idxs)
         question_idxs = filter_existing_questions(question_idxs, questions_data, MODEL_NAME, NUM_CHOICES, existing_qa)
         
         if not question_idxs:

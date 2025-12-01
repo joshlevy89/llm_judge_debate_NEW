@@ -4,15 +4,24 @@ DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "openai/o3"
 # DEBATER_MODEL = "openai/gpt-oss-120b"
 
-DATASET_NAME = "Idavidrein/gpqa"
-DATASET_SUBSET = "gpqa_diamond"
+# DATASET_NAME = "Idavidrein/gpqa"
+# DATASET_SUBSET = "gpqa_diamond"
+# DATASET_SPLIT = "train"
+
+DATASET_NAME = "m-a-p/SuperGPQA"
+DATASET_SUBSET = None
 DATASET_SPLIT = "train"
+# additional filters that can be applied
+DATASET_FILTERS = {  
+    'field': 'Physics',
+    'difficulty': 'hard'
+}
                 
 # DATASET_NAME = "TIGER-Lab/MMLU-Pro"
 # DATASET_SUBSET = None
 # DATASET_SPLIT = "test"
 
-DEBATER_TEMPERATURE = 0.3
+DEBATER_TEMPERATURE = 0.5
 
 MAX_OUTPUT_TOKENS = 15000
 DEBATER_REASONING_EFFORT = None # 'high' # None # 'low'
@@ -26,9 +35,9 @@ PRIVATE_REASONING_WORD_LIMIT = None
 
 LENIENT_PARSING_ARGUMENT = False
 
-NUM_QUESTIONS = 198
+NUM_QUESTIONS = 5
 RANDOM_SEED = 42
-NUM_CHOICES = 4
+NUM_CHOICES = 2
 NUM_TURNS = 10
 
 MAX_THREADS = 5000
@@ -53,7 +62,8 @@ MOCK_INTERACTIVE_JUDGE_RESPONSE = False
 # SPECIFIC_IDXS = [32, 92, 125, 63, 136, 179, 123, 97, 9, 129]
 # SPECIFIC_IDXS = [176, 76, 118, 149, 56, 139, 3, 142, 21, 182, 22, 33, 192, 105, 110, 189, 68, 45, 75, 173]
 # SPECIFIC_IDXS = [125]
-SPECIFIC_IDXS = None
+# SPECIFIC_IDXS = None
+SPECIFIC_IDXS = [25803, 5627, 4880, 10347, 10561]
 
 
 ########################################################################################################################################################################

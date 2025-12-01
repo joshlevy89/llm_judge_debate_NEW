@@ -67,7 +67,7 @@ def main():
         print(f"Record {args.record_id} not found in debate run {args.run_id}")
         return
     
-    display_debate(debate_data, hide_private=args.hide_private, view_qa=args.view_qa)
+    display_debate(debate_data, hide_private=args.hide_private, view_qa=args.view_qa, do_latex_formatting=True)
 
 if __name__ == '__main__':
     main()
