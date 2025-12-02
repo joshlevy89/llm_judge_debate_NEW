@@ -69,6 +69,8 @@ def format_latex(text):
         return f'√({content})'
     text = re.sub(r'\\sqrt\{([^}]*)\}', replace_sqrt, text)
     
+    text = re.sub(r'\\frac\{([^}]*)\}\{([^}]*)\}', r'\1/\2', text)
+    
     text = re.sub(r'\\[()\[\]]', '', text)
     text = re.sub(r'\\begin\{pmatrix\}(.*?)\\end\{pmatrix\}', r'[\1]', text, flags=re.DOTALL)
     
