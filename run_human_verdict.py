@@ -12,16 +12,15 @@ def main():
     parser = argparse.ArgumentParser(description='View debate results')
     parser.add_argument('run_id')
     parser.add_argument('record_id', nargs='?', help='Optional record ID to view specific record')
-    parser.add_argument('--hide-private', action='store_true', help='Hide private reasoning')
     parser.add_argument('--random_id', action='store_true', help='Pick a random record from the file')
     args = parser.parse_args()
     
-    debate_data = load_debate_data(args.run_id, record_id=args.record_id, random_id=args.random_id)
+    debate_data = load_debate_data(args.run_id, record_id=args.record_id, hide_private=True, random_id=args.random_id)
     if not debate_data:
         print(f"Record {args.record_id} not found in debate run {args.run_id}")
         return
     
-    display_debate(debate_data, hide_private=args.hide_private, do_latex_formatting=True)
+    display_debate(debate_data, hide_private=args.hide_private, do_latex_formatting=True, view_qa=True)
 
     results_path = setup_output_path()
 
@@ -36,13 +35,18 @@ def main():
     print("Reasoning: ")
     reasoning = input("> ").strip()
 
+    print("Additional Comments?: ")
+    comments = input("> ").strip()
+
     print(f"Correct Idx {debate_data['correct_idx']}")
 
     result = {
+        'run_id': args.run_id,
         'record_id': debate_data['record_id'],
         'verdict': verdict,
         'confidence': confidence,
-        'reasoning': reasoning
+        'reasoning': reasoning,
+        'comments': comments
     }
 
     with open(results_path, 'a') as f:

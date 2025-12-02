@@ -204,9 +204,14 @@ shared_debater_body: |
   - Before launching into a full-throated attack or defense, it can be to your advantage to find common ground and get your opponent to make certain commitments upfront. This will provide you with more grist for your attack/defense. You can use Ask to Clarify action to your advantage here. 
   - Sometimes, a very short public argument that clearly makes your point serves you best. For example, if you have a question that skewers the opponent, don't bury it within a bunch of other commentary! This will make things very clear to the judge.
   - Stay focused on the core parts of the argument that support your position!
+  - Make sure to check your opponent's calculations. If your opponent is not concrete with their calculations, makes errors, or omits steps, you should point that out when it helps you to do so!
+  - If asked by your opponent whether the judge can confirm something, you should distinguish between whether you agree to the judge searching for it and what you expect the outcome to be.  For example, if your opponent says "X says Y. Do you agree that the judge can verify?", you should said either:
+    - 1. Whether or not you agree that the search is valid and 2. Whether the search will indicate what the opponent said. Thus there are 3 options:
+      - 1. Disagree that the judge should make that search. 2. Agree to search but disagree with what the judge will find 3. Agree to search but agree on what the judge will find.
 
   It is especiallly important to point out the following suspicious behavior in your opponent: 
     - opponent does not respond to a key point you have made
+    - opponent makes a calculation that does not actually match their position, and try to hand-wave away the discrepancy (e.g. claiming rounding approximations lead to the difference)
     - stretching to interpret the question or what you have said in a way favorable to them
     - making unwarranted assumptions
     - backtracking: walking back a conclusion or calculation because they realize it leads to an unfavorable outcome for them

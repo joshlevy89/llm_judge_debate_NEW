@@ -57,6 +57,19 @@ def format_latex(text):
     text = str(text)
     text = text.replace('\\\\', '\\')
     text = text.replace('$', '')
+    
+    text = text.replace('\\cdot', '·')
+    text = text.replace('\\times', '×')
+    text = text.replace('\\approx', '≈')
+    
+    text = re.sub(r'\\mathrm\{([^}]*)\}', r'\1', text)
+    
+    def replace_sqrt(match):
+        content = match.group(1)
+        return f'√({content})'
+    text = re.sub(r'\\sqrt\{([^}]*)\}', replace_sqrt, text)
+    
     text = re.sub(r'\\[()\[\]]', '', text)
     text = re.sub(r'\\begin\{pmatrix\}(.*?)\\end\{pmatrix\}', r'[\1]', text, flags=re.DOTALL)
+    
     return unicodeit.replace(text)

@@ -2,21 +2,24 @@
 # DATASET_SUBSET = "gpqa_diamond"
 # DATASET_SPLIT = "train"
 
-# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-# DATASET_SUBSET = None
-# DATASET_SPLIT = "test"
-
-DATASET_NAME = "m-a-p/SuperGPQA"
+DATASET_NAME = "TIGER-Lab/MMLU-Pro"
 DATASET_SUBSET = None
-DATASET_SPLIT = "train"
-# additional filters that can be applied
-DATASET_FILTERS = {  
-    'field': 'Physics',
-    'difficulty': 'hard'
+DATASET_SPLIT = "test"
+DATASET_FILTERS = {
+    "category": "physics"
 }
 
-# MODEL_NAME = "openai/gpt-4o-mini" 
-MODEL_NAME = "x-ai/grok-4-fast" 
+# DATASET_NAME = "m-a-p/SuperGPQA"
+# DATASET_SUBSET = None
+# DATASET_SPLIT = "train"
+# # additional filters that can be applied
+# DATASET_FILTERS = {  
+#     'field': 'Physics',
+#     'difficulty': 'hard'
+# }
+
+MODEL_NAME = "openai/gpt-4o-mini" 
+# MODEL_NAME = "x-ai/grok-4-fast" 
 # MODEL_NAME = "x-ai/grok-4.1-fast:free"
 # MODEL_NAME = "openai/gpt-3.5-turbo"
 # MODEL_NAME = "qwen/qwen-2.5-7b-instruct" 

@@ -35,11 +35,14 @@ def display_debate(debate_data, hide_private=False, upto_turns=None, do_latex_fo
     debate_text = format_debate_history(debate_data['debate_history'], show_private=show_private, upto_turns=upto_turns, do_latex_formatting=do_latex_formatting)
     
     print(f"{'='*80}")
-    # print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']} | Question Idx: {debate_data['question_idx']} | Correct Idx: {debate_data['correct_idx']}")
     print(f"Debate Run: {debate_data['run_id']} | Record: {debate_data['record_id']} | Question Idx: {debate_data['question_idx']} | Dataset: {debate_data['config']['dataset_name']}")
     print(f"{'='*80}\nQuestion\n{'='*80}")
-    print(format_latex(debate_data['question']))
-    print(f"\nOptions: {[format_latex(opt) for opt in debate_data['options']]}")
+    question_text = format_latex(debate_data['question']) if do_latex_formatting else debate_data['question']
+    print(question_text)
+    print(f"\nOptions:")
+    for i, opt in enumerate(debate_data['options']):
+        formatted_opt = format_latex(opt) if do_latex_formatting else opt
+        print(f"  {i}: {formatted_opt}")
     print(f"{'='*80}\nDebate\n{'='*80}")
     print(f"{debate_text}")
     if view_qa:
