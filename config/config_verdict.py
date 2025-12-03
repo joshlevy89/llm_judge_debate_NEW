@@ -44,23 +44,24 @@ JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"
 # DEBATE_RUN_ID = "n27oezk"   # sequential run with 10 turns, two debaters, non-interative, UPDATED PROMPTS, gpt-4o-mini as debater (validation set of the 30 ids). control.
 # DEBATE_RUN_ID = "o5g5vzf" # sequential run with 10 turns, two debaters, non-interative, UPDATED PROMPTS, grok-4-fast as debater (test set of the 30 ids)
 # DEBATE_RUN_ID = "d97mc4l"   # sequential run with 10 turns, two debaters, non-interative, UPDATED PROMPTS, gpt-4o-mini as debater (test set of the 30 ids). control.
-DEBATE_RUN_ID = "tw3w3f9"  # all 198, grok-4-fast 10 turns updated
+# DEBATE_RUN_ID = "tw3w3f9"  # all 198, grok-4-fast 10 turns updated
 # DEBATE_RUN_ID = "5mflq0e"  # all 198, gpt-oss-120b (high) 10 turns updated prompts
 # DEBATE_RUN_ID = "q9uj26k" # 4 way debate, all 198, gpt-oss-120b (high) 10 turns, updated prompts
 # DEBATE_RUN_ID = 'i3mvjzg' # # 4 way debate, all 198, grok-4-fast 10 turns, updated prompts
 # DEBATE_RUN_ID = "human"
+# DEBATE_RUN_ID = "egkyot4"  # gemini-3-pro on all 198 questions. expensive! (2 choice, sequential, 10 turuns, FULL DEBATER SCAFFOLD)
+DEBATE_RUN_ID = "yn1vu8h"  # grok-4-fast on all 198 questions (2 choice, sequential, 10 turuns, MINIMAL DEBATER SCAFFOLD)
 
 JUDGE_TEMPERATURE = 0.0
 JUDGE_REASONING_EFFORT = None
 JUDGE_REASONING_MAX_TOKENS = None
 MAX_OUTPUT_TOKENS = 5000
 
-SKIP_QA = False
+SKIP_QA = True
 RERUN = False
 
 SUBSET_N = None # Only run the verdict for the first N debates
 SPECIFIC_RECORD_IDS = None # ['ezrn67r'] # List of specific record_ids to run the verdict for
 UPTO_TURNS = None
 
-
-MAX_THREADS = 200  
+MAX_THREADS = 200

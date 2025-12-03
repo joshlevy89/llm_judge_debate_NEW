@@ -22,7 +22,7 @@ def main():
         return
 
     start_time = time.time()
-    display_debate(debate_data, hide_private=True, do_latex_formatting=True, view_qa=True)
+    display_debate(debate_data, hide_private=True, do_latex_formatting=True, view_qa=False)
 
     results_path = setup_output_path()
 

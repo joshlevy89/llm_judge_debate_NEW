@@ -4,18 +4,19 @@ DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "openai/o3"
 # DEBATER_MODEL = "openai/gpt-oss-120b"
 
-# DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-# DATASET_SPLIT = "train"
-
-DATASET_NAME = "m-a-p/SuperGPQA"
-DATASET_SUBSET = None
+DATASET_NAME = "Idavidrein/gpqa"
+DATASET_SUBSET = "gpqa_diamond"
 DATASET_SPLIT = "train"
-# additional filters that can be applied
-DATASET_FILTERS = {  
-    'field': 'Physics',
-    'difficulty': 'hard'
-}
+DATASET_FILTERS = None
+
+# DATASET_NAME = "m-a-p/SuperGPQA"
+# DATASET_SUBSET = None
+# DATASET_SPLIT = "train"
+# # additional filters that can be applied
+# DATASET_FILTERS = {  
+#     'field': 'Physics',
+#     'difficulty': 'hard'
+# }
                 
 # DATASET_NAME = "TIGER-Lab/MMLU-Pro"
 # DATASET_SUBSET = None
@@ -27,7 +28,7 @@ DATASET_FILTERS = {
 DEBATER_TEMPERATURE = 0.5
 
 MAX_OUTPUT_TOKENS = 15000
-DEBATER_REASONING_EFFORT = None # 'high' # None # 'low'
+DEBATER_REASONING_EFFORT = None # 'low' # None # 'high' # None # 'low'
 DEBATER_REASONING_MAX_TOKENS = None
 PROVIDE_INTERNAL_REASONING_TO_SELF = True # When True, the debater will have access to its own past thought processes
 
@@ -38,7 +39,7 @@ PRIVATE_REASONING_WORD_LIMIT = None
 
 LENIENT_PARSING_ARGUMENT = False
 
-NUM_QUESTIONS = 20
+NUM_QUESTIONS = 198
 RANDOM_SEED = 42
 NUM_CHOICES = 2
 NUM_TURNS = 10
@@ -69,7 +70,11 @@ MOCK_INTERACTIVE_JUDGE_RESPONSE = False
 # SPECIFIC_IDXS = [7894, 25241, 18343, 22468, 7759] # [4880] # [25803, 5627, 4880, 10347, 10561]
 # SPECIFIC_IDXS = [10561]
 # SPECIFIC_IDXS = [25803, 5627, 4880, 10347, 10561]
-SPECIFIC_IDXS = [19485, 18347, 12849, 14191, 25441, 861, 12266, 12563, 24926, 6143, 5868, 21169, 6120, 10361, 5136, 4049, 23588, 5021, 19402, 7567]
+# SPECIFIC_IDXS = [19485, 18347, 12849, 14191, 25441, 861, 12266, 12563, 24926, 6143, 5868, 21169, 6120, 10361, 5136, 4049, 23588, 5021, 19402, 7567]
+# SPECIFIC_IDXS = [12563]
+# SPECIFIC_IDXS = [18526, 8530, 1265, 16177, 16245, 1262, 7451, 20988, 21328, 14734, 3924, 10491, 20764, 14412]
+# SPECIFIC_IDXS = [10361, 5136, 4049, 23588, 5021, 19402, 7567, 1904, 11812, 14101, 5984, 11661, 14195]
+SPECIFIC_IDXS = None
 
 
 ########################################################################################################################################################################
