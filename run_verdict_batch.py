@@ -130,4 +130,6 @@ if __name__ == "__main__":
     print(f"\nGroup saved: results/verdict_groups/{group_run_id}.json")
     print(f"Duration: {duration:.1f}s")
     print(f"Completed: {len(all_runs)}/{total_runs}")
+    
+    executor.shutdown(wait=True)
 
