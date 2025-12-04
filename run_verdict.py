@@ -197,8 +197,8 @@ def main(judge_model=None, debate_run_id=None, max_threads=None):
     run_datetime = datetime.now().isoformat()
     results_path = setup_output_path(verdict_run_id)
     config = extract_config(config_verdict)
-    config['JUDGE_MODEL'] = judge_model
-    config['DEBATE_RUN_ID'] = debate_run_id
+    config['judge_model'] = judge_model
+    config['debate_run_id'] = debate_run_id
     
     print(f"Verdict Run ID: {verdict_run_id}")
     print(f"Debate Run ID: {debate_run_id}")
