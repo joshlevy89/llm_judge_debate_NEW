@@ -23,7 +23,7 @@ def load_verdict_data(verdict_run_id, record_id):
 
 def display_verdict(verdict_data, debate_data):
     print(verdict_data['config'].keys())
-    print(f"{'='*80}\nJudge Verdict (Verdict Run: {verdict_data['verdict_run_id']} | Question Idx: {debate_data['question_idx']} | Judge Model: {verdict_data['config']['JUDGE_MODEL']})\n{'='*80}")
+    print(f"{'='*80}\nJudge Verdict (Verdict Run: {verdict_data['verdict_run_id']} | Question Idx: {debate_data['question_idx']} | Judge Model: {verdict_data['config']['judge_model']})\n{'='*80}")
     if verdict_data['judge_verdict'].get('internal_model_reasoning') is not None:
         print(f"[BEGIN INTERNAL REASONING]\n{verdict_data['judge_verdict']['internal_model_reasoning']}\n[END INTERNAL REASONING]\n")
     print(f"[BEGIN RAW RESPONSE]\n{verdict_data['judge_verdict']['raw_response']}\n[END RAW RESPONSE]")

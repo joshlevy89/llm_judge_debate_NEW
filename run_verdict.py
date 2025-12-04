@@ -148,8 +148,8 @@ def check_and_run_missing_qa(debate_records, api_key, judge_model, max_threads):
             else:
                 print(f"All questions already have QA results for {model_name}. Skipping QA...")
 
-def process_debate_record(debate_record, judge_template, response_format_prompt, judge_template_str, api_key, config, verdict_run_id, run_datetime, judge_model, debate_run_id):
-    public_debate_history_text = format_debate_history(debate_record['debate_history'], show_private=False, upto_turns=UPTO_TURNS)
+def process_debate_record(debate_record, judge_template, response_format_prompt, judge_template_str, api_key, config, verdict_run_id, run_datetime, judge_model, debate_run_id, upto_turns):
+    public_debate_history_text = format_debate_history(debate_record['debate_history'], show_private=False, upto_turns=upto_turns)
     
     judge_verdict = run_judge(
         debate_record['question'],
@@ -178,9 +178,10 @@ def process_debate_record(debate_record, judge_template, response_format_prompt,
         'judge_verdict': judge_verdict
     }
 
-def main(judge_model=None, debate_run_id=None, max_threads=None):
+def main(judge_model=None, debate_run_id=None, upto_turns=None, max_threads=None):
     judge_model = judge_model or CONFIG_JUDGE_MODEL
     debate_run_id = debate_run_id or CONFIG_DEBATE_RUN_ID
+    upto_turns = upto_turns if upto_turns is not None else UPTO_TURNS
     max_threads = max_threads or MAX_THREADS
     
     if judge_model is None:
@@ -199,12 +200,14 @@ def main(judge_model=None, debate_run_id=None, max_threads=None):
     config = extract_config(config_verdict)
     config['judge_model'] = judge_model
     config['debate_run_id'] = debate_run_id
+    config['upto_turns'] = upto_turns
     
     print(f"Verdict Run ID: {verdict_run_id}")
     print(f"Debate Run ID: {debate_run_id}")
     print(f"Datetime: {run_datetime}")
     print(f"Results: {results_path}")
     print(f"Judge Model: {judge_model}")
+    print(f"Upto Turns: {upto_turns}")
     
     if debate_run_id == 'human':
         debate_path = Path('results') / 'human' / f'human_interactive_debate.jsonl'
@@ -239,7 +242,7 @@ def main(judge_model=None, debate_run_id=None, max_threads=None):
     
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         futures = {
-            executor.submit(process_debate_record, debate_record, judge_template, response_format_prompt, judge_template, api_key, config, verdict_run_id, run_datetime, judge_model, debate_run_id): debate_record
+            executor.submit(process_debate_record, debate_record, judge_template, response_format_prompt, judge_template, api_key, config, verdict_run_id, run_datetime, judge_model, debate_run_id, upto_turns): debate_record
             for i, debate_record in enumerate(debate_records)
         }
         
