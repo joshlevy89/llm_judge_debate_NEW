@@ -14,9 +14,11 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
 import config.config_verdict as config_verdict
 from config.config_verdict import (
-    DEBATE_RUN_ID, JUDGE_MODEL, JUDGE_TEMPERATURE,
-    JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, MAX_OUTPUT_TOKENS,
-    SKIP_QA, RERUN, SUBSET_N, SPECIFIC_RECORD_IDS, MAX_THREADS, UPTO_TURNS
+    DEBATE_RUN_ID as CONFIG_DEBATE_RUN_ID, 
+    JUDGE_MODEL as CONFIG_JUDGE_MODEL, 
+    JUDGE_TEMPERATURE, JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, 
+    MAX_OUTPUT_TOKENS, SKIP_QA, RERUN, SUBSET_N, SPECIFIC_RECORD_IDS, 
+    MAX_THREADS, UPTO_TURNS
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
@@ -28,7 +30,7 @@ def setup_output_path(verdict_run_id):
     output_dir.mkdir(parents=True, exist_ok=True)
     return output_dir / f'{verdict_run_id}.jsonl'
     
-def run_judge(question, options, public_debate_history_text, judge_template, response_format_prompt, api_key, verdict_run_id, record_id):
+def run_judge(question, options, public_debate_history_text, judge_template, response_format_prompt, api_key, verdict_run_id, record_id, judge_model):
     options_text = ""
     for i, option in enumerate[Any](options):
         options_text += f"Debater {i} is arguing for: {option}\n"
@@ -46,7 +48,7 @@ def run_judge(question, options, public_debate_history_text, judge_template, res
     
     response, token_usage = call_openrouter(
         prompt, 
-        JUDGE_MODEL, 
+        judge_model, 
         api_key, 
         JUDGE_TEMPERATURE,
         reasoning_effort=JUDGE_REASONING_EFFORT,
@@ -69,7 +71,7 @@ def run_judge(question, options, public_debate_history_text, judge_template, res
         'token_usage': token_usage
     }
 
-def check_and_run_missing_qa(debate_records, api_key):
+def check_and_run_missing_qa(debate_records, api_key, judge_model, max_threads):
     if SKIP_QA:
         return
     
@@ -104,11 +106,11 @@ def check_and_run_missing_qa(debate_records, api_key):
         
         print(f"\nProcessing dataset: {dataset_key[0]}/{dataset_key[1]} ({len(records)} records)")
 
-        if JUDGE_MODEL == debater_model:
-            tups = [(JUDGE_MODEL, JUDGE_TEMPERATURE)]
+        if judge_model == debater_model:
+            tups = [(judge_model, JUDGE_TEMPERATURE)]
             print("Since judge and debater model are the same, only running QA for missing idxs once")
         else:
-            tups = [(JUDGE_MODEL, JUDGE_TEMPERATURE), (debater_model, debater_temperature)]
+            tups = [(judge_model, JUDGE_TEMPERATURE), (debater_model, debater_temperature)]
 
         
         for model_name, temperature in tups:
@@ -137,7 +139,7 @@ def check_and_run_missing_qa(debate_records, api_key):
                     dataset_config=dataset_config,
                     num_choices=num_choices,
                     api_key=api_key,
-                    max_threads=MAX_THREADS,
+                    max_threads=max_threads,
                     qa_results_path=qa_results_path,
                     random_seed=random_seed
                 )
@@ -146,7 +148,7 @@ def check_and_run_missing_qa(debate_records, api_key):
             else:
                 print(f"All questions already have QA results for {model_name}. Skipping QA...")
 
-def process_debate_record(debate_record, judge_template, response_format_prompt, judge_template_str, api_key, config, verdict_run_id, run_datetime):
+def process_debate_record(debate_record, judge_template, response_format_prompt, judge_template_str, api_key, config, verdict_run_id, run_datetime, judge_model, debate_run_id):
     public_debate_history_text = format_debate_history(debate_record['debate_history'], show_private=False, upto_turns=UPTO_TURNS)
     
     judge_verdict = run_judge(
@@ -157,12 +159,13 @@ def process_debate_record(debate_record, judge_template, response_format_prompt,
         response_format_prompt,
         api_key,
         verdict_run_id,
-        debate_record['record_id']
+        debate_record['record_id'],
+        judge_model
     )
     
     return {
         'verdict_run_id': verdict_run_id,
-        'debate_run_id': DEBATE_RUN_ID,
+        'debate_run_id': debate_run_id,
         'record_id': debate_record['record_id'],
         'datetime': run_datetime,
         'config': config,
@@ -175,7 +178,16 @@ def process_debate_record(debate_record, judge_template, response_format_prompt,
         'judge_verdict': judge_verdict
     }
 
-def main():
+def main(judge_model=None, debate_run_id=None, max_threads=None):
+    judge_model = judge_model or CONFIG_JUDGE_MODEL
+    debate_run_id = debate_run_id or CONFIG_DEBATE_RUN_ID
+    max_threads = max_threads or MAX_THREADS
+    
+    if judge_model is None:
+        raise ValueError("No judge_model specified (set in config or pass as argument)")
+    if debate_run_id is None:
+        raise ValueError("No debate_run_id specified (set in config or pass as argument)")
+    
     load_dotenv()
     api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
@@ -185,17 +197,19 @@ def main():
     run_datetime = datetime.now().isoformat()
     results_path = setup_output_path(verdict_run_id)
     config = extract_config(config_verdict)
+    config['JUDGE_MODEL'] = judge_model
+    config['DEBATE_RUN_ID'] = debate_run_id
     
     print(f"Verdict Run ID: {verdict_run_id}")
-    print(f"Debate Run ID: {DEBATE_RUN_ID}")
+    print(f"Debate Run ID: {debate_run_id}")
     print(f"Datetime: {run_datetime}")
     print(f"Results: {results_path}")
-    print(f"Judge Model: {JUDGE_MODEL}")
+    print(f"Judge Model: {judge_model}")
     
-    if DEBATE_RUN_ID == 'human':
+    if debate_run_id == 'human':
         debate_path = Path('results') / 'human' / f'human_interactive_debate.jsonl'
     else:
-        debate_path = Path('results') / 'debates' / f'{DEBATE_RUN_ID}.jsonl'
+        debate_path = Path('results') / 'debates' / f'{debate_run_id}.jsonl'
     if not debate_path.exists():
         raise ValueError(f"Debate results not found: {debate_path}")
     
@@ -210,7 +224,7 @@ def main():
     elif SUBSET_N is not None:
         debate_records = debate_records[:SUBSET_N]
     
-    check_and_run_missing_qa(debate_records, api_key)
+    check_and_run_missing_qa(debate_records, api_key, judge_model, max_threads)
     
     judge_template = load_prompts('judge')
     response_format_prompt = load_prompts('shared')
@@ -223,9 +237,9 @@ def main():
     completed = 0
     failed = 0
     
-    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+    with ThreadPoolExecutor(max_workers=max_threads) as executor:
         futures = {
-            executor.submit(process_debate_record, debate_record, judge_template, response_format_prompt, judge_template, api_key, config, verdict_run_id, run_datetime): debate_record
+            executor.submit(process_debate_record, debate_record, judge_template, response_format_prompt, judge_template, api_key, config, verdict_run_id, run_datetime, judge_model, debate_run_id): debate_record
             for i, debate_record in enumerate(debate_records)
         }
         
@@ -236,7 +250,7 @@ def main():
                     result = future.result()
                     completed += 1
                     is_correct = result['judge_verdict']['parsed']['answer'] == result['correct_idx'] if result['judge_verdict']['parsed']['answer'] is not None else None
-                    log_progress("completed", completed, len(debate_records), result['verdict_run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
+                    log_progress(f"{judge_model} completed", completed, len(debate_records), result['verdict_run_id'], result['record_id'], api_key, start_usage, is_correct=is_correct)
                 except Exception as e:
                     failed += 1
                     error_trace = traceback.format_exc()
@@ -246,22 +260,22 @@ def main():
                         'error_message': error_trace,
                         'verdict_run_id': verdict_run_id,
                         'record_id': error_record_id,
-                        'debate_run_id': DEBATE_RUN_ID,
+                        'debate_run_id': debate_run_id,
                         'datetime': run_datetime,
                         'config': config,
                         'question': debate_record['question'],
                         'options': debate_record['options'],
                         'correct_idx': debate_record['correct_idx']
                     }
-                    log_progress("failed", failed, len(debate_records), verdict_run_id, error_record_id, api_key, start_usage, error=error_trace)
+                    log_progress(f"{judge_model} failed", failed, len(debate_records), verdict_run_id, error_record_id, api_key, start_usage, error=error_trace)
                 
                 f.write(json.dumps(result) + '\n')
                 f.flush()
     
     duration = time.time() - start_time
     
-    results_path = f"results/verdicts/{verdict_run_id}.jsonl"
-    with open(results_path, 'r') as f:
+    results_path_str = f"results/verdicts/{verdict_run_id}.jsonl"
+    with open(results_path_str, 'r') as f:
         results = [json.loads(line) for line in f]
     null_count = sum(1 for r in results if r.get('success') and r.get('judge_verdict', {}).get('parsed', {}).get('answer') is None)
     
@@ -270,8 +284,10 @@ def main():
     print(f"Results: total {len(debate_records)}, success {completed}, error {failed}, null {null_count}")
     
     key_info_end = get_openrouter_key_info(api_key)
-    end_usage = key_info_end.get('data', {}).get('usage', 0)
+    end_usage = key_info_end.get('data', {}).get('usage', 0) if key_info_end else 0
     print(f"Cost: ${end_usage - start_usage:.6f} (Total: ${end_usage:.2f})")
+    
+    return verdict_run_id
 
 if __name__ == "__main__":
     main()

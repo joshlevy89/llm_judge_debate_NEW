@@ -1,22 +1,28 @@
-# JUDGE_MODEL = "openai/gpt-4o-mini"
-# JUDGE_MODEL = "x-ai/grok-4-fast"
-# JUDGE_MODEL = "openai/gpt-3.5-turbo"
-# JUDGE_MODEL = "qwen/qwen-2.5-7b-instruct"
-# JUDGE_MODEL = "qwen/qwen-2.5-72b-instruct"
-# JUDGE_MODEL = "qwen/qwen3-8b"
-# JUDGE_MODEL = "qwen/qwen3-14b"
-# JUDGE_MODEL = "qwen/qwen3-32b"
-# JUDGE_MODEL = "qwen/qwen3-235b-a22b"
+JUDGE_MODEL=None
+DEBATE_RUN_ID=None
+
+# JUDGE_MODEL = "google/gemma-3-12b-it"
+# JUDGE_MODEL = "google/gemma-3-27b-it"
 # JUDGE_MODEL = "meta-llama/llama-3-8b-instruct"
-JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"
+# JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"
 # JUDGE_MODEL = "meta-llama/llama-3.1-70b-instruct"
 # JUDGE_MODEL = "meta-llama/llama-3.1-405b-instruct"
 # JUDGE_MODEL = "meta-llama/llama-3.3-70b-instruct"
 # JUDGE_MODEL = "meta-llama/llama-4-scout"
 # JUDGE_MODEL = "meta-llama/llama-4-maverick"
+# JUDGE_MODEL = "openai/gpt-3.5-turbo"
+# JUDGE_MODEL = "openai/gpt-4o-mini"
+# JUDGE_MODEL = "qwen/qwen-2.5-7b-instruct"
+# JUDGE_MODEL = "qwen/qwen-2.5-72b-instruct"
+# JUDGE_MODEL = "qwen/qwen3-8b"
+# JUDGE_MODEL = "qwen/qwen3-14b"
+# JUDGE_MODEL = "qwen/qwen3-32b"
+# JUDGE_MODEL = "x-ai/grok-4-fast"
+
+
+
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-qwen-14b"
-# JUDGE_MODEL = "google/gemma-3-12b-it"
-# JUDGE_MODEL = "google/gemma-3-27b-it"
+
 # JUDGE_MODEL = "anthropic/claude-3.5-haiku"
 
 # JUDGE_MODEL = "deepseek/deepseek-r1-distill-llama-70b"
@@ -50,7 +56,7 @@ JUDGE_MODEL = "meta-llama/llama-3.1-8b-instruct"
 # DEBATE_RUN_ID = 'i3mvjzg' # # 4 way debate, all 198, grok-4-fast 10 turns, updated prompts
 # DEBATE_RUN_ID = "human"
 # DEBATE_RUN_ID = "egkyot4"  # gemini-3-pro on all 198 questions. expensive! (2 choice, sequential, 10 turuns, FULL DEBATER SCAFFOLD)
-DEBATE_RUN_ID = "yn1vu8h"  # grok-4-fast on all 198 questions (2 choice, sequential, 10 turuns, MINIMAL DEBATER SCAFFOLD)
+# DEBATE_RUN_ID = "yn1vu8h"  # grok-4-fast on all 198 questions (2 choice, sequential, 10 turuns, MINIMAL DEBATER SCAFFOLD)
 
 JUDGE_TEMPERATURE = 0.0
 JUDGE_REASONING_EFFORT = None

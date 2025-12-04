@@ -136,7 +136,7 @@ def log_progress(status_message, count, total, run_id, record_id, api_key, start
     current_usage = key_info.get('data', {}).get('usage', 0) if key_info else 0
     cost = current_usage - start_usage if current_usage else 0
     
-    extra = f" - Correct: {is_correct}" if is_correct is not None else ""
+    extra = f" - Correct: {is_correct}"
     error_msg = f" - Error: {str(error)[:100] if error else None}"
     print(f"{status_message} {count}/{total} - Run ID: {run_id} - Record ID: {record_id} - Cost: ${cost:.6f}{extra}{error_msg}")
     
