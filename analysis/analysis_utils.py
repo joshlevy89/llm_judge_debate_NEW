@@ -24,13 +24,18 @@ def extract_parsed_answer(df, type):
     return None
 
 
-def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_filters=None):
+def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_filters=None, specific_verdict_ids=None):
     results_dir = get_project_root() / 'results'
     if type == 'human':
         files = [str(results_dir / type / 'human_interactive_debate.jsonl')]
     else:
         files = glob.glob(str(results_dir / type / '*.jsonl'))
     dfs = []
+
+    if type == 'verdicts' and specific_verdict_ids is not None:
+        # filter to just those verdict ids
+        files = [f for f in files if any(vid in f for vid in specific_verdict_ids)]
+
     for file in files:
         if type == 'qa' and qa_filters is not None:
             records = []
@@ -87,7 +92,7 @@ def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_fil
     return pd.concat(aligned_dfs, ignore_index=True)
 
 
-def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_nulls=True, qa_filters=None):
+def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_nulls=True, qa_filters=None, specific_verdict_ids=None):
     if isinstance(types, str):
         types = [types]
     
@@ -119,7 +124,7 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
         if types == ['debates'] or types == ['human']:
             return debate_df
 
-    verdict_df = load_all_records_into_df('verdicts', filter_errors=filter_errors, filter_nulls=filter_nulls)
+    verdict_df = load_all_records_into_df('verdicts', filter_errors=filter_errors, filter_nulls=filter_nulls, specific_verdict_ids=specific_verdict_ids)
     
     if types == ['verdicts']:
         valid_verdicts = verdict_df[verdict_df['record_id_verdicts'].notna()]
@@ -186,6 +191,9 @@ def aggregate_acc(df):
         'judge_qa_n_correct': df['is_correct_qa_judge'].sum(),
         'verdict_n_correct': df['is_correct_verdict'].sum(),
         'n_total': len(df),
+        'n_verdict_not_null': df['is_correct_verdict'].notnull().sum(), 
+        'n_judge_qa_not_null': df['is_correct_qa_judge'].notnull().sum(), 
+        'n_debater_qa_not_null': df['is_correct_qa_debater'].notnull().sum(), 
         'pgr': (df['is_correct_verdict'].mean() - df['is_correct_qa_judge'].mean()) / (df['is_correct_qa_debater'].mean() - df['is_correct_qa_judge'].mean()),
         'gap': df['is_correct_qa_debater'].mean() - df['is_correct_qa_judge'].mean(),
         'gain':df['is_correct_verdict'].mean() - df['is_correct_qa_judge'].mean()
