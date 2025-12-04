@@ -1,13 +1,14 @@
-# DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-# DATASET_SPLIT = "train"
+DATASET_NAME = "Idavidrein/gpqa"
+DATASET_SUBSET = "gpqa_diamond"
+DATASET_SPLIT = "train"
+DATASET_FILTERS = None
 
-DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-DATASET_SUBSET = None
-DATASET_SPLIT = "test"
-DATASET_FILTERS = {
-    "category": "physics"
-}
+# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+# DATASET_SUBSET = None
+# DATASET_SPLIT = "test"
+# DATASET_FILTERS = {
+#     "category": "physics"
+# }
 
 # DATASET_NAME = "m-a-p/SuperGPQA"
 # DATASET_SUBSET = None
@@ -40,10 +41,10 @@ MODEL_NAME = "openai/gpt-4o-mini"
 TEMPERATURE = 0.5 # 1.0 # 0.0 # 0.5
 
 MAX_TOKENS = 15000
-REASONING_EFFORT = 'low'
+REASONING_EFFORT = None # 'low'
 REASONING_MAX_TOKENS = None
 
-NUM_QUESTIONS = 100
+NUM_QUESTIONS = 198
 RANDOM_SEED = 42 
 NUM_CHOICES = 2
 
