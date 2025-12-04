@@ -19,7 +19,7 @@ DATASET_FILTERS = None
 #     'difficulty': 'hard'
 # }
 
-MODEL_NAME = "openai/gpt-4o-mini" 
+# MODEL_NAME = "openai/gpt-4o-mini" 
 # MODEL_NAME = "x-ai/grok-4-fast" 
 # MODEL_NAME = "x-ai/grok-4.1-fast:free"
 # MODEL_NAME = "openai/gpt-3.5-turbo"
@@ -36,7 +36,7 @@ MODEL_NAME = "openai/gpt-4o-mini"
 
 # MODEL_NAME = "google/gemini-3-pro-preview"
 
-# MODEL_NAME = "meta-llama/llama-3.1-8b-instruct"
+MODEL_NAME = "meta-llama/llama-3.1-8b-instruct"
 
 TEMPERATURE = 0.5 # 1.0 # 0.0 # 0.5
 
