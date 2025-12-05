@@ -7,6 +7,11 @@ from typing import Literal
 
 def load_qa(filters=None):
     df = pd.read_json("results/qa/qa_results.jsonl", lines=True)
+
+    cutoff_date = pd.Timestamp('2025-11-06')
+    df['datetime'] = pd.to_datetime(df['datetime'])
+    df = df[df['datetime'] < cutoff_date]
+
     
     df = df[
         df['parsed_model_response'].apply(
