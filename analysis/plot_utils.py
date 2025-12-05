@@ -28,24 +28,28 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
         ratio2 = round(results_df.iloc[i]['judge_qa_acc'], 2)
         ratio3 = round(results_df.iloc[i]['verdict_acc'], 2)
         
-        n_total = results_df.iloc[i]['n_total']
+        # n_total = results_df.iloc[i]['n_total']
+        n_verdict_not_null =  results_df.iloc[i]['n_verdict_not_null']
+        n_judge_qa_not_null = results_df.iloc[i]['n_judge_qa_not_null']
+        n_debater_qa_not_null = results_df.iloc[i]['n_debater_qa_not_null']
+        
         judge_qa_correct = results_df.iloc[i]['judge_qa_n_correct']
         debater_qa_correct = results_df.iloc[i]['debater_qa_n_correct']
         verdict_correct = results_df.iloc[i]['verdict_n_correct']
 
 
         ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 0.02, 
-                f"{ratio1}\n{debater_qa_correct:.0f}/{n_total}", 
+                f"{ratio1}\n{debater_qa_correct:.0f}/{n_debater_qa_not_null}", 
                 ha='center', va='bottom', fontsize=9)
         ax.text(b2.get_x() + b2.get_width()/2, b2.get_height() + 0.02, 
-                f"{ratio2}\n{judge_qa_correct:.0f}/{n_total}", 
+                f"{ratio2}\n{judge_qa_correct:.0f}/{n_judge_qa_not_null}", 
                 ha='center', va='bottom', fontsize=9)
         ax.text(b3.get_x() + b3.get_width()/2, b3.get_height() + 0.02, 
-                f"{ratio3}\n{verdict_correct:.0f}/{n_total}", 
+                f"{ratio3}\n{verdict_correct:.0f}/{n_verdict_not_null}", 
                 ha='center', va='bottom', fontsize=9)
 
         # Test significance of gain (judge QA vs verdict)
-        z_stat, p_value = test_gain_significance(judge_qa_correct, n_total, verdict_correct, n_total)
+        z_stat, p_value = test_gain_significance(judge_qa_correct, n_judge_qa_not_null, verdict_correct, n_verdict_not_null)
 
         # Add significance bracket if p < 0.05
         if p_value < 0.05 and show_sig:
