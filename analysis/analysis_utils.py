@@ -194,6 +194,7 @@ def aggregate_acc(df):
         'n_verdict_not_null': df['is_correct_verdict'].notnull().sum(), 
         'n_judge_qa_not_null': df['is_correct_qa_judge'].notnull().sum(), 
         'n_debater_qa_not_null': df['is_correct_qa_debater'].notnull().sum(), 
+        'verdict_chose_idx_0': (df['parsed_answer_verdicts'] == 0).mean(),
         'pgr': (df['is_correct_verdict'].mean() - df['is_correct_qa_judge'].mean()) / (df['is_correct_qa_debater'].mean() - df['is_correct_qa_judge'].mean()),
         'gap': df['is_correct_qa_debater'].mean() - df['is_correct_qa_judge'].mean(),
         'gain':df['is_correct_verdict'].mean() - df['is_correct_qa_judge'].mean()

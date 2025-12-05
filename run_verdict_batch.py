@@ -14,47 +14,56 @@ from run_verdict import main
 from utils.shared_utils import generate_run_id
 from utils.llm_utils import get_openrouter_key_info
 
-# JUDGE_MODELS = [
-#     "google/gemma-3-12b-it",
-#     "google/gemma-3-27b-it",
-#     "meta-llama/llama-3-8b-instruct",
-#     "meta-llama/llama-3.1-8b-instruct",
-#     "meta-llama/llama-3.1-70b-instruct",
-#     "meta-llama/llama-3.1-405b-instruct",
-#     "meta-llama/llama-3.3-70b-instruct",
-#     "meta-llama/llama-4-scout",
-#     "meta-llama/llama-4-maverick",
-#     "openai/gpt-3.5-turbo",
-#     "openai/gpt-4o-mini",
-#     "qwen/qwen-2.5-7b-instruct",
-#     "qwen/qwen-2.5-72b-instruct",
-#     # "qwen/qwen3-8b",
-#     # "qwen/qwen3-14b",
-#     # "qwen/qwen3-32b",
-#     "x-ai/grok-4-fast",
-# ]
-
-
 JUDGE_MODELS = [
+    "google/gemma-3-12b-it",
     "google/gemma-3-27b-it",
+    "meta-llama/llama-3-8b-instruct",
     "meta-llama/llama-3.1-8b-instruct",
+    "meta-llama/llama-3.1-70b-instruct",
+    "meta-llama/llama-3.1-405b-instruct",
+    "meta-llama/llama-3.3-70b-instruct",
+    "meta-llama/llama-4-scout",
+    "meta-llama/llama-4-maverick",
+    "openai/gpt-3.5-turbo",
     "openai/gpt-4o-mini",
-#     "x-ai/grok-4-fast",
+    "qwen/qwen-2.5-7b-instruct",
+    "qwen/qwen-2.5-72b-instruct",
+    # "qwen/qwen3-8b",
+    # "qwen/qwen3-14b",
+    # "qwen/qwen3-32b",
+    "x-ai/grok-4-fast",
 ]
 
+
+# JUDGE_MODELS = [
+#     "google/gemma-3-27b-it",
+#     "meta-llama/llama-3.1-8b-instruct",
+#     "openai/gpt-4o-mini",
+# #     "x-ai/grok-4-fast",
+# ]
+
 # JUDGE_MODELS = [
 #     "meta-llama/llama-3.1-8b-instruct",
 # ]
 
-DEBATE_RUN_IDS = [
+# DEBATE_RUN_IDS = [
     # "egkyot4",
-    "ts9ga4y",
+    # "ts9ga4y",
     # "txd06z5",
     # "wcsck4w",
     # "yn1vu8h",
+# ]
+
+# The simultaneous run
+DEBATE_RUN_IDS = [
+    "sxmozhh"
 ]
 
-UPTO_TURNS = [0, 1, 2, 4, 6, 8, 10, 11, 12]
+# UPTO_TURNS = [0, 1, 2, 4, 6, 8, 10, 11, 12]
+# UPTO_TURNS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+# UPTO_TURNS = [1, 2, 3, 4]
+UPTO_TURNS = [2]
+
 
 RUNS_PER_COMBINATION = 1
 MAX_PARALLEL_PROCESSES = 6

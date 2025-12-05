@@ -231,8 +231,9 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
                 turn_responses = []
                 for debater_idx in range(len(debater_assignments)):
                     turn_response = run_debate_turn(turn, debater_assignments, q_data['correct_idx'], debater_idx, q_data['question'], debate_history, debater_prompts, api_key, run_id, record_id, NUM_TURNS, mock=MOCK_DEBATE_RESPONSE)
-                    turn_responses.append(turn_responses)
+                    turn_responses.append(turn_response)
                 debate_history.extend(turn_responses)
+                print(format_debate_history(debate_history[-1:], show_private=False, do_latex_formatting=True))
 
         # closing arguments
         turn += 1
@@ -263,7 +264,7 @@ def format_debate_history(history, show_private=False, upto_turns=None, do_latex
     # print(history)
     for entry in history:
         if 'success' not in entry or not entry['success']:
-            if entry['persona'] == 'debater':
+            if 'persona' not in entry or entry['persona'] == 'debater':
                 text += f"{'-'*80}\nDebater {entry['debater_idx']} (Turn: {num_debater_turns}) \n{'-'*80}\n"
                 num_debater_turns += 1
             elif entry['persona'] == 'judge':
