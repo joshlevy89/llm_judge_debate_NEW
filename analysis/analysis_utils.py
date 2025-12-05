@@ -54,14 +54,14 @@ def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_fil
             continue
 
         # for debugging purposes, add a few lines of code where only keep qa results from runs before 11-05-2025 (nov 5 2025)
-        if type == 'qa' and 'datetime' in df.columns:
-            print('before')
-            print(df.shape)
-            cutoff_date = pd.Timestamp('2025-11-06')
-            df['datetime'] = pd.to_datetime(df['datetime'])
-            df = df[df['datetime'] < cutoff_date]
-            print('after')
-            print(df.shape)
+        # if type == 'qa' and 'datetime' in df.columns:
+        #     print('before')
+        #     print(df.shape)
+        #     cutoff_date = pd.Timestamp('2025-11-07')
+        #     df['datetime'] = pd.to_datetime(df['datetime'])
+        #     df = df[df['datetime'] < cutoff_date]
+        #     print('after')
+        #     print(df.shape)
 
         config_df = pd.json_normalize(df['config'])
         config_df.columns = ['config_' + col for col in config_df.columns]
