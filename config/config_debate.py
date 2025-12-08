@@ -25,12 +25,12 @@ DATASET_FILTERS = None
 #     "category": "physics"
 # }
 
-DEBATER_TEMPERATURE = 0.0
+DEBATER_TEMPERATURE = 0.5
 
 MAX_OUTPUT_TOKENS = 15000
 DEBATER_REASONING_EFFORT = None # 'low' # None # 'high' # None # 'low'
 DEBATER_REASONING_MAX_TOKENS = None
-PROVIDE_INTERNAL_REASONING_TO_SELF = False # When True, the debater will have access to its own past thought processes
+PROVIDE_INTERNAL_REASONING_TO_SELF = True # When True, the debater will have access to its own past thought processes
 
 PRIVATE_SCRATCHPAD = False
 
@@ -42,14 +42,14 @@ LENIENT_PARSING_ARGUMENT = False
 NUM_QUESTIONS = 198
 RANDOM_SEED = 42
 NUM_CHOICES = 2
-NUM_TURNS = 1
+NUM_TURNS = 10
 
 MAX_THREADS = 5000
 
-# DEBATE_MODE = "sequential"
-DEBATE_MODE = "simultaneous"
+DEBATE_MODE = "sequential"
+# DEBATE_MODE = "simultaneous"
 
-INCLUDE_CLOSING_ARGUMENTS=False
+INCLUDE_CLOSING_ARGUMENTS=True
 
 # INTERACTIVE_JUDGE = "x-ai/grok-4-fast"
 # INTERACTIVE_JUDGE_TEMPERATURE = 0.3

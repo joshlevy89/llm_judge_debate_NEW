@@ -1,6 +1,8 @@
-# JUDGE_MODEL=None
-# DEBATE_RUN_ID=None
-JUDGE_MODEL = "openai/gpt-3.5-turbo"
+JUDGE_MODEL=None
+DEBATE_RUN_ID=None
+
+
+# JUDGE_MODEL = "openai/gpt-3.5-turbo"
 # DEBATE_RUN_ID="sxmozhh"  # new debate
 # DEBATE_RUN_ID="17zguxe" # old debate
 # DEBATE_RUN_ID = "qhdu7f9"  # new debate prompts but with temp=0, and provide private to False
@@ -14,7 +16,7 @@ JUDGE_MODEL = "openai/gpt-3.5-turbo"
 # Experiments with old debater promtps (fixing temp=0 and provide_itnernal=False...even though they probably don't matter)
 # DEBATE_RUN_ID="1mhgf9t"
 # DEBATE_RUN_ID="j2czezm"
-DEBATE_RUN_ID="i446l0v"
+# DEBATE_RUN_ID="i446l0v"
 
 
 # JUDGE_MODEL = "google/gemma-3-12b-it"
@@ -84,6 +86,6 @@ RERUN = False
 
 SUBSET_N = None # Only run the verdict for the first N debates
 SPECIFIC_RECORD_IDS = None # ['ezrn67r'] # List of specific record_ids to run the verdict for
-UPTO_TURNS = 2
+UPTO_TURNS = None
 
 MAX_THREADS = 200

@@ -1,3 +1,20 @@
+# response_format_prompt: |
+#   You may do some initial thinking about the question. You can use:
+#   <BEGIN THINKING>
+#   <your thinking here>
+#   </END THINKING>
+  
+#   After thinking, your final answer should be in the following format:
+#   <BEGIN FINAL ANSWER>
+#   Answer: X (where X is the index of the correct answer)
+#   Confidence: Y% (with a minimum of 100/N% and a maximum of 100%)
+#   Reasoning: <brief explanation>
+#   </END FINAL ANSWER>
+
+#   Your response MUST contain both the <BEGIN FINAL ANSWER> and </END FINAL ANSWER> tags.
+#   Be very careful not to omit the </END FINAL ANSWER> tag.
+
+
 response_format_prompt: |
   You may do some initial thinking about the question. You can use:
   <BEGIN THINKING>
