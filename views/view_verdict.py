@@ -42,7 +42,7 @@ def display_verdict(verdict_data, debate_data):
     print()
 
 
-def display_full_verdict(verdict_run_id, record_id, hide_private=False, view_qa=False, first_record=False):
+def display_full_verdict(verdict_run_id, record_id, hide_private=False, view_qa=False, first_record=False, show_templates=False):
     verdict_data = load_verdict_data(verdict_run_id, record_id, first_record=first_record)
     if not verdict_data:
         if first_record:
@@ -88,11 +88,13 @@ def main():
     parser.add_argument('--hide-private', action='store_true', help='Hide private reasoning')
     parser.add_argument('--view-qa', action='store_true', help='View the associated judge QA')
     parser.add_argument('--first-record', action='store_true', help='Use the first record instead of record_id')
+    parser.add_argument('--show-templates', action='store_true')
+
     args = parser.parse_args()
-    
+
     display_full_verdict(args.verdict_run_id, args.record_id, 
                         hide_private=args.hide_private, 
-                        view_qa=args.view_qa, first_record=args.first_record)
+                        view_qa=args.view_qa, first_record=args.first_record, show_templates=args.show_templates)
 
 if __name__ == '__main__':
     main()

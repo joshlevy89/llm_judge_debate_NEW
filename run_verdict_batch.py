@@ -14,25 +14,25 @@ from run_verdict import main
 from utils.shared_utils import generate_run_id
 from utils.llm_utils import get_openrouter_key_info
 
-JUDGE_MODELS = [
-    "google/gemma-3-12b-it",
-    "google/gemma-3-27b-it",
-    "meta-llama/llama-3-8b-instruct",
-    "meta-llama/llama-3.1-8b-instruct",
-    "meta-llama/llama-3.1-70b-instruct",
-    "meta-llama/llama-3.1-405b-instruct",
-    "meta-llama/llama-3.3-70b-instruct",
-    "meta-llama/llama-4-scout",
-    "meta-llama/llama-4-maverick",
-    "openai/gpt-3.5-turbo",
-    "openai/gpt-4o-mini",
-    "qwen/qwen-2.5-7b-instruct",
-    "qwen/qwen-2.5-72b-instruct",
-    # "qwen/qwen3-8b",
-    # "qwen/qwen3-14b",
-    # "qwen/qwen3-32b",
-    "x-ai/grok-4-fast",
-]
+# JUDGE_MODELS = [
+#     "google/gemma-3-12b-it",
+#     "google/gemma-3-27b-it",
+#     "meta-llama/llama-3-8b-instruct",
+#     "meta-llama/llama-3.1-8b-instruct",
+#     "meta-llama/llama-3.1-70b-instruct",
+#     "meta-llama/llama-3.1-405b-instruct",
+#     "meta-llama/llama-3.3-70b-instruct",
+#     "meta-llama/llama-4-scout",
+#     "meta-llama/llama-4-maverick",
+#     "openai/gpt-3.5-turbo",
+#     "openai/gpt-4o-mini",
+#     "qwen/qwen-2.5-7b-instruct",
+#     "qwen/qwen-2.5-72b-instruct",
+#     # "qwen/qwen3-8b",
+#     # "qwen/qwen3-14b",
+#     # "qwen/qwen3-32b",
+#     "x-ai/grok-4-fast",
+# ]
 
 
 # JUDGE_MODELS = [
@@ -42,9 +42,9 @@ JUDGE_MODELS = [
 # #     "x-ai/grok-4-fast",
 # ]
 
-# JUDGE_MODELS = [
-#     "meta-llama/llama-3.1-8b-instruct",
-# ]
+JUDGE_MODELS = [
+    "openai/gpt-3.5-turbo"
+]
 
 # DEBATE_RUN_IDS = [
     # "egkyot4",

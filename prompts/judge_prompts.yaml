@@ -1,26 +1,26 @@
-# judge_prompt_template: |
-#   Given the question and debate history, which of the N debaters do you think is correct?
-#   Think critically about what you know as well as which debater makes the most sense.
-  
-#   Question: {question}
-#   {options_text}
-
-#   Debate: {public_debate_history_text}
-
-#   {response_format_prompt}
-
-
 judge_prompt_template: |
   Given the question and debate history, which of the N debaters do you think is correct?
   Think critically about what you know as well as which debater makes the most sense.
-  ______________
+  
   Question: {question}
-  Options: {options_text}
+  {options_text}
 
   Debate: {public_debate_history_text}
-  _____________
 
   {response_format_prompt}
+
+
+# judge_prompt_template: |
+#   Given the question and debate history, which of the N debaters do you think is correct?
+#   Think critically about what you know as well as which debater makes the most sense.
+#   ______________
+#   Question: {question}
+#   Options: {options_text}
+
+#   Debate: {public_debate_history_text}
+#   _____________
+
+#   {response_format_prompt}
 
 
 # judge_prompt_template: |
