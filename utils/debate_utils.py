@@ -272,7 +272,7 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
                     turn_responses.append(turn_response)
                 debate_history.extend(turn_responses)
                 print(format_debate_history(debate_history[-1:], show_private=False, do_latex_formatting=True))
-
+        
         # closing arguments
         if INCLUDE_CLOSING_ARGUMENTS:
             turn += 1
@@ -284,6 +284,15 @@ def process_question(q_data, interactive_judge, api_key, config, run_id, run_dat
     except:
         question_success = False
         error_message = traceback.format_exc()
+        turn_response = {
+            'success': False,
+            'error_message': error_message,
+            'debater_idx': cur_debater_idx,
+            'persona': 'debater',
+            'raw_response': error_message,
+            'turn': turn
+        }
+        debate_history.append(turn_response)
 
     question_result['success'] = question_success
     question_result['error_message'] = error_message
