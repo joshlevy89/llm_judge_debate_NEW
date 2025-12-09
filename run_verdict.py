@@ -18,7 +18,7 @@ from config.config_verdict import (
     JUDGE_MODEL as CONFIG_JUDGE_MODEL, 
     JUDGE_TEMPERATURE, JUDGE_REASONING_EFFORT, JUDGE_REASONING_MAX_TOKENS, 
     MAX_OUTPUT_TOKENS, SKIP_QA, RERUN, SUBSET_N, SPECIFIC_RECORD_IDS, 
-    MAX_THREADS, UPTO_TURNS
+    MAX_THREADS, UPTO_TURNS, SKIP_DEBATER_QA
 )
 from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answer, log_progress
 from utils.debate_utils import format_debate_history
@@ -106,9 +106,12 @@ def check_and_run_missing_qa(debate_records, api_key, judge_model, max_threads):
         
         print(f"\nProcessing dataset: {dataset_key[0]}/{dataset_key[1]} ({len(records)} records)")
 
-        if judge_model == debater_model:
+        if judge_model == debater_model or SKIP_DEBATER_QA:
             tups = [(judge_model, JUDGE_TEMPERATURE)]
-            print("Since judge and debater model are the same, only running QA for missing idxs once")
+            if judge_model == debater_model:
+                print("Since judge and debater are same, only running for one.")
+            else:
+                print('Since SKIP_DEBATER_QA is true, only running QA for judge.')
         else:
             tups = [(judge_model, JUDGE_TEMPERATURE), (debater_model, debater_temperature)]
 

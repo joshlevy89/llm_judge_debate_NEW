@@ -14,37 +14,29 @@ from run_verdict import main
 from utils.shared_utils import generate_run_id
 from utils.llm_utils import get_openrouter_key_info
 
-# JUDGE_MODELS = [
-#     "google/gemma-3-12b-it",
-#     "google/gemma-3-27b-it",
-#     "meta-llama/llama-3-8b-instruct",
-#     "meta-llama/llama-3.1-8b-instruct",
-#     "meta-llama/llama-3.1-70b-instruct",
-#     "meta-llama/llama-3.1-405b-instruct",
-#     "meta-llama/llama-3.3-70b-instruct",
-#     "meta-llama/llama-4-scout",
-#     "meta-llama/llama-4-maverick",
-#     "openai/gpt-3.5-turbo",
-#     "openai/gpt-4o-mini",
-#     "qwen/qwen-2.5-7b-instruct",
-#     "qwen/qwen-2.5-72b-instruct",
+JUDGE_MODELS = [
+    "google/gemma-3-12b-it",
+    "google/gemma-3-27b-it",
+    "meta-llama/llama-3-8b-instruct",
+    "meta-llama/llama-3.1-8b-instruct",
+    "meta-llama/llama-3.1-70b-instruct",
+    "meta-llama/llama-3.1-405b-instruct",
+    "meta-llama/llama-3.3-70b-instruct",
+    "meta-llama/llama-4-scout",
+    "meta-llama/llama-4-maverick",
+    "openai/gpt-3.5-turbo",
+    "openai/gpt-4o-mini",
+    # "qwen/qwen-2.5-7b-instruct",
+    "qwen/qwen-2.5-72b-instruct",
 #     # "qwen/qwen3-8b",
 #     # "qwen/qwen3-14b",
 #     # "qwen/qwen3-32b",
-#     "x-ai/grok-4-fast",
-# ]
-
+#     # "x-ai/grok-4-fast",
+]
 
 # JUDGE_MODELS = [
-#     "google/gemma-3-27b-it",
-#     "meta-llama/llama-3.1-8b-instruct",
-#     "openai/gpt-4o-mini",
-# #     "x-ai/grok-4-fast",
+#     "x-ai/grok-4-fast",
 # ]
-
-JUDGE_MODELS = [
-    "openai/gpt-3.5-turbo"
-]
 
 # DEBATE_RUN_IDS = [
     # "egkyot4",
@@ -54,15 +46,23 @@ JUDGE_MODELS = [
     # "yn1vu8h",
 # ]
 
-# The simultaneous run
 DEBATE_RUN_IDS = [
-    "sxmozhh"
+    "0dbc00o"
 ]
 
 # UPTO_TURNS = [0, 1, 2, 4, 6, 8, 10, 11, 12]
 # UPTO_TURNS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 # UPTO_TURNS = [1, 2, 3, 4]
-UPTO_TURNS = [2]
+# UPTO_TURNS = [2]
+# UPTO_TURNS=None
+# UPTO_TURNS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+# UPTO_TURNS = [2, 8, 14, 20, 22]
+# UPTO_TURNS = [2, 4, 6, 8]
+# UPTO_TURNS = None
+# UPTO_TURNS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+UPTO_TURNS = None
+
+
 
 
 RUNS_PER_COMBINATION = 1
@@ -87,22 +87,24 @@ if __name__ == "__main__":
     
     group_run_id = generate_run_id()
     
+    upto_turns_list = [None] if UPTO_TURNS is None else UPTO_TURNS
+    
     combinations = [
         (model, debate_run_id, upto_turns, run_idx)
         for run_idx in range(RUNS_PER_COMBINATION)
-        for upto_turns in UPTO_TURNS
+        for upto_turns in upto_turns_list
         for debate_run_id in DEBATE_RUN_IDS
         for model in JUDGE_MODELS
     ]
     total_runs = len(combinations)
     
     print(f"Group Run ID: {group_run_id}")
-    print(f"Total combinations: {total_runs} ({len(JUDGE_MODELS)} models x {len(DEBATE_RUN_IDS)} debates x {len(UPTO_TURNS)} turn limits x {RUNS_PER_COMBINATION} reps)")
+    print(f"Total combinations: {total_runs} ({len(JUDGE_MODELS)} models x {len(DEBATE_RUN_IDS)} debates x {len(upto_turns_list)} turn limits x {RUNS_PER_COMBINATION} reps)")
     print(f"Parallelism: {MAX_PARALLEL_PROCESSES} processes, {MAX_THREADS_PER_COMBO} threads each")
     
     start_time = time.time()
     all_runs = []
-    model_progress = defaultdict(lambda: {"completed": 0, "total": len(DEBATE_RUN_IDS) * len(UPTO_TURNS) * RUNS_PER_COMBINATION})
+    model_progress = defaultdict(lambda: {"completed": 0, "total": len(DEBATE_RUN_IDS) * len(upto_turns_list) * RUNS_PER_COMBINATION})
     
     executor = ProcessPoolExecutor(max_workers=MAX_PARALLEL_PROCESSES)
     future_to_combo = {executor.submit(run_combination, combo): combo for combo in combinations}

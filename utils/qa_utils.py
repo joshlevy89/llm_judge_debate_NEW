@@ -12,6 +12,18 @@ from utils.llm_utils import call_openrouter, get_openrouter_key_info, parse_answ
 from utils.dataset_utils import select_questions_and_options, format_options
 from utils.shared_utils import generate_run_id, load_prompts
 
+
+def load_specific_question_idxs(specific_question_idxs):
+    if specific_question_idxs is None:
+        return None
+    if isinstance(specific_question_idxs, str) and specific_question_idxs.endswith('.txt'):
+        file_path = Path(specific_question_idxs)
+        if not file_path.is_absolute():
+            file_path = Path(__file__).parent.parent / file_path
+        with open(file_path, 'r') as f:
+            return [int(line.strip()) for line in f if line.strip()]
+    return specific_question_idxs
+
 def format_qa_prompt(question, options, num_choices):
     prompt_template = load_prompts('qa')
     response_format_prompt = load_prompts('shared')

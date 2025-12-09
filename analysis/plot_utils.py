@@ -130,17 +130,25 @@ def plot_verdict_difference(results_df, ax=None, type='gain'):
     return ax, bars
 
 
-def plot_results_by_name(results_df, field='config_judge_model_verdicts'):
+def plot_results_by_name(results_df, field='config_judge_model_verdicts', plot_gap_and_gain=True):
     if field == 'config_judge_model_verdicts':
         sorted_names, _ = sort_and_color_by_model_family(results_df['name'].unique())
         results_df = results_df.set_index('name').loc[sorted_names].reset_index()
-    fig, ax = plt.subplots(3, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [3, 1, 1]}, sharex=True)
-    ax_acc, _ = plot_accuracy_bars(results_df, ax=ax[0])
-    ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right')
-    ax_gain, _ = plot_verdict_difference(results_df, ax=ax[1])
-    ax_gap, _ = plot_verdict_difference(results_df, ax=ax[2], type='gap')
-    plt.tight_layout()
-    return plt, ax_gain, ax_gap
+    if plot_gap_and_gain:
+        fig, ax = plt.subplots(3, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [3, 1, 1]}, sharex=True)
+        ax_acc, _ = plot_accuracy_bars(results_df, ax=ax[0])
+        ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right')
+        ax_gain, _ = plot_verdict_difference(results_df, ax=ax[1])
+        ax_gap, _ = plot_verdict_difference(results_df, ax=ax[2], type='gap')
+        plt.tight_layout()
+        return ax_acc, ax_gain, ax_gap
+    else:
+        # fig, ax = plt.subplots(1, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [1]}, sharex=True)
+        ax_acc, _ = plot_accuracy_bars(results_df, ax=None)
+        ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right')
+        ax_acc.set_ylim([0, 1.05])
+        plt.tight_layout()
+        return ax_acc
 
 
 def plot_gain_scatter(results_df, n_choices, over: Literal["gap", "judge_qa"] = 'gap'):

@@ -44,12 +44,12 @@ def main():
     dataset = dataset.add_column('_original_idx', range(len(dataset)))
     
     if DATASET_FILTERS:
-        dataset = dataset.filter(lambda x: all(x.get(k) == v for k, v in DATASET_FILTERS.items()))
+        dataset = dataset.filter(lambda x: all(x.get(k) in v if isinstance(v, list) else x.get(k) == v for k, v in DATASET_FILTERS.items()))
         print(f"Filtered dataset to {len(dataset)} questions")
     
     if SPECIFIC_IDXS is not None:
-        print(f"Using specific question indices (referring to original dataset): {SPECIFIC_IDXS}")
-        question_idxs = SPECIFIC_IDXS
+        question_idxs = load_specific_idxs(SPECIFIC_IDXS)
+        print(f"Using specific question indices (referring to original dataset): {len(question_idxs)} indices")
     else:
         print(f"Selecting {NUM_QUESTIONS} questions with seed {RANDOM_SEED}")
         rng = random.Random(RANDOM_SEED)

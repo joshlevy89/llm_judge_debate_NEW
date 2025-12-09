@@ -1,11 +1,24 @@
 import re
 import yaml
+from pathlib import Path
 from config.config_debate import *
 from utils.llm_utils import call_openrouter
 from utils.dataset_utils import format_options
 import time
 from utils.shared_utils import generate_run_id, format_latex, load_prompts
 import traceback
+
+
+def load_specific_idxs(specific_idxs):
+    if specific_idxs is None:
+        return None
+    if isinstance(specific_idxs, str) and specific_idxs.endswith('.txt'):
+        file_path = Path(specific_idxs)
+        if not file_path.is_absolute():
+            file_path = Path(__file__).parent.parent / file_path
+        with open(file_path, 'r') as f:
+            return [int(line.strip()) for line in f if line.strip()]
+    return specific_idxs
 
 
 def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, question, history, debater_prompts, closing_argument, num_turns):
@@ -66,21 +79,21 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
 
 
 # def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, question, history, debater_prompts, closing_argument, num_turns):
-# """
-# Code for getting the old debater prompt
-# """
+#     """
+#     Code for getting the old debater prompt
+#     """
 #     opponents_text = "\nYour opponents are arguing for:\n"
 #     for i, ans in enumerate(all_answers):
 #         if i != debater_idx:
 #             opponents_text += f"- Debater {i}: {ans}\n"
-    
+
 #     public_debate_history_text = format_debate_history(history, show_private=False) if history else "\nThis is the first turn of the debate."
-    
+
 #     # private_reasoning_text = private_reasoning_prompt.format(
 #     #     public_argument_word_limit=PUBLIC_ARGUMENT_WORD_LIMIT,
 #     #     private_reasoning_word_limit=PRIVATE_REASONING_WORD_LIMIT
 #     # ) if PRIVATE_SCRATCHPAD else ""
-    
+
 #     return debater_prompts['debater_prompt_template'].format(
 #         role=debater_idx,
 #         question=question,

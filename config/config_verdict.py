@@ -83,6 +83,10 @@ MAX_OUTPUT_TOKENS = 5000
 
 SKIP_QA = True
 RERUN = False
+SKIP_DEBATER_QA = True
+
+# SKIP_QA = False
+# RERUN = True
 
 SUBSET_N = None # Only run the verdict for the first N debates
 SPECIFIC_RECORD_IDS = None # ['ezrn67r'] # List of specific record_ids to run the verdict for

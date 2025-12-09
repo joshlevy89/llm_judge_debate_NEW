@@ -1,14 +1,15 @@
-DATASET_NAME = "Idavidrein/gpqa"
-DATASET_SUBSET = "gpqa_diamond"
-DATASET_SPLIT = "train"
-DATASET_FILTERS = None
+# DATASET_NAME = "Idavidrein/gpqa"
+# DATASET_SUBSET = "gpqa_diamond"
+# DATASET_SPLIT = "train"
+# DATASET_FILTERS = None
 
-# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-# DATASET_SUBSET = None
-# DATASET_SPLIT = "test"
+DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+DATASET_SUBSET = None
+DATASET_SPLIT = "test"
 # DATASET_FILTERS = {
 #     "category": "physics"
 # }
+DATASET_FILTERS = None
 
 # DATASET_NAME = "m-a-p/SuperGPQA"
 # DATASET_SUBSET = None
@@ -20,7 +21,7 @@ DATASET_FILTERS = None
 # }
 
 # MODEL_NAME = "openai/gpt-4o-mini" 
-# MODEL_NAME = "x-ai/grok-4-fast" 
+MODEL_NAME = "x-ai/grok-4-fast" 
 # MODEL_NAME = "x-ai/grok-4.1-fast:free"
 # MODEL_NAME = "openai/gpt-3.5-turbo"
 # MODEL_NAME = "qwen/qwen-2.5-7b-instruct" 
@@ -36,7 +37,7 @@ DATASET_FILTERS = None
 
 # MODEL_NAME = "google/gemini-3-pro-preview"
 
-MODEL_NAME = "meta-llama/llama-3.1-8b-instruct"
+# MODEL_NAME = "meta-llama/llama-3.1-8b-instruct"
 
 TEMPERATURE = 0.5 # 1.0 # 0.0 # 0.5
 
@@ -44,13 +45,13 @@ MAX_TOKENS = 15000
 REASONING_EFFORT = None # 'low'
 REASONING_MAX_TOKENS = None
 
-NUM_QUESTIONS = 198
+NUM_QUESTIONS = 1400
 RANDOM_SEED = 42 
 NUM_CHOICES = 2
 
 RERUN = True  # will rerun a question/choice set even if it already exists
 LENIENT_PARSING = False
 
-SPECIFIC_QUESTION_IDXS = None # [183] # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]
+SPECIFIC_QUESTION_IDXS = "results/question_idxs_mmlu_stratified_100_per_category.txt" # [183] # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]
 
-MAX_THREADS = 2000
+MAX_THREADS = 200
