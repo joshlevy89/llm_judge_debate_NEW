@@ -51,13 +51,13 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
 
         ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 0.02, 
                 f"{ratio1}", 
-                ha='center', va='bottom', fontsize=12)
+                ha='center', va='bottom', fontsize=14)
         ax.text(b2.get_x() + b2.get_width()/2, b2.get_height() + 0.02, 
                 f"{ratio2}", 
-                ha='center', va='bottom', fontsize=12)
+                ha='center', va='bottom', fontsize=14)
         ax.text(b3.get_x() + b3.get_width()/2, b3.get_height() + 0.02, 
                 f"{ratio3}", 
-                ha='center', va='bottom', fontsize=12)
+                ha='center', va='bottom', fontsize=14)
 
 
         # Test significance of gain (judge QA vs verdict)
@@ -91,14 +91,14 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
             ax.text((b2_x + b3_x)/2, bracket_y + 0.01, sig_text,
                    ha='center', va='bottom', fontsize=10, fontweight='bold')
 
-    ax.set_ylabel('Accuracy', fontsize=14)
+    ax.set_ylabel('Accuracy', fontsize=16)
     # Adjust ylim to accommodate significance brackets
     current_ylim = ax.get_ylim()
     ax.set_ylim(0, max(current_ylim[1], 1.25))  # Ensure space for brackets above text
     ax.legend(fontsize=12, bbox_to_anchor=(1.0, 1), loc='upper left')
     ax.grid(axis='y', alpha=0.3)
     ax.set_xticks(x)
-    ax.tick_params(axis='y', labelsize=12)
+    ax.tick_params(axis='y', labelsize=16)
 
     return ax, plt
 
@@ -160,7 +160,7 @@ def plot_results_by_name(results_df, field='config_judge_model_verdicts', plot_g
         # fig, ax = plt.subplots(1, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [1]}, sharex=True)
         ax_acc, _ = plot_accuracy_bars(results_df, ax=None, show_sig=True)
         # ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right', fontsize=14)
-        ax_acc.set_xticklabels(results_df['name'], fontsize=14)
+        ax_acc.set_xticklabels(results_df['name'], fontsize=16)
         ax_acc.set_ylim([0, 1.05])
         plt.tight_layout()
         return ax_acc
