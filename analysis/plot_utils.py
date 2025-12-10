@@ -14,7 +14,8 @@ import numpy as np
 
 def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
     if ax is None:
-        fig, ax = plt.subplots(figsize=(15, 4))
+        # fig, ax = plt.subplots(figsize=(15, 4))
+        fig, ax = plt.subplots(figsize=(15, 6))
     
     x = np.arange(len(results_df))
     width = 0.25
@@ -38,31 +39,31 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
         verdict_correct = results_df.iloc[i]['verdict_n_correct']
 
 
-        # ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 0.02, 
-        #         f"{ratio1}\n{debater_qa_correct:.0f}/{n_debater_qa_not_null}", 
-        #         ha='center', va='bottom', fontsize=9)
-        # ax.text(b2.get_x() + b2.get_width()/2, b2.get_height() + 0.02, 
-        #         f"{ratio2}\n{judge_qa_correct:.0f}/{n_judge_qa_not_null}", 
-        #         ha='center', va='bottom', fontsize=9)
-        # ax.text(b3.get_x() + b3.get_width()/2, b3.get_height() + 0.02, 
-        #         f"{ratio3}\n{verdict_correct:.0f}/{n_verdict_not_null}", 
-        #         ha='center', va='bottom', fontsize=9)
-
-
         ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 0.02, 
-                f"{ratio1}", 
-                ha='center', va='bottom', fontsize=14)
+                f"{ratio1}\n{debater_qa_correct:.0f}/{n_debater_qa_not_null}", 
+                ha='center', va='bottom', fontsize=9)
         ax.text(b2.get_x() + b2.get_width()/2, b2.get_height() + 0.02, 
-                f"{ratio2}", 
-                ha='center', va='bottom', fontsize=14)
+                f"{ratio2}\n{judge_qa_correct:.0f}/{n_judge_qa_not_null}", 
+                ha='center', va='bottom', fontsize=9)
         ax.text(b3.get_x() + b3.get_width()/2, b3.get_height() + 0.02, 
-                f"{ratio3}", 
-                ha='center', va='bottom', fontsize=14)
+                f"{ratio3}\n{verdict_correct:.0f}/{n_verdict_not_null}", 
+                ha='center', va='bottom', fontsize=9)
+
+
+        # ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 0.02, 
+        #         f"{ratio1}", 
+        #         ha='center', va='bottom', fontsize=14)
+        # ax.text(b2.get_x() + b2.get_width()/2, b2.get_height() + 0.02, 
+        #         f"{ratio2}", 
+        #         ha='center', va='bottom', fontsize=14)
+        # ax.text(b3.get_x() + b3.get_width()/2, b3.get_height() + 0.02, 
+        #         f"{ratio3}", 
+        #         ha='center', va='bottom', fontsize=14)
 
 
         # Test significance of gain (judge QA vs verdict)
         z_stat, p_value = test_gain_significance(judge_qa_correct, n_judge_qa_not_null, verdict_correct, n_verdict_not_null)
-        print(p_value)
+        # print(p_value)
         # Add significance bracket if p < 0.05
         if p_value < 0.05 and show_sig:
             # Get bar positions and heights
@@ -159,8 +160,8 @@ def plot_results_by_name(results_df, field='config_judge_model_verdicts', plot_g
     else:
         # fig, ax = plt.subplots(1, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [1]}, sharex=True)
         ax_acc, _ = plot_accuracy_bars(results_df, ax=None, show_sig=True)
-        # ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right', fontsize=14)
-        ax_acc.set_xticklabels(results_df['name'], fontsize=16)
+        ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right', fontsize=14)
+        # ax_acc.set_xticklabels(results_df['name'], fontsize=16)
         ax_acc.set_ylim([0, 1.05])
         plt.tight_layout()
         return ax_acc
