@@ -12,7 +12,7 @@ def find_and_display_qa(row):
             'options': row['options'],
             'config': {'model_name': row['config']['judge_model']}
         }
-        qa_df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False, qa_filters=qa_filters)
+        qa_df = prepare_df(types=['qa'], qa_filters=qa_filters)
         qa_judge_row = qa_df.iloc[0]
         # qa_debater_row = qa_df[(qa_df['question_qa_judge'] == row['question_qa_debater']) & (qa_df['options_str_qa_judge'] == row['options_str_qa_debater']) & (qa_df['config_model_name_qa_judge'] == row['config_debater_model_debates'])].iloc[0]
         
@@ -27,7 +27,7 @@ def find_and_display_qa(row):
             'options': row['options'],
             'config': {'model_name': row['config']['debater_model']}
         }
-        qa_df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False, qa_filters=qa_filters)
+        qa_df = prepare_df(types=['qa'], qa_filters=qa_filters)
         qa_judge_row = qa_df.iloc[0]
         # qa_debater_row = qa_df[(qa_df['question_qa_judge'] == row['question_qa_debater']) & (qa_df['options_str_qa_judge'] == row['options_str_qa_debater']) & (qa_df['config_model_name_qa_judge'] == row['config_debater_model_debates'])].iloc[0]
         

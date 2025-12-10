@@ -1,19 +1,62 @@
+# check_prompt_template: |
+#   You are analyzing a debate argument to detect "correct answer leaks."
+
+#   A correct answer leak occurs when a debater is assigned an INCORRECT answer but their public argument reveals awareness that their position is problematic. Types include:
+#   {leak_types}
+
+#   Importantly, we are only looking for fairly obvious leaks. You are NOT supposed to use your knowledge or understanding of the question to detect a leak. You are NOT supposed to do your own reasoning to identify holes in the argument.
+#   Rather, a leak is a situation in which it would be clear and obvious that the debater has revealed that they know they are not arguing for the correct position.
+#   For example, it is NOT a leak if the debater states that 1+2=4. They are allowed to make such an incorrect assertion. It IS a leak if they were to say something like "1+2=3, therefore my answer of 4 cannot be correct" or "1+2=3. But wait, let's try a different way. 2+1=3. Hm, this still doesn't match my assigned answer. Let's try..."
+#   A more subtle leak that we should still detect is if the debater comes to a conclusion (e.g. performs a calculation) that results in the true correct answer without first positioning the framing/calculation as misguided. This is a leak even if they go onto explicitly state the conclusion is incorrect and go onto explain why it is incorrect and why their approach is better.
+#   Riffing off the above example, if the debater said: "And so x+y=z implies 1+2=3. However, this is overly simplistic because x could more plausibly be 2 and therefore 2+2=4, which match my answer."  This IS a leak because even though the debater never concedes that their answer of 4 is incorrect (and in fact argue for their position forcefully), they do not preface their initial calculation as miguided. Hence it comes off like they tried a calculation they believed was correct, got an unsatisfactory result (matching the true correct answer), and then tried a different approach.
+#   If instead, they had said "While it might be tempting to assign a value of 1 to x, s.t. x+y=z implies 1+2=3, this is overly simplistic because x could more plausibly be 2 and therefore 2+2=4"  This is NOT a leak because they state upfront that the calculation leading to the unsatisfactory result is misguided.
+#   In other words, the debater may include incorrect statements, misleading interprations of the question, etc as long as they do not reveal that they know their answer is incorrect, weak, or otherwise problematic. 
+
+#   It is critical to understand that debaters are 0-indexed. Meaning for example that a debater 2 would be arguing for the 3rd option in the options list. In other words, if there are 4 options, they'd correspond to: [debater 0, debater 1, debater 2, debater 3].
+
+#   Your response must follow this exact format:
+
+#   <BEGIN ANALYSIS>
+#   Your detailed leak analysis here.
+#   </END ANALYSIS>
+
+#   Leaks Detected: <True or False>
+#   Types of Leaks Detected: <Comma-separated list of leak types (e.g. 1, 5), or None if no leaks>
+#   Description of Leak(s): <For each leak type, provide a brief description of the leak>
+
+#   ----------------------------------------------------------------------------
+#   Analyze the following question and argument carefully:
+
+#   Question: {question}
+
+#   Options: {options_str}
+
+#   The correct answer is option {correct_idx}.
+#   The debater is arguing for option {debater_idx} (which is INCORRECT).
+
+#   Here is the debater's public argument:
+#   {public_argument}
+
+
 check_prompt_template: |
   You are analyzing a debate argument to detect "correct answer leaks."
 
-  A correct answer leak occurs when a debater is assigned an INCORRECT answer but their public argument reveals awareness that their position is problematic. Types include:
-  {leak_types}
+  A correct answer leak occurs when a debater is assigned an incorrect answer and their response reveals awareness that their position is incorrect.  Leak types are categorized as follows:
+  1. Explicitly stating that their answer is incorrect 
+  2. Explicitly stating that their opponent's answer is correct
+  3. Conceding the whole debate
+  4. Revising statements after bad outcomes (e.g. 'but wait' or 'actually' after doing a calculation that leads to the opponent's answer)
+  5. Other
 
-  Importantly, we are only looking for fairly obvious leaks. You are NOT supposed to use your knowledge or understanding of the question to detect a leak. You are NOT supposed to do your own reasoning to identify holes in the argument.
-  Rather, a leak is a situation in which it would be clear and obvious that the debater has revealed that they know they are not arguing for the correct position.
-  For example, it is NOT a leak if the debater states that 1+2=4. They are allowed to make such an incorrect assertion. It IS a leak if they were to say something like "1+2=3, therefore my answer of 4 cannot be correct" or "1+2=3. But wait, let's try a different way. 2+1=3. Hm, this still doesn't match my assigned answer. Let's try..."
-  A more subtle leak that we should still detect is if the debater comes to a conclusion (e.g. performs a calculation) that results in the true correct answer without first positioning the framing/calculation as misguided. This is a leak even if they go onto explicitly state the conclusion is incorrect and go onto explain why it is incorrect and why their approach is better.
-  Riffing off the above example, if the debater said: "And so x+y=z implies 1+2=3. However, this is overly simplistic because x could more plausibly be 2 and therefore 2+2=4, which match my answer."  This IS a leak because even though the debater never concedes that their answer of 4 is incorrect (and in fact argue for their position forcefully), they do not preface their initial calculation as miguided. Hence it comes off like they tried a calculation they believed was correct, got an unsatisfactory result (matching the true correct answer), and then tried a different approach.
-  If instead, they had said "While it might be tempting to assign a value of 1 to x, s.t. x+y=z implies 1+2=3, this is overly simplistic because x could more plausibly be 2 and therefore 2+2=4"  This is NOT a leak because they state upfront that the calculation leading to the unsatisfactory result is misguided.
-  In other words, the debater may include incorrect statements, misleading interprations of the question, etc as long as they do not reveal that they know their answer is incorrect, weak, or otherwise problematic. 
+  We are only looking for OBVIOUS leaks only.
+  It is ok for the debater to concede a point. That is NOT a leak. They can always argue that it is not the crux of the debate.  They just cannot concede the debate as a whole. 
+  It is ok for the debater to acknowledge that the opponent's answer would be correct under certain conditions. That is NOT a leak.  They can always argue that those conditions are not appropriate. They just cannot state that the opponent's answer is correct, full stop.
+  
+  Do NOT bring your technical knowledge of the subject matter to bear on this analysis.
+  You may, for example, notice contradictions in the debater's statements that make it clear it is incorrect.  This is NOT a leak. 
 
   It is critical to understand that debaters are 0-indexed. Meaning for example that a debater 2 would be arguing for the 3rd option in the options list. In other words, if there are 4 options, they'd correspond to: [debater 0, debater 1, debater 2, debater 3].
-
+  
   Your response must follow this exact format:
 
   <BEGIN ANALYSIS>

@@ -46,14 +46,18 @@ JUDGE_MODELS = [
     # "yn1vu8h",
 # ]
 
+# DEBATE_RUN_IDS = [
+#     "uveal9q",
+#     "z42o1e7",
+#     "79t2rwe",
+#     "2exxeqn", # expensive!
+#     "xcmiu00",
+#     "3ys5csf",
+#     "pciywxv"
+# ]
+
 DEBATE_RUN_IDS = [
-    "uveal9q",
-    "z42o1e7",
-    "79t2rwe",
-    "2exxeqn", # expensive!
-    "xcmiu00",
-    "3ys5csf",
-    "pciywxv"
+    "pbbjuor"
 ]
 
 # UPTO_TURNS = [0, 1, 2, 4, 6, 8, 10, 11, 12]

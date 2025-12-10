@@ -22,7 +22,7 @@ def display_qa(row, display_question=True):
 
     if display_question:
         print(f"{'='*80}")
-        print(f"Run: {row['run_id_qa']} | Record: {row['record_id_qa']} | Question Idx: {row['question_idx_qa']}")
+        print(f"Run: {row['run_id_qa']} | Record: {row['record_id_qa']} | Question Idx: {row['question_idx_qa']} | Datetime: {row['datetime_qa']}")
         print(f"{'='*80}\nQuestion\n{'='*80}")
         print(f"{row['question_qa']}\n")
         print(f"Options: {row['options_qa']}")
@@ -47,7 +47,8 @@ def main():
     parser.add_argument('record_id')
     args = parser.parse_args()
     
-    df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False)
+    # df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False)
+    df = prepare_df(types=['qa'])
     
     if args.run_id:
         df = df[df['run_id_qa'] == args.run_id]

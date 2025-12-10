@@ -12,14 +12,14 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dotenv import load_dotenv
 import config.config_check as config_check
-from config.config_check import MODEL_NAME, TEMPERATURE, MAX_THREADS, LEAK_TYPES
+from config.config_check import MODEL_NAME, TEMPERATURE, MAX_THREADS #, LEAK_TYPES
 from utils.llm_utils import call_openrouter, get_openrouter_key_info
 from utils.shared_utils import extract_config, load_prompts
 
 load_dotenv()
 
-def format_leak_types():
-    return '\n'.join(f"- Type {k}: {v}" for k, v in LEAK_TYPES.items())
+# def format_leak_types():
+#     return '\n'.join(f"- Type {k}: {v}" for k, v in LEAK_TYPES.items())
 
 def format_options(options):
     return '\n'.join(f"{i}. {opt}" for i, opt in enumerate(options))
@@ -44,7 +44,7 @@ def process_turn(record_item, turn_data, prompt_template, api_key):
     
     try:
         prompt = prompt_template.format(
-            leak_types=format_leak_types(),
+            # leak_types=format_leak_types(),
             question=record_item['question'],
             options_str=format_options(record_item['options']),
             correct_idx=record_item['correct_idx'],
@@ -105,7 +105,7 @@ def process_record(record_item, prompt_template, api_key):
             'options': options,
             'correct_idx': correct_idx,
             'prompt_template': prompt_template,
-            'leak_types': LEAK_TYPES,
+            # 'leak_types': LEAK_TYPES,
             'config': config,
             'has_leak': debate_has_leak,
             'turns': turns_results
@@ -119,7 +119,7 @@ def process_record(record_item, prompt_template, api_key):
             'options': options,
             'correct_idx': correct_idx,
             'prompt_template': prompt_template,
-            'leak_types': LEAK_TYPES,
+            # 'leak_types': LEAK_TYPES,
             'config': config,
             'error': str(e),
             'turns': turns_results
@@ -180,7 +180,8 @@ def check_debate_for_leaks(run_id, api_key, record_ids=None, filter_turn=None, f
             if debater_idx == correct_idx:
                 continue
             
-            public_argument = turn.get('parsed_response', {}).get('public_argument', '')
+            # public_argument = turn.get('parsed_response', {}).get('public_argument', '')
+            public_argument = turn['raw_response']
             if not public_argument:
                 continue
             

@@ -120,6 +120,7 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
         if filter_nulls:
             qa_df = qa_df[qa_df['parsed_answer_qa'].notnull()]
 
+
         if types == ['qa']:
             return qa_df
 

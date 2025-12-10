@@ -331,7 +331,7 @@ def format_debate_history(history, show_private=False, upto_turns=None, do_latex
                 text += f"[BEGIN PRIVATE SCRATCHPAD REASONING]\n{entry['parsed_response']['private_reasoning']}\n[END PRIVATE SCRATCHPAD REASONING]\n\n"
             
             if 'parsed_response' in entry and 'public_argument' in entry['parsed_response']:
-                text += f"[BEGIN PUBLIC ARGUMENT]\n{entry['parsed_response']['public_argument']}\n[END PUBLIC ARGUMENT]\n"
+                text += f"[BEGIN PUBLIsC ARGUMENT]\n{entry['parsed_response']['public_argument']}\n[END PUBLIC ARGUMENT]\n"
 
             num_debater_turns += 1
         elif entry['persona'] == 'judge':
