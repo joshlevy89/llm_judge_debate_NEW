@@ -159,13 +159,13 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
         debater_qa_df.columns = [col + '_debater' for col in qa_df.columns]
 
         all_df = verdict_and_debate_df.merge(
-            judge_qa_df[['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge', 'parsed_answer_qa_judge', 'is_correct_qa_judge', 'success_qa_judge']], 
+            judge_qa_df[['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge', 'parsed_answer_qa_judge', 'is_correct_qa_judge', 'success_qa_judge', 'run_id_qa_judge', 'record_id_qa_judge']], 
             left_on=['question_verdicts', 'options_str_verdicts', 'config_judge_model_verdicts'], 
             right_on=['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge'],
             how='left')
 
         all_df = all_df.merge(
-            debater_qa_df[['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'is_correct_qa_debater', 'success_qa_debater']], 
+            debater_qa_df[['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'is_correct_qa_debater', 'success_qa_debater', 'run_id_qa_debater', 'record_id_qa_debater']], 
             left_on=['question_verdicts', 'options_str_verdicts', 'config_debater_model_debates'], 
             right_on=['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater'],
             how='left',

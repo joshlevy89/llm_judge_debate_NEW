@@ -43,7 +43,7 @@ def main():
         record_ids = args.record_ids
     elif args.sample or args.qa_result is not None or args.verdict_result is not None:
         if args.qa_result is not None or args.verdict_result is not None:
-            df = prepare_df(['verdicts', 'debates', 'qa'])
+            df = prepare_df(['verdicts', 'debates', 'qa'], specific_verdict_ids=[args.verdict_run_id])
             df = df[df['verdict_run_id_verdicts'] == args.verdict_run_id]
             if args.qa_result is not None: df = df[df['is_correct_qa_judge'] == args.qa_result]
             if args.verdict_result is not None: df = df[df['is_correct_verdict'] == args.verdict_result]
