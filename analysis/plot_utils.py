@@ -14,7 +14,7 @@ import numpy as np
 
 def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
     if ax is None:
-        fig, ax = plt.subplots(figsize=(20, 6))
+        fig, ax = plt.subplots(figsize=(15, 4))
     
     x = np.arange(len(results_df))
     width = 0.25
@@ -38,19 +38,31 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
         verdict_correct = results_df.iloc[i]['verdict_n_correct']
 
 
+        # ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 0.02, 
+        #         f"{ratio1}\n{debater_qa_correct:.0f}/{n_debater_qa_not_null}", 
+        #         ha='center', va='bottom', fontsize=9)
+        # ax.text(b2.get_x() + b2.get_width()/2, b2.get_height() + 0.02, 
+        #         f"{ratio2}\n{judge_qa_correct:.0f}/{n_judge_qa_not_null}", 
+        #         ha='center', va='bottom', fontsize=9)
+        # ax.text(b3.get_x() + b3.get_width()/2, b3.get_height() + 0.02, 
+        #         f"{ratio3}\n{verdict_correct:.0f}/{n_verdict_not_null}", 
+        #         ha='center', va='bottom', fontsize=9)
+
+
         ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 0.02, 
-                f"{ratio1}\n{debater_qa_correct:.0f}/{n_debater_qa_not_null}", 
-                ha='center', va='bottom', fontsize=9)
+                f"{ratio1}", 
+                ha='center', va='bottom', fontsize=12)
         ax.text(b2.get_x() + b2.get_width()/2, b2.get_height() + 0.02, 
-                f"{ratio2}\n{judge_qa_correct:.0f}/{n_judge_qa_not_null}", 
-                ha='center', va='bottom', fontsize=9)
+                f"{ratio2}", 
+                ha='center', va='bottom', fontsize=12)
         ax.text(b3.get_x() + b3.get_width()/2, b3.get_height() + 0.02, 
-                f"{ratio3}\n{verdict_correct:.0f}/{n_verdict_not_null}", 
-                ha='center', va='bottom', fontsize=9)
+                f"{ratio3}", 
+                ha='center', va='bottom', fontsize=12)
+
 
         # Test significance of gain (judge QA vs verdict)
         z_stat, p_value = test_gain_significance(judge_qa_correct, n_judge_qa_not_null, verdict_correct, n_verdict_not_null)
-
+        print(p_value)
         # Add significance bracket if p < 0.05
         if p_value < 0.05 and show_sig:
             # Get bar positions and heights
@@ -59,12 +71,12 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
             max_height = max(b2.get_height(), b3.get_height())
 
             # Draw horizontal line connecting the bars
-            bracket_y = max_height + 0.30  # Position above the taller bar and text labels
+            bracket_y = max_height + 0.15  # Position above the taller bar and text labels
             ax.plot([b2_x, b3_x], [bracket_y, bracket_y], 'k-', linewidth=1.5)
 
             # Add vertical ticks at ends
-            ax.plot([b2_x, b2_x], [max_height + 0.20, bracket_y], 'k-', linewidth=1.5)
-            ax.plot([b3_x, b3_x], [max_height + 0.20, bracket_y], 'k-', linewidth=1.5)
+            ax.plot([b2_x, b2_x], [max_height + 0.1, bracket_y], 'k-', linewidth=1.5)
+            ax.plot([b3_x, b3_x], [max_height + 0.1, bracket_y], 'k-', linewidth=1.5)
 
             # Add p-value text
             if p_value < 0.001:
@@ -79,13 +91,15 @@ def plot_accuracy_bars(results_df, ax=None, color_map=None, show_sig=False):
             ax.text((b2_x + b3_x)/2, bracket_y + 0.01, sig_text,
                    ha='center', va='bottom', fontsize=10, fontweight='bold')
 
-    ax.set_ylabel('Accuracy')
+    ax.set_ylabel('Accuracy', fontsize=14)
     # Adjust ylim to accommodate significance brackets
     current_ylim = ax.get_ylim()
     ax.set_ylim(0, max(current_ylim[1], 1.25))  # Ensure space for brackets above text
-    ax.legend()
+    ax.legend(fontsize=12, bbox_to_anchor=(1.0, 1), loc='upper left')
     ax.grid(axis='y', alpha=0.3)
     ax.set_xticks(x)
+    ax.tick_params(axis='y', labelsize=12)
+
     return ax, plt
 
 
@@ -137,15 +151,16 @@ def plot_results_by_name(results_df, field='config_judge_model_verdicts', plot_g
     if plot_gap_and_gain:
         fig, ax = plt.subplots(3, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [3, 1, 1]}, sharex=True)
         ax_acc, _ = plot_accuracy_bars(results_df, ax=ax[0])
-        ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right')
+        ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right', fontsize=14)
         ax_gain, _ = plot_verdict_difference(results_df, ax=ax[1])
         ax_gap, _ = plot_verdict_difference(results_df, ax=ax[2], type='gap')
         plt.tight_layout()
         return ax_acc, ax_gain, ax_gap
     else:
         # fig, ax = plt.subplots(1, 1, figsize=(20, 8), gridspec_kw={'height_ratios': [1]}, sharex=True)
-        ax_acc, _ = plot_accuracy_bars(results_df, ax=None)
-        ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right')
+        ax_acc, _ = plot_accuracy_bars(results_df, ax=None, show_sig=True)
+        # ax_acc.set_xticklabels(results_df['name'], rotation=45, ha='right', fontsize=14)
+        ax_acc.set_xticklabels(results_df['name'], fontsize=14)
         ax_acc.set_ylim([0, 1.05])
         plt.tight_layout()
         return ax_acc
@@ -428,16 +443,15 @@ def cdf(data, labels=None, ax=None, xlim_percentiles=None, xlim_ranges=None, xli
 
     for idx, d in enumerate(data):
         d = np.sort(d.dropna().copy())
-        ax.plot(d, np.arange(1, len(d) + 1) / len(d), label=f"{labels[idx]} (n={len(d)})")
+        ax.plot(d, np.arange(1, len(d) + 1) / len(d), label=f"{labels[idx]} (n={len(d)})", linewidth=2)
         # plot dash line at .5 on y axis
-        ax.axhline(y=0.5, color='gray', linestyle='--')
+        # ax.axhline(y=0.5, color='gray', linestyle='--')
 
         
     # d1 = np.sort(d1.dropna().copy())
     # d2 = np.sort(d2.dropna().copy())
     # ax.plot(d1, np.arange(1, len(d1) + 1) / len(d1), label=f'Success (n={len(d1)})')
     # ax.plot(d2, np.arange(1, len(d2) + 1) / len(d2), label=f'Failure (n={len(d2)})')
-    ax.set_ylabel('Empirical CDF')
     ax.grid(True, alpha=0.3)
     
     if xlim_percentiles:
@@ -450,5 +464,7 @@ def cdf(data, labels=None, ax=None, xlim_percentiles=None, xlim_ranges=None, xli
         combined = np.concatenate(data)
         combined_median = np.percentile(combined, 50)
         ax.set_xlim(combined_median + xlim_window_from_median[0], combined_median + xlim_window_from_median[1])
+    
+    ax.tick_params(axis='x', labelsize=12)
     
     return ax
