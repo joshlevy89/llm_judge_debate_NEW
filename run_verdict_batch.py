@@ -14,29 +14,29 @@ from run_verdict import main
 from utils.shared_utils import generate_run_id
 from utils.llm_utils import get_openrouter_key_info
 
-# JUDGE_MODELS = [
-#     "google/gemma-3-12b-it",
-#     "google/gemma-3-27b-it",
-#     "meta-llama/llama-3-8b-instruct",
-#     "meta-llama/llama-3.1-8b-instruct",
-#     "meta-llama/llama-3.1-70b-instruct",
-#     "meta-llama/llama-3.1-405b-instruct",
-#     "meta-llama/llama-3.3-70b-instruct",
-#     "meta-llama/llama-4-scout",
-#     "meta-llama/llama-4-maverick",
-#     "openai/gpt-3.5-turbo",
-#     "openai/gpt-4o-mini",
-#     # "qwen/qwen-2.5-7b-instruct",
-#     "qwen/qwen-2.5-72b-instruct",
-# #     # "qwen/qwen3-8b",
-# #     # "qwen/qwen3-14b",
-# #     # "qwen/qwen3-32b",
-# #     # "x-ai/grok-4-fast",
-# ]
-
 JUDGE_MODELS = [
+    "google/gemma-3-12b-it",
+    "google/gemma-3-27b-it",
+    "meta-llama/llama-3-8b-instruct",
+    "meta-llama/llama-3.1-8b-instruct",
     "meta-llama/llama-3.1-70b-instruct",
+    "meta-llama/llama-3.1-405b-instruct",
+    "meta-llama/llama-3.3-70b-instruct",
+    "meta-llama/llama-4-scout",
+    "meta-llama/llama-4-maverick",
+    "openai/gpt-3.5-turbo",
+    "openai/gpt-4o-mini",
+    # "qwen/qwen-2.5-7b-instruct",
+    "qwen/qwen-2.5-72b-instruct",
+#     # "qwen/qwen3-8b",
+#     # "qwen/qwen3-14b",
+#     # "qwen/qwen3-32b",
+    "x-ai/grok-4-fast"
 ]
+
+# JUDGE_MODELS = [
+#     "meta-llama/llama-3.1-70b-instruct",
+# ]
 
 # DEBATE_RUN_IDS = [
     # "egkyot4",
@@ -46,18 +46,38 @@ JUDGE_MODELS = [
     # "yn1vu8h",
 # ]
 
+# Correct/Incorrect Separate
 # DEBATE_RUN_IDS = [
 #     "uveal9q",
 #     "z42o1e7",
 #     "79t2rwe",
-#     "2exxeqn", # expensive!
+#     "2exxeqn", 
 #     "xcmiu00",
 #     "3ys5csf",
-#     "pciywxv"
+#     "pciywxv",
+#     "jd2pimv",
+#     "tmw84j1",
+#     "j8yuy7y",
+#     "irkdtwb",
+#     "5j3px30",
+#     "82qitta"
 # ]
 
+# Correct/Incorrect Unified
 DEBATE_RUN_IDS = [
-    "6ych69j"
+    "xkf7xq8",
+    "v7begbr", 
+    "w090ux1",
+    "urogtuu",
+    "bo445vx",
+    "r9gy9fb",
+    "0aosp95",
+    "ixhso69",
+    "xw16wq0",
+    "ew7glib",
+    "50jo2tz",
+    "t5yhta6",
+    "rcumaex"
 ]
 
 # UPTO_TURNS = [0, 1, 2, 4, 6, 8, 10, 11, 12]
@@ -70,11 +90,8 @@ DEBATE_RUN_IDS = [
 # UPTO_TURNS = [2, 4, 6, 8]
 # UPTO_TURNS = None
 # UPTO_TURNS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-# UPTO_TURNS = None
-UPTO_TURNS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-
-
+UPTO_TURNS = None
+# UPTO_TURNS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
 RUNS_PER_COMBINATION = 1

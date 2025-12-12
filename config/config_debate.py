@@ -1,8 +1,5 @@
-DEBATER_MODEL = "x-ai/grok-4-fast"
-# DEBATER_MODEL = "google/gemini-3-pro-preview"
+# DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "openai/gpt-4o-mini"
-# DEBATER_MODEL = "openai/o3"
-# DEBATER_MODEL = "openai/gpt-oss-120b"
 # DEBATER_MODEL = "meta-llama/llama-3-8b-instruct"
 # DEBATER_MODEL = "meta-llama/llama-3.1-8b-instruct"
 # DEBATER_MODEL = "meta-llama/llama-3.1-70b-instruct"
@@ -10,11 +7,19 @@ DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "meta-llama/llama-3.3-70b-instruct"
 # DEBATER_MODEL = "meta-llama/llama-4-scout"
 # DEBATER_MODEL = "meta-llama/llama-4-maverick"
+# DEBATER_MODEL = "openai/gpt-3.5-turbo"
+# DEBATER_MODEL = "google/gemma-3-12b-it"
+# DEBATER_MODEL = "google/gemma-3-27b-it"
+DEBATER_MODEL = "qwen/qwen-2.5-72b-instruct"
+
 # DEBATER_MODEL = "deepseek/deepseek-v3.2-exp"
+# DEBATER_MODEL = "google/gemini-3-pro-preview"
+# DEBATER_MODEL = "openai/o3"
+# DEBATER_MODEL = "openai/gpt-oss-120b"
 
 DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-DATASET_SUBSET = "gpqa_main"
+DATASET_SUBSET = "gpqa_diamond"
+# DATASET_SUBSET = "gpqa_main"
 DATASET_SPLIT = "train"
 DATASET_FILTERS = None
 
@@ -37,7 +42,9 @@ DATASET_FILTERS = None
 
 DEBATER_TEMPERATURE = 0.5
 
-MAX_OUTPUT_TOKENS = 15000
+# MAX_OUTPUT_TOKENS = 15000
+MAX_OUTPUT_TOKENS = 5000
+
 DEBATER_REASONING_EFFORT = None # 'low' # 'high' # 'low' # None # 'high' # None # 'low'
 DEBATER_REASONING_MAX_TOKENS = None
 PROVIDE_INTERNAL_REASONING_TO_SELF = True # When True, the debater will have access to its own past thought processes
@@ -49,12 +56,12 @@ PRIVATE_REASONING_WORD_LIMIT = None
 
 LENIENT_PARSING_ARGUMENT = False
 
-NUM_QUESTIONS = 448
+NUM_QUESTIONS = 198
 RANDOM_SEED = 42
 NUM_CHOICES = 2
 NUM_TURNS = 6  
 
-MAX_THREADS = 200
+MAX_THREADS = 40
 
 DEBATE_MODE = "sequential"
 # DEBATE_MODE = "simultaneous"
