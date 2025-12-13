@@ -209,7 +209,7 @@ def aggregate_acc(df):
         'pgr': (df['is_correct_verdict'].mean() - df['is_correct_qa_judge'].mean()) / (df['is_correct_qa_debater'].mean() - df['is_correct_qa_judge'].mean()),
         'gap': df['is_correct_qa_debater'].mean() - df['is_correct_qa_judge'].mean(),
         'gain':df['is_correct_verdict'].mean() - df['is_correct_qa_judge'].mean()
-    })
+})
 
     return result
 
