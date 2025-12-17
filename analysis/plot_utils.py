@@ -434,7 +434,7 @@ def cdf(data, labels=None, ax=None, xlim_percentiles=None, xlim_ranges=None, xli
     if not labels:
         labels = [str(i) for i in range(len(data))]
 
-    colors = ['red', 'green']
+    colors = ['green', 'red']
     for idx, d in enumerate(data):
         d = np.sort(d.dropna().copy())
         color = colors[idx % len(colors)]
