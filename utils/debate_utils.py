@@ -55,7 +55,9 @@ def get_debater_prompt(correct_idx, debater_idx, my_answer, all_answers, questio
     closing_argument_text = debater_prompts['closing_argument'] if closing_argument else ""
 
     if len(all_answers) > 2:
-        multiple_opponents_comment = debater_prompts['multiple_opponents_comment']
+        # TODO: Commenting out the multiple opponents comment as long as I'm using the base prompt
+        # multiple_opponents_comment = debater_prompts['multiple_opponents_comment']
+        multiple_opponents_comment = ""
     else:
         multiple_opponents_comment = ""
     

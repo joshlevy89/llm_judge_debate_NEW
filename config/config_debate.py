@@ -1,4 +1,4 @@
-# DEBATER_MODEL = "x-ai/grok-4-fast"
+DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "openai/gpt-4o-mini"
 # DEBATER_MODEL = "meta-llama/llama-3-8b-instruct"
 # DEBATER_MODEL = "meta-llama/llama-3.1-8b-instruct"
@@ -10,7 +10,7 @@
 # DEBATER_MODEL = "openai/gpt-3.5-turbo"
 # DEBATER_MODEL = "google/gemma-3-12b-it"
 # DEBATER_MODEL = "google/gemma-3-27b-it"
-DEBATER_MODEL = "qwen/qwen-2.5-72b-instruct"
+# DEBATER_MODEL = "qwen/qwen-2.5-72b-instruct"
 
 # DEBATER_MODEL = "deepseek/deepseek-v3.2-exp"
 # DEBATER_MODEL = "google/gemini-3-pro-preview"
@@ -58,8 +58,10 @@ LENIENT_PARSING_ARGUMENT = False
 
 NUM_QUESTIONS = 198
 RANDOM_SEED = 42
-NUM_CHOICES = 2
-NUM_TURNS = 6  
+NUM_CHOICES = 2  
+NUM_TURNS = 6
+# NUM_CHOICES = 4  # SETTING TO 4 (set back to 2)
+# NUM_TURNS = 12 # SETTING TO 12 (set back to 6)
 
 MAX_THREADS = 200
 
