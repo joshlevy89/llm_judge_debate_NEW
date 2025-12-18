@@ -20,18 +20,18 @@ JUDGE_MODELS = [
     "meta-llama/llama-3-8b-instruct",
     "meta-llama/llama-3.1-8b-instruct",
     "meta-llama/llama-3.1-70b-instruct",
-    "meta-llama/llama-3.1-405b-instruct",
+#     "meta-llama/llama-3.1-405b-instruct",
     "meta-llama/llama-3.3-70b-instruct",
-    "meta-llama/llama-4-scout",
-    "meta-llama/llama-4-maverick",
+#    # "meta-llama/llama-4-scout",
+    # "meta-llama/llama-4-maverick",
     "openai/gpt-3.5-turbo",
     "openai/gpt-4o-mini",
-    # "qwen/qwen-2.5-7b-instruct",
+#     # "qwen/qwen-2.5-7b-instruct",
     "qwen/qwen-2.5-72b-instruct",
-#     # "qwen/qwen3-8b",
-#     # "qwen/qwen3-14b",
-#     # "qwen/qwen3-32b",
-    "x-ai/grok-4-fast"
+# #     # "qwen/qwen3-8b",
+# #     # "qwen/qwen3-14b",
+# #     # "qwen/qwen3-32b",
+    # "x-ai/grok-4-fast"
 ]
 
 # JUDGE_MODELS = [
@@ -63,22 +63,56 @@ JUDGE_MODELS = [
 #     "82qitta"
 # ]
 
-# Correct/Incorrect Unified
+# # Correct/Incorrect Unified
+# DEBATE_RUN_IDS = [
+#     "xkf7xq8",
+#     "v7begbr", 
+#     "w090ux1",
+#     "urogtuu",
+#     "bo445vx",
+#     "r9gy9fb",
+#     "0aosp95",
+#     "ixhso69",
+#     "xw16wq0",
+#     "ew7glib",
+#     "50jo2tz",
+#     "t5yhta6",
+#     "rcumaex"
+# ]
+
+# Full debate game prompt
+# DEBATE_RUN_IDS = [
+#     "kslugpt",
+#     "17oqpyr"
+# ]
+
+# # Re-run Correct/Incorrect Seprate. No additional incorrect instruction, 5000 max tokesn (to match with unified expts)
+# DEBATE_RUN_IDS = [
+#     "6ml9p40",
+#     "bb135u1",
+#     "cq6uv60",
+#     "wodg938",
+#     "5xgygge",
+#     "nyp6zox",
+#     "17gvtal",
+#     "98lcqkb",
+#     "oiu5nrx",
+#     "fxwtewy",
+#     "dq6exks"
+# ]
+
+# TEST A COUPLE OF JUDGE PROMPTS WITH TWO DIFFERENT DEBATES
+# MINIMAL DEBATE PROMPT (UNIFIED)
 DEBATE_RUN_IDS = [
     "xkf7xq8",
-    "v7begbr", 
-    "w090ux1",
-    "urogtuu",
-    "bo445vx",
-    "r9gy9fb",
-    "0aosp95",
-    "ixhso69",
-    "xw16wq0",
-    "ew7glib",
-    "50jo2tz",
-    "t5yhta6",
-    "rcumaex"
+    "xw16wq0"
 ]
+
+# FULL DEBATE PROMPT (UNIFIED)
+# DEBATE_RUN_IDS = [
+#     "kslugpt",
+#     "17oqpyr"
+# ]
 
 # UPTO_TURNS = [0, 1, 2, 4, 6, 8, 10, 11, 12]
 # UPTO_TURNS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]

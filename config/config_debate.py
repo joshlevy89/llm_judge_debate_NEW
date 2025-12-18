@@ -61,7 +61,7 @@ RANDOM_SEED = 42
 NUM_CHOICES = 2
 NUM_TURNS = 6  
 
-MAX_THREADS = 40
+MAX_THREADS = 200
 
 DEBATE_MODE = "sequential"
 # DEBATE_MODE = "simultaneous"
