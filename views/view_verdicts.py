@@ -31,7 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description='View multiple verdict results')
     parser.add_argument('verdict_run_id', help='Verdict run ID')
     # parser.add_argument('record_ids', nargs='*', help='Record IDs to display (optional)')
-    # parser.add_argument('--sample', '-n', type=int, help='Randomly sample N records if no record_ids provided')
+    parser.add_argument('--sample', '-n', type=int, help='Randomly sample N records if no record_ids provided')
     # parser.add_argument('--seed', type=int, default=42, help='Random seed for sampling (default: 42)')
     parser.add_argument('--judge-qa-result', type=lambda x: x.lower() == 'true', help='Filter by judge QA correctness (True/False)')
     parser.add_argument('--verdict-result', type=lambda x: x.lower() == 'true', help='Filter by verdict correctness (True/False)')
@@ -41,7 +41,14 @@ def main():
     
     df = prepare_df(['verdicts', 'debates', 'qa'], specific_verdict_ids=[args.verdict_run_id])
 
-    df = df[(df['is_correct_verdict'] == args.verdict_result) & (df['is_correct_qa_judge'] == args.judge_qa_result)]
+    print(df.shape)
+    if args.verdict_result is not None:
+        df = df[df['is_correct_verdict'] == args.verdict_result]
+    if args.judge_qa_result is not None:
+        df = df[df['is_correct_qa_judge'] == args.judge_qa_result]
+    
+    if args.sample:
+        df = df.sample(n=min(args.sample, len(df)))
     record_ids = df['record_id_verdicts']
 
     print(f'Matched {df.shape[0]} records...')

@@ -1,15 +1,15 @@
-# DATASET_NAME = "Idavidrein/gpqa"
-# DATASET_SUBSET = "gpqa_diamond"
-# DATASET_SPLIT = "train"
-# DATASET_FILTERS = None
+DATASET_NAME = "Idavidrein/gpqa"
+DATASET_SUBSET = "gpqa_diamond"
+DATASET_SPLIT = "train"
+DATASET_FILTERS = None
 
-DATASET_NAME = "TIGER-Lab/MMLU-Pro"
-DATASET_SUBSET = None
-DATASET_SPLIT = "test"
+# DATASET_NAME = "TIGER-Lab/MMLU-Pro"
+# DATASET_SUBSET = None
+# DATASET_SPLIT = "test"
 # DATASET_FILTERS = {
 #     "category": "physics"
 # }
-DATASET_FILTERS = None
+# DATASET_FILTERS = None
 
 # DATASET_NAME = "m-a-p/SuperGPQA"
 # DATASET_SUBSET = None
@@ -20,6 +20,7 @@ DATASET_FILTERS = None
 #     'difficulty': 'hard'
 # }
 
+# MODEL_NAME = "meta-llama/llama-4-maverick"
 # MODEL_NAME = "openai/gpt-4o-mini" 
 MODEL_NAME = "x-ai/grok-4-fast" 
 # MODEL_NAME = "x-ai/grok-4.1-fast:free"
@@ -41,17 +42,18 @@ MODEL_NAME = "x-ai/grok-4-fast"
 
 TEMPERATURE = 0.5 # 1.0 # 0.0 # 0.5
 
-MAX_TOKENS = 15000
+MAX_TOKENS = 5000
 REASONING_EFFORT = None # 'low'
 REASONING_MAX_TOKENS = None
 
-NUM_QUESTIONS = 1400
+NUM_QUESTIONS = 198
 RANDOM_SEED = 42 
-NUM_CHOICES = 2
+NUM_CHOICES = 4
 
-RERUN = True  # will rerun a question/choice set even if it already exists
+RERUN = False  # will rerun a question/choice set even if it already exists
 LENIENT_PARSING = False
 
-SPECIFIC_QUESTION_IDXS = "results/question_idxs_mmlu_stratified_100_per_category.txt" # [183] # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]
+# SPECIFIC_QUESTION_IDXS = "results/question_idxs_mmlu_stratified_100_per_category.txt" # [183] # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]
+SPECIFIC_QUESTION_IDXS = None
 
 MAX_THREADS = 200
