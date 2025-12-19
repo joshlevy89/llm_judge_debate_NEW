@@ -115,9 +115,17 @@ JUDGE_MODELS = [
 # ]
 
 # 4 choice debates
+# DEBATE_RUN_IDS = [
+#     "325gyi4",
+#     "1dqmkq1"
+# ]
+
+# gemini-3-preview with various reasoning levels
 DEBATE_RUN_IDS = [
-    "325gyi4",
-    "1dqmkq1"
+    "yia5f29",
+    "5nmmk66",
+    "6ecqcm2",
+    "qa81720"
 ]
 
 

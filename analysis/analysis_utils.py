@@ -102,7 +102,16 @@ def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_fil
     return pd.concat(aligned_dfs, ignore_index=True)
 
 
-def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_nulls=True, qa_filters=None, specific_verdict_ids=None):
+def has_any_failed_turn(debate_history):
+    if not isinstance(debate_history, list):
+        return False
+    for turn in debate_history:
+        if not isinstance(turn, dict):
+            print(f"Non-dict turn found: {type(turn)} - {repr(turn)[:200]}")
+    return any(isinstance(turn, dict) and turn.get('success') == False for turn in debate_history)
+
+
+def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_nulls=True, qa_filters=None, specific_verdict_ids=None, filter_debates_with_any_failed_turns=False):
     if isinstance(types, str):
         types = [types]
     
@@ -132,6 +141,10 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
         else:
             debate_df = load_all_records_into_df('debates', filter_errors=filter_errors, filter_nulls=filter_nulls)
             debate_df = debate_df.drop(columns=['config_judge_model_debates']) # this field shouldn't exist
+        
+        if filter_debates_with_any_failed_turns and 'debate_history_debates' in debate_df.columns:
+            debate_df = debate_df[~debate_df['debate_history_debates'].apply(has_any_failed_turn)]
+        
         if types == ['debates'] or types == ['human']:
             return debate_df
 

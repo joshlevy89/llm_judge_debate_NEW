@@ -1,4 +1,6 @@
-DEBATER_MODEL = "x-ai/grok-4-fast"
+# DEBATER_MODEL = "x-ai/grok-4-fast"
+# DEBATER_MODEL = "x-ai/grok-4.1-fast"
+DEBATER_MODEL = "google/gemini-3-flash-preview"
 # DEBATER_MODEL = "openai/gpt-4o-mini"
 # DEBATER_MODEL = "meta-llama/llama-3-8b-instruct"
 # DEBATER_MODEL = "meta-llama/llama-3.1-8b-instruct"
@@ -42,11 +44,11 @@ DATASET_FILTERS = None
 
 DEBATER_TEMPERATURE = 0.5
 
-# MAX_OUTPUT_TOKENS = 15000
-MAX_OUTPUT_TOKENS = 5000
+MAX_OUTPUT_TOKENS = 10000
+# MAX_OUTPUT_TOKENS = 5000
 
-DEBATER_REASONING_EFFORT = None # 'low' # 'high' # 'low' # None # 'high' # None # 'low'
-DEBATER_REASONING_MAX_TOKENS = None
+DEBATER_REASONING_EFFORT = None # 'medium' # 'low' # 'high' # 'low' # None # 'high' # None # 'low'
+DEBATER_REASONING_MAX_TOKENS = 5000
 PROVIDE_INTERNAL_REASONING_TO_SELF = True # When True, the debater will have access to its own past thought processes
 
 PRIVATE_SCRATCHPAD = False
@@ -56,10 +58,10 @@ PRIVATE_REASONING_WORD_LIMIT = None
 
 LENIENT_PARSING_ARGUMENT = False
 
-NUM_QUESTIONS = 198
+NUM_QUESTIONS = 198 
 RANDOM_SEED = 42
 NUM_CHOICES = 2  
-NUM_TURNS = 6
+NUM_TURNS = 6 
 # NUM_CHOICES = 4  # SETTING TO 4 (set back to 2)
 # NUM_TURNS = 12 # SETTING TO 12 (set back to 6)
 
@@ -68,7 +70,7 @@ MAX_THREADS = 200
 DEBATE_MODE = "sequential"
 # DEBATE_MODE = "simultaneous"
 
-INCLUDE_CLOSING_ARGUMENTS=True
+INCLUDE_CLOSING_ARGUMENTS=True 
 
 # INTERACTIVE_JUDGE = "x-ai/grok-4-fast"
 # INTERACTIVE_JUDGE_TEMPERATURE = 0.3
