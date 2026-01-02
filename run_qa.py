@@ -50,7 +50,7 @@ def main():
         unfiltered_dataset = load_dataset(DATASET_NAME, DATASET_SUBSET)[DATASET_SPLIT]
         existing_qa = get_existing_qa_keys(results_path)
         questions_data = select_questions_and_options(DATASET_NAME, unfiltered_dataset, len(question_idxs), NUM_CHOICES, None, question_idxs)
-        question_idxs = filter_existing_questions(question_idxs, questions_data, MODEL_NAME, NUM_CHOICES, existing_qa)
+        question_idxs = filter_existing_questions(question_idxs, questions_data, MODEL_NAME, NUM_CHOICES, existing_qa, REASONING_EFFORT, REASONING_MAX_TOKENS)
         
         if not question_idxs:
             print("All questions already have QA results. Nothing to run. Can set RERUN = True to rerun.")

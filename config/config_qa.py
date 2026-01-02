@@ -20,9 +20,10 @@ DATASET_FILTERS = None
 #     'difficulty': 'hard'
 # }
 
+MODEL_NAME = "google/gemini-3-flash-preview"
 # MODEL_NAME = "meta-llama/llama-4-maverick"
 # MODEL_NAME = "openai/gpt-4o-mini" 
-MODEL_NAME = "x-ai/grok-4-fast" 
+# MODEL_NAME = "x-ai/grok-4-fast" 
 # MODEL_NAME = "x-ai/grok-4.1-fast:free"
 # MODEL_NAME = "openai/gpt-3.5-turbo"
 # MODEL_NAME = "qwen/qwen-2.5-7b-instruct" 
@@ -42,13 +43,13 @@ MODEL_NAME = "x-ai/grok-4-fast"
 
 TEMPERATURE = 0.5 # 1.0 # 0.0 # 0.5
 
-MAX_TOKENS = 5000
+MAX_TOKENS = 10000
 REASONING_EFFORT = None # 'low'
 REASONING_MAX_TOKENS = None
 
 NUM_QUESTIONS = 198
 RANDOM_SEED = 42 
-NUM_CHOICES = 4
+NUM_CHOICES = 2
 
 RERUN = False  # will rerun a question/choice set even if it already exists
 LENIENT_PARSING = False

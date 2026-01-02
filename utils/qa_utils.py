@@ -63,20 +63,23 @@ def get_existing_qa_keys(qa_results_path):
         for line in f:
             record = json.loads(line)
             if record.get('success') is not False:
+                config = record.get('config', {})
                 key = (
                     record.get('question_idx'),
-                    record.get('config', {}).get('model_name'),
-                    normalize_whitespace(record.get('prompt', ''))  # added because one time i added a white line and this made all the qa re-run
+                    config.get('model_name'),
+                    normalize_whitespace(record.get('prompt', '')),
+                    config.get('reasoning_effort'),
+                    config.get('reasoning_max_tokens')
                 )
                 existing_qa.add(key)
     return existing_qa
 
-def filter_existing_questions(question_idxs, questions_data, model_name, num_choices, existing_qa):
+def filter_existing_questions(question_idxs, questions_data, model_name, num_choices, existing_qa, reasoning_effort=None, reasoning_max_tokens=None):
     missing_idxs = []
     
     for idx, q_data in zip(question_idxs, questions_data):
         prompt = format_qa_prompt(q_data['question'], q_data['options'], num_choices)
-        key = (idx, model_name, normalize_whitespace(prompt))
+        key = (idx, model_name, normalize_whitespace(prompt), reasoning_effort, reasoning_max_tokens)
         
         if key not in existing_qa:
             missing_idxs.append(idx)

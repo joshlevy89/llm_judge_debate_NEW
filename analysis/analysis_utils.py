@@ -105,9 +105,6 @@ def load_all_records_into_df(type, filter_errors=True, filter_nulls=True, qa_fil
 def has_any_failed_turn(debate_history):
     if not isinstance(debate_history, list):
         return False
-    for turn in debate_history:
-        if not isinstance(turn, dict):
-            print(f"Non-dict turn found: {type(turn)} - {repr(turn)[:200]}")
     return any(isinstance(turn, dict) and turn.get('success') == False for turn in debate_history)
 
 
@@ -117,10 +114,15 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
     
     if 'qa' in types:
         qa_df = load_all_records_into_df('qa', filter_errors=filter_errors, filter_nulls=filter_nulls, qa_filters=qa_filters)
-        # Keep only most recent QA record for each (question, options, model) triplet
+        # Keep only most recent QA record for each (question, options, model, reasoning_config) tuple
         if 'datetime_qa' in qa_df.columns:
             qa_df = qa_df.sort_values('datetime_qa', ascending=False)
-        qa_df = qa_df.drop_duplicates(subset=['question_qa', 'options_str_qa', 'config_model_name_qa'], keep='first')
+        dedup_cols = ['question_qa', 'options_str_qa', 'config_model_name_qa']
+        if 'config_reasoning_effort_qa' in qa_df.columns:
+            dedup_cols.append('config_reasoning_effort_qa')
+        if 'config_reasoning_max_tokens_qa' in qa_df.columns:
+            dedup_cols.append('config_reasoning_max_tokens_qa')
+        qa_df = qa_df.drop_duplicates(subset=dedup_cols, keep='first')
         if qa_df.empty and qa_filters is not None:
             raise Exception(f'There are no QA records with the provided filter: {qa_filters}')
         qa_df['is_correct_qa'] = qa_df['parsed_answer_qa'] == qa_df['correct_idx_qa']
@@ -178,10 +180,29 @@ def prepare_df(types=['verdicts', 'debates', 'qa'], filter_errors=True, filter_n
             right_on=['question_qa_judge', 'options_str_qa_judge', 'config_model_name_qa_judge'],
             how='left')
 
+        debater_qa_cols = ['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'is_correct_qa_debater', 'success_qa_debater', 'run_id_qa_debater', 'record_id_qa_debater']
+        debater_left_on = ['question_verdicts', 'options_str_verdicts', 'config_debater_model_debates']
+        debater_right_on = ['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater']
+        
+        has_reasoning_effort = 'config_reasoning_effort_qa_debater' in debater_qa_df.columns and 'config_debater_reasoning_effort_debates' in all_df.columns
+        has_reasoning_max_tokens = 'config_reasoning_max_tokens_qa_debater' in debater_qa_df.columns and 'config_debater_reasoning_max_tokens_debates' in all_df.columns
+        
+        if has_reasoning_effort:
+            debater_qa_cols.append('config_reasoning_effort_qa_debater')
+            debater_left_on.append('config_debater_reasoning_effort_debates')
+            debater_right_on.append('config_reasoning_effort_qa_debater')
+        if has_reasoning_max_tokens:
+            # Normalize column types to float64 to handle None/NaN mixed types
+            all_df['config_debater_reasoning_max_tokens_debates'] = pd.to_numeric(all_df['config_debater_reasoning_max_tokens_debates'], errors='coerce')
+            debater_qa_df['config_reasoning_max_tokens_qa_debater'] = pd.to_numeric(debater_qa_df['config_reasoning_max_tokens_qa_debater'], errors='coerce')
+            debater_qa_cols.append('config_reasoning_max_tokens_qa_debater')
+            debater_left_on.append('config_debater_reasoning_max_tokens_debates')
+            debater_right_on.append('config_reasoning_max_tokens_qa_debater')
+
         all_df = all_df.merge(
-            debater_qa_df[['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater', 'parsed_answer_qa_debater', 'is_correct_qa_debater', 'success_qa_debater', 'run_id_qa_debater', 'record_id_qa_debater']], 
-            left_on=['question_verdicts', 'options_str_verdicts', 'config_debater_model_debates'], 
-            right_on=['question_qa_debater', 'options_str_qa_debater', 'config_model_name_qa_debater'],
+            debater_qa_df[debater_qa_cols], 
+            left_on=debater_left_on, 
+            right_on=debater_right_on,
             how='left',
             suffixes=('', '_debater'))
     else:
