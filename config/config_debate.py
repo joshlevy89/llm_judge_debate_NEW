@@ -1,6 +1,6 @@
 # DEBATER_MODEL = "x-ai/grok-4-fast"
 # DEBATER_MODEL = "x-ai/grok-4.1-fast"
-DEBATER_MODEL = "google/gemini-3-flash-preview"
+# DEBATER_MODEL = "google/gemini-3-flash-preview"
 # DEBATER_MODEL = "openai/gpt-4o-mini"
 # DEBATER_MODEL = "meta-llama/llama-3-8b-instruct"
 # DEBATER_MODEL = "meta-llama/llama-3.1-8b-instruct"
@@ -13,6 +13,8 @@ DEBATER_MODEL = "google/gemini-3-flash-preview"
 # DEBATER_MODEL = "google/gemma-3-12b-it"
 # DEBATER_MODEL = "google/gemma-3-27b-it"
 # DEBATER_MODEL = "qwen/qwen-2.5-72b-instruct"
+DEBATER_MODEL = "moonshotai/kimi-k2-thinking"
+# DEBATER_MODEL = "moonshotai/kimi-k2-0905"
 
 # DEBATER_MODEL = "deepseek/deepseek-v3.2-exp"
 # DEBATER_MODEL = "google/gemini-3-pro-preview"
@@ -44,11 +46,13 @@ DATASET_FILTERS = None
 
 DEBATER_TEMPERATURE = 0.5
 
-MAX_OUTPUT_TOKENS = 10000
+MAX_OUTPUT_TOKENS = 20000
+# MAX_OUTPUT_TOKENS = 10000
 # MAX_OUTPUT_TOKENS = 5000
 
 DEBATER_REASONING_EFFORT = None # 'medium' # 'low' # 'high' # 'low' # None # 'high' # None # 'low'
-DEBATER_REASONING_MAX_TOKENS = 5000
+DEBATER_REASONING_MAX_TOKENS = None
+REASONING_ENABLED=None
 PROVIDE_INTERNAL_REASONING_TO_SELF = True # When True, the debater will have access to its own past thought processes
 
 PRIVATE_SCRATCHPAD = False
@@ -58,19 +62,17 @@ PRIVATE_REASONING_WORD_LIMIT = None
 
 LENIENT_PARSING_ARGUMENT = False
 
-NUM_QUESTIONS = 198 
+NUM_QUESTIONS = 198 # TODO 
 RANDOM_SEED = 42
 NUM_CHOICES = 2  
-NUM_TURNS = 6 
-# NUM_CHOICES = 4  # SETTING TO 4 (set back to 2)
-# NUM_TURNS = 12 # SETTING TO 12 (set back to 6)
+NUM_TURNS = 6 # TODO
 
 MAX_THREADS = 200
 
 DEBATE_MODE = "sequential"
 # DEBATE_MODE = "simultaneous"
 
-INCLUDE_CLOSING_ARGUMENTS=True 
+INCLUDE_CLOSING_ARGUMENTS=True # TODO 
 
 # INTERACTIVE_JUDGE = "x-ai/grok-4-fast"
 # INTERACTIVE_JUDGE_TEMPERATURE = 0.3

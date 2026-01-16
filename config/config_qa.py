@@ -20,10 +20,12 @@ DATASET_FILTERS = None
 #     'difficulty': 'hard'
 # }
 
-MODEL_NAME = "google/gemini-3-flash-preview"
+# MODEL_NAME = "google/gemini-3-flash-preview"
+# MODEL_NAME = "moonshotai/kimi-k2-thinking"
+# MODEL_NAME = "moonshotai/kimi-k2-0905"
 # MODEL_NAME = "meta-llama/llama-4-maverick"
 # MODEL_NAME = "openai/gpt-4o-mini" 
-# MODEL_NAME = "x-ai/grok-4-fast" 
+MODEL_NAME = "x-ai/grok-4-fast" 
 # MODEL_NAME = "x-ai/grok-4.1-fast:free"
 # MODEL_NAME = "openai/gpt-3.5-turbo"
 # MODEL_NAME = "qwen/qwen-2.5-7b-instruct" 
@@ -46,12 +48,13 @@ TEMPERATURE = 0.5 # 1.0 # 0.0 # 0.5
 MAX_TOKENS = 10000
 REASONING_EFFORT = None # 'low'
 REASONING_MAX_TOKENS = None
+REASONING_ENABLED = False
 
 NUM_QUESTIONS = 198
 RANDOM_SEED = 42 
 NUM_CHOICES = 2
 
-RERUN = False  # will rerun a question/choice set even if it already exists
+RERUN = True  # will rerun a question/choice set even if it already exists
 LENIENT_PARSING = False
 
 # SPECIFIC_QUESTION_IDXS = "results/question_idxs_mmlu_stratified_100_per_category.txt" # [183] # [167] # List of specific question indices to run QA for, e.g., [0, 5, 10]

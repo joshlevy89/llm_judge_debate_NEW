@@ -47,8 +47,7 @@ def main():
     parser.add_argument('record_id')
     args = parser.parse_args()
     
-    # df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False)
-    df = prepare_df(types=['qa'])
+    df = prepare_df(types=['qa'], filter_errors=False, filter_nulls=False)
     
     if args.run_id:
         df = df[df['run_id_qa'] == args.run_id]

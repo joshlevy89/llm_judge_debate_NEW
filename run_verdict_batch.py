@@ -121,11 +121,15 @@ JUDGE_MODELS = [
 # ]
 
 # gemini-3-preview with various reasoning levels
+# DEBATE_RUN_IDS = [
+#     "yia5f29",
+#     "5nmmk66",
+#     "6ecqcm2",
+#     "qa81720"
+# ]
+
 DEBATE_RUN_IDS = [
-    "yia5f29",
-    "5nmmk66",
-    "6ecqcm2",
-    "qa81720"
+    "lnde0rj"
 ]
 
 
